@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/SASO_DSH.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
-import 'package:flutter_application_1/pages/intropage.dart';
+import 'package:flutter_application_1/pages/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'VioTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Intropage(),
+      home: Dashboard(),
     );
   }
 }
