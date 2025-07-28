@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/SASO_DSH.dart';
+import 'package:flutter_application_1/pages/dashboard.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -18,8 +18,7 @@ class _Loginstate extends State<Login> {
           gradient: LinearGradient(
             colors: [
               Color.fromARGB(255, 65, 154, 238),
-              Color.fromARGB(255, 158, 65, 135),
-              Color.fromARGB(255, 54, 79, 219),
+              Color.fromARGB(255, 221, 162, 204),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomRight,
@@ -94,7 +93,9 @@ class _Loginstate extends State<Login> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SasoDsh()),
+                          MaterialPageRoute(
+                            builder: (context) => DashboardPage(),
+                          ),
                         );
                       },
                       child: Container(
