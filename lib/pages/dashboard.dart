@@ -1,27 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/reffered_CNL.dart';
+import 'package:flutter_application_1/pages/user_MGT.dart';
+import 'package:flutter_application_1/pages/violation_logs.dart';
 
-void main() {
-  runApp(const DashboardApp());
-}
+class Dashboard extends StatelessWidget {
+  const Dashboard({super.key});
 
-class DashboardApp extends StatelessWidget {
-  const DashboardApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Dashboard',
-      theme: ThemeData(fontFamily: 'Poppins', primarySwatch: Colors.grey),
-      home: const DashboardPage(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
-
-  // Add the missing buildSummaryCard function
   Widget buildSummaryCard(
     String title,
     String value,
@@ -46,7 +30,7 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('CMU-SASO DASHBOARD'),
-        backgroundColor: Colors.grey[300],
+        backgroundColor: const Color.fromARGB(255, 182, 175, 175),
         foregroundColor: Colors.black,
         elevation: 1,
         actions: [
@@ -58,10 +42,10 @@ class DashboardPage extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               CircleAvatar(
-                backgroundColor: const Color.fromARGB(255, 83, 77, 77),
+                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
                 child: const Icon(
                   Icons.person,
-                  color: Color.fromARGB(255, 116, 108, 108),
+                  color: Color.fromARGB(255, 0, 0, 0),
                 ),
               ),
               const SizedBox(width: 40),
@@ -73,39 +57,57 @@ class DashboardPage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
             Row(
               children: [
-                buildSummaryCard(
-                  "Total Violations",
-                  "9",
-                  "This week",
-                  Icons.description,
-                  Colors.blue,
+                const SizedBox(width: 40.0),
+                SizedBox(
+                  width: 400,
+                  height: 200,
+                  child: buildSummaryCard(
+                    "Total Violations",
+                    "9",
+                    "This Week",
+                    Icons.description,
+                    const Color.fromARGB(255, 216, 230, 22),
+                  ),
                 ),
-                const SizedBox(width: 20),
-                buildSummaryCard(
-                  "Active Cases",
-                  "8",
-                  "Pending review",
-                  Icons.bookmark,
-                  Colors.orange,
+                const SizedBox(width: 30.0),
+                SizedBox(
+                  width: 400,
+                  height: 200,
+                  child: buildSummaryCard(
+                    "Active Cases",
+                    "8",
+                    "Pending Review",
+                    Icons.bookmark,
+                    const Color.fromARGB(255, 12, 212, 22),
+                  ),
                 ),
-                const SizedBox(width: 20),
-                buildSummaryCard(
-                  "Student_Involved",
-                  "15",
-                  "Unique students",
-                  Icons.people,
-                  Colors.green,
+                const SizedBox(width: 30.0),
+                SizedBox(
+                  width: 400,
+                  height: 200,
+                  child: buildSummaryCard(
+                    "Student Involved",
+                    "15",
+                    "Unique Students",
+                    Icons.people,
+                    const Color.fromARGB(255, 0, 0, 0),
+                  ),
                 ),
-                const SizedBox(width: 20),
-                buildSummaryCard(
-                  "Resolved",
-                  "5",
-                  "This week",
-                  Icons.trending_up,
-                  Colors.purple,
+                const SizedBox(width: 30.0),
+                SizedBox(
+                  width: 430,
+                  height: 200,
+                  child: buildSummaryCard(
+                    "Resolved",
+                    "5",
+                    "This week",
+                    Icons.trending_up_sharp,
+                    const Color.fromARGB(255, 216, 91, 69),
+                  ),
                 ),
               ],
             ),
@@ -116,7 +118,7 @@ class DashboardPage extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Container(
-                    padding: const EdgeInsets.all(40),
+                    padding: const EdgeInsets.all(100),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,10 +127,10 @@ class DashboardPage extends StatelessWidget {
                           'Recent Violations',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 25,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 20),
                         _ViolationEntry(
                           name: 'Annie Batumbakal',
                           description: 'Improper Uniform',
@@ -155,7 +157,7 @@ class DashboardPage extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Container(
-                    padding: const EdgeInsets.all(42),
+                    padding: const EdgeInsets.all(100),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,10 +166,10 @@ class DashboardPage extends StatelessWidget {
                           'Quick Actions',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 25,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 30),
                         _QuickActionButton(text: 'Create New Violation Report'),
                         _QuickActionButton(text: 'View Pending Reports'),
                         _QuickActionButton(text: 'Generate Weekly Report'),
@@ -222,12 +224,24 @@ class DashboardPage extends StatelessWidget {
                 leading: const Icon(Icons.home),
                 title: const Text('Dashboard'),
                 tileColor: Colors.grey[300],
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Dashboard()),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.list_alt),
                 title: const Text('Violation Logs'),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ViolationLogsPage(),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.pie_chart),
@@ -237,7 +251,12 @@ class DashboardPage extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.bookmark),
                 title: const Text('Referred to Council'),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RefferedCnl()),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               const Padding(
@@ -254,7 +273,12 @@ class DashboardPage extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('User management'),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserMgt()),
+                  );
+                },
               ),
             ],
           ),
@@ -282,24 +306,31 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 160,
-      padding: const EdgeInsets.all(12),
+      width: 300,
+      height: 180,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(4),
+        color: iconColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: iconColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const Spacer(),
-              Icon(icon, color: iconColor),
+              Icon(icon, color: iconColor, size: 40),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             value,
             style: const TextStyle(
@@ -311,7 +342,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
           ),
         ],
       ),

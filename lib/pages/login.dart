@@ -29,7 +29,7 @@ class _Loginstate extends State<Login> {
             Container(
               padding: const EdgeInsets.only(top: 20.0),
               width: 700,
-              height: 952,
+              height: 930,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -59,27 +59,47 @@ class _Loginstate extends State<Login> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 50.0),
-                    Text(
-                      "Username",
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 2, 2, 2),
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 30.0),
+                    SizedBox(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.only(right: 535),
+                            child: Text(
+                              "Username",
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 2, 2, 2),
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+
                     TextField(
                       decoration: InputDecoration(
                         hintText: "Enter your Username",
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                     ),
-                    Text(
-                      "Password",
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 2, 2, 2),
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 30.0),
+                    SizedBox(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.only(right: 535),
+                            child: Text(
+                              "Password",
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 2, 2, 2),
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     TextField(
@@ -93,9 +113,7 @@ class _Loginstate extends State<Login> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => DashboardPage(),
-                          ),
+                          MaterialPageRoute(builder: (context) => Dashboard()),
                         );
                       },
                       child: Container(

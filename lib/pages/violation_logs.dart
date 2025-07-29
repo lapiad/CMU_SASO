@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MaterialApp(home: ViolationLogsPage()));
-}
+import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/reffered_CNL.dart';
+import 'package:flutter_application_1/pages/user_MGT.dart';
 
 class ViolationLogsPage extends StatelessWidget {
   const ViolationLogsPage({super.key});
@@ -12,18 +11,30 @@ class ViolationLogsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Violation Logs'),
+        backgroundColor: const Color.fromARGB(255, 182, 175, 175),
+        foregroundColor: Colors.black,
+        elevation: 1,
         actions: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Center(child: Text('ADMIN')),
+          Row(
+            children: [
+              const Text(
+                'ADMIN',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(width: 16),
+              CircleAvatar(
+                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
+                child: const Icon(
+                  Icons.person,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+              ),
+              const SizedBox(width: 40),
+            ],
           ),
-          const CircleAvatar(
-            backgroundColor: Colors.black12,
-            child: Icon(Icons.person),
-          ),
-          const SizedBox(width: 16),
         ],
       ),
+
       drawer: Drawer(
         child: ListView(
           children: [
@@ -38,30 +49,60 @@ class ViolationLogsPage extends StatelessWidget {
                     ),
                     child: Image.asset('images/logos.png'),
                   ),
-                  Text(
+                  const Text(
                     "CMU_SASO DRMS",
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            const ListTile(leading: Icon(Icons.home), title: Text("Dashboard")),
-            const ListTile(
-              leading: Icon(Icons.list_alt),
-              title: Text("Violation Logs"),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text("Dashboard"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Dashboard()),
+                );
+              },
             ),
-            const ListTile(
-              leading: Icon(Icons.pie_chart),
-              title: Text("Summary of Reports"),
+            ListTile(
+              leading: const Icon(Icons.list_alt),
+              title: const Text("Violation Logs"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ViolationLogsPage(),
+                  ),
+                );
+              },
             ),
-            const ListTile(
-              leading: Icon(Icons.bookmark),
-              title: Text("Referred to Council"),
+            ListTile(
+              leading: const Icon(Icons.pie_chart),
+              title: const Text("Summary of Reports"),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.bookmark),
+              title: const Text("Referred to Council"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RefferedCnl()),
+                );
+              },
             ),
             const Divider(),
-            const ListTile(
-              leading: Icon(Icons.people),
-              title: Text("User management"),
+            ListTile(
+              leading: const Icon(Icons.people),
+              title: const Text("User management"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserMgt()),
+                );
+              },
             ),
           ],
         ),
@@ -84,16 +125,21 @@ class ViolationLogsPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 50),
                 ElevatedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.filter_list),
-                  label: const Text("Filter"),
+                  label: const Text(
+                    "Filter By",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Color.fromARGB(255, 1, 1, 1),
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-
             Expanded(
               child: ListView(
                 children: const [
@@ -176,6 +222,7 @@ class ViolationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Name and ID
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -201,6 +248,7 @@ class ViolationCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
+            // Violation title
             Text(
               violationTitle,
               style: const TextStyle(
@@ -209,10 +257,12 @@ class ViolationCard extends StatelessWidget {
               ),
             ),
 
+            // Description
             Text(description),
             const SizedBox(height: 6),
 
-            if (reportedBy.isNotEmpty)
+            // Reported by and dateTime
+            if (reportedBy.isNotEmpty && dateTime.isNotEmpty)
               Row(
                 children: [
                   const Icon(Icons.person, size: 16),
@@ -224,13 +274,15 @@ class ViolationCard extends StatelessWidget {
                   Text(dateTime),
                 ],
               ),
+
             const SizedBox(height: 8),
 
+            // Offense level and status
             Row(
               children: [
                 Chip(
                   label: Text(offenseLevel),
-                  backgroundColor: Colors.amber[700],
+                  backgroundColor: const Color.fromARGB(255, 102, 100, 97),
                   labelStyle: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(width: 8),
@@ -240,7 +292,6 @@ class ViolationCard extends StatelessWidget {
                   labelStyle: const TextStyle(color: Colors.white),
                 ),
                 const Spacer(),
-
                 IconButton(
                   icon: const Icon(Icons.visibility),
                   onPressed: () {},
@@ -251,6 +302,19 @@ class ViolationCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Dummy DashboardPage to avoid errors during navigation
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Dashboard')),
+      body: const Center(child: Text('Dashboard content goes here')),
     );
   }
 }
