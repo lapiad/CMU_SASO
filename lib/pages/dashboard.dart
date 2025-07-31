@@ -53,11 +53,23 @@ class Dashboard extends StatelessWidget {
           ),
         ],
       ),
+      drawer: _buildDrawer(context),
+      floatingActionButton: Container(
+        width: 130,
+        height: 80,
+        child: FloatingActionButton(
+          onPressed: () {
+            // TODO: Navigate to Add User Page
+          },
+          child: const Icon(Icons.add, size: 50),
+          tooltip: 'Add New User',
+          backgroundColor: Colors.blue,
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             Row(
               children: [
@@ -118,7 +130,7 @@ class Dashboard extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Container(
-                    padding: const EdgeInsets.all(100),
+                    padding: const EdgeInsets.all(16),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +139,7 @@ class Dashboard extends StatelessWidget {
                           'Recent Violations',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 25,
+                            fontSize: 30,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -157,7 +169,7 @@ class Dashboard extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Container(
-                    padding: const EdgeInsets.all(100),
+                    padding: const EdgeInsets.all(16),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,7 +178,7 @@ class Dashboard extends StatelessWidget {
                           'Quick Actions',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 25,
+                            fontSize: 30,
                           ),
                         ),
                         const SizedBox(height: 30),
@@ -182,106 +194,106 @@ class Dashboard extends StatelessWidget {
           ],
         ),
       ),
-      drawer: Drawer(
-        child: Container(
-          color: Colors.grey[200],
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxHeight: 70.0,
-                        maxWidth: 70.0,
-                      ),
-                      child: Image.asset('images/logos.png'),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: Container(
+        color: Colors.grey[200],
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxHeight: 70.0,
+                      maxWidth: 70.0,
                     ),
-                    Text(
-                      "CMU_SASO DRMS",
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'GENERAL',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54,
-                    fontSize: 14,
+                    child: Image.asset('images/logos.png'),
                   ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Dashboard'),
-                tileColor: Colors.grey[300],
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Dashboard()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.list_alt),
-                title: const Text('Violation Logs'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ViolationLogsPage(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.pie_chart),
-                title: const Text('Summary of Reports'),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.bookmark),
-                title: const Text('Referred to Council'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RefferedCnl()),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'ADMINISTRATION',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54,
-                    fontSize: 14,
+                  const Text(
+                    "CMU_SASO DRMS",
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
+                ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'GENERAL',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black54,
+                  fontSize: 14,
                 ),
               ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('User management'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => UserMgt()),
-                  );
-                },
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Dashboard'),
+              tileColor: Colors.grey[300],
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Dashboard()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.list_alt),
+              title: const Text('Violation Logs'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ViolationLogsPage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.pie_chart),
+              title: const Text('Summary of Reports'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.bookmark),
+              title: const Text('Referred to Council'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => RefferedCnl()),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'ADMINISTRATION',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black54,
+                  fontSize: 14,
+                ),
               ),
-            ],
-          ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('User management'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserMgt()),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -379,10 +391,16 @@ class _ViolationEntry extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
                 Text(
                   description,
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  style: const TextStyle(fontSize: 20, color: Colors.black87),
                 ),
               ],
             ),
@@ -395,7 +413,7 @@ class _ViolationEntry extends StatelessWidget {
             ),
             child: Text(
               offenseType,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
           ),
         ],
@@ -412,15 +430,20 @@ class _QuickActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade600),
-        borderRadius: BorderRadius.circular(4),
-        color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 23),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 25),
+          backgroundColor: const Color.fromARGB(255, 238, 234, 234),
+          foregroundColor: Colors.black,
+          elevation: 2,
+          textStyle: const TextStyle(fontSize: 22),
+        ),
+        onPressed: () {
+          // Add your logic here
+        },
+        child: Center(child: Text(text)),
       ),
-      width: double.infinity,
-      child: Center(child: Text(text, style: const TextStyle(fontSize: 16))),
     );
   }
 }

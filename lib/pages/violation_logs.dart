@@ -16,20 +16,17 @@ class ViolationLogsPage extends StatelessWidget {
         elevation: 1,
         actions: [
           Row(
-            children: [
-              const Text(
+            children: const [
+              Text(
                 'ADMIN',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               CircleAvatar(
-                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
-                child: const Icon(
-                  Icons.person,
-                  color: Color.fromARGB(255, 0, 0, 0),
-                ),
+                backgroundColor: Color.fromARGB(255, 253, 250, 250),
+                child: Icon(Icons.person, color: Colors.black),
               ),
-              const SizedBox(width: 40),
+              SizedBox(width: 40),
             ],
           ),
         ],
@@ -62,7 +59,7 @@ class ViolationLogsPage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Dashboard()),
+                  MaterialPageRoute(builder: (context) => const Dashboard()),
                 );
               },
             ),
@@ -100,13 +97,14 @@ class ViolationLogsPage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => UserMgt()),
+                  MaterialPageRoute(builder: (context) => const UserMgt()),
                 );
               },
             ),
           ],
         ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -125,16 +123,13 @@ class ViolationLogsPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 50),
+                const SizedBox(width: 20),
                 ElevatedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.filter_list),
                   label: const Text(
                     "Filter By",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 1, 1, 1),
-                    ),
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ],
@@ -222,7 +217,6 @@ class ViolationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name and ID
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -248,7 +242,6 @@ class ViolationCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Violation title
             Text(
               violationTitle,
               style: const TextStyle(
@@ -257,11 +250,9 @@ class ViolationCard extends StatelessWidget {
               ),
             ),
 
-            // Description
             Text(description),
             const SizedBox(height: 6),
 
-            // Reported by and dateTime
             if (reportedBy.isNotEmpty && dateTime.isNotEmpty)
               Row(
                 children: [
@@ -277,7 +268,6 @@ class ViolationCard extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // Offense level and status
             Row(
               children: [
                 Chip(
@@ -302,19 +292,6 @@ class ViolationCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// Dummy DashboardPage to avoid errors during navigation
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
-      body: const Center(child: Text('Dashboard content goes here')),
     );
   }
 }

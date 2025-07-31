@@ -4,7 +4,9 @@ import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 
 class UserMgt extends StatelessWidget {
-  final List<Map<String, dynamic>> users = [
+  const UserMgt({super.key});
+
+  final List<Map<String, dynamic>> users = const [
     {
       'name': 'Nadine Lustre',
       'email': 'nadine.l@cityofmalabonuniversity.edu.ph',
@@ -49,6 +51,7 @@ class UserMgt extends StatelessWidget {
         elevation: 1,
         actions: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.end, // Align to the right
             children: [
               const Text(
                 'ADMIN',
@@ -65,6 +68,18 @@ class UserMgt extends StatelessWidget {
         ],
       ),
       drawer: _buildDrawer(context),
+      floatingActionButton: Container(
+        width: 130,
+        height: 80,
+        child: FloatingActionButton(
+          onPressed: () {
+            // TODO: Navigate to Add User Page
+          },
+          child: const Icon(Icons.add, size: 50),
+          tooltip: 'Add New User',
+          backgroundColor: Colors.blue,
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -74,58 +89,41 @@ class UserMgt extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: 30.0),
-                  SizedBox(
-                    width: 430,
-                    height: 200,
-                    child: buildSummaryCard(
-                      "Total Users",
-                      "4",
-                      "Registered Users",
-                      Icons.supervised_user_circle_outlined,
-                      const Color.fromARGB(255, 33, 31, 196),
-                    ),
+                  _buildSummaryCard(
+                    "Total Users",
+                    "4",
+                    "Registered Users",
+                    Icons.supervised_user_circle_outlined,
+                    const Color.fromARGB(255, 33, 31, 196),
                   ),
                   const SizedBox(width: 30.0),
-                  SizedBox(
-                    width: 430,
-                    height: 200,
-                    child: buildSummaryCard(
-                      "Active Users",
-                      "4",
-                      "Currently Active",
-                      Icons.online_prediction,
-                      const Color.fromARGB(255, 24, 206, 33),
-                    ),
+                  _buildSummaryCard(
+                    "Active Users",
+                    "4",
+                    "Currently Active",
+                    Icons.online_prediction,
+                    const Color.fromARGB(255, 24, 206, 33),
                   ),
                   const SizedBox(width: 30.0),
-                  SizedBox(
-                    width: 430,
-                    height: 200,
-                    child: buildSummaryCard(
-                      "SASO Officers",
-                      "1",
-                      "Officers Assigned",
-                      Icons.shield,
-                      const Color.fromARGB(255, 47, 199, 204),
-                    ),
+                  _buildSummaryCard(
+                    "SASO Officers",
+                    "1",
+                    "Officers Assigned",
+                    Icons.shield,
+                    const Color.fromARGB(255, 47, 199, 204),
                   ),
                   const SizedBox(width: 30.0),
-                  SizedBox(
-                    width: 430,
-                    height: 200,
-                    child: buildSummaryCard(
-                      "Admins",
-                      "1",
-                      "System Administrators",
-                      Icons.admin_panel_settings,
-                      const Color.fromARGB(255, 44, 71, 194),
-                    ),
+                  _buildSummaryCard(
+                    "Admins",
+                    "1",
+                    "System Administrators",
+                    Icons.admin_panel_settings,
+                    const Color.fromARGB(255, 44, 71, 194),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-
             TextField(
               decoration: const InputDecoration(
                 hintText: "Search by name, ID, or violation...",
@@ -134,7 +132,6 @@ class UserMgt extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
             Expanded(
               child: ListView.builder(
                 itemCount: users.length,
@@ -146,17 +143,10 @@ class UserMgt extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // link ng add user
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Add New User',
-      ),
     );
   }
 
-  Widget buildSummaryCard(
+  Widget _buildSummaryCard(
     String title,
     String value,
     String subtitle,
@@ -164,8 +154,8 @@ class UserMgt extends StatelessWidget {
     Color color,
   ) {
     return Container(
-      width: 300,
-      height: 180,
+      width: 430,
+      height: 200,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -269,7 +259,7 @@ class UserMgt extends StatelessWidget {
               tileColor: Colors.grey[300],
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Dashboard()),
+                MaterialPageRoute(builder: (context) => const Dashboard()),
               ),
             ),
             ListTile(
@@ -311,7 +301,7 @@ class UserMgt extends StatelessWidget {
               title: const Text('User management'),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => UserMgt()),
+                MaterialPageRoute(builder: (context) => const UserMgt()),
               ),
             ),
           ],

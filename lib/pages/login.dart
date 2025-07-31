@@ -2,69 +2,77 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 
 class Login extends StatefulWidget {
-  const Login({super.key});
   @override
-  State<Login> createState() => _Loginstate();
+  _LoginState createState() => _LoginState();
 }
 
-class _Loginstate extends State<Login> {
+class _LoginState extends State<Login> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final ValueNotifier<bool> passwordVisible = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    passwordVisible.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 65, 154, 238),
-              Color.fromARGB(255, 221, 162, 204),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomRight,
+      body: SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 54, 113, 202),
+                Color.fromARGB(255, 148, 68, 214),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.only(top: 20.0),
-              width: 700,
-              height: 930,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: 80.0),
+              Container(
+                height: 700,
+                width: 700,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 245, 242, 242),
+                  borderRadius: BorderRadius.circular(30),
                 ),
-              ),
-              child: Container(
-                padding: EdgeInsets.only(top: 50.0, left: 30.0, right: 30.0),
-                width: MediaQuery.of(context).size.width,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    SizedBox(height: 20.0),
                     Image.asset(
-                      "images/logos.png",
-                      height: 300,
-                      width: 300,
-                      fit: BoxFit.cover,
+                      'images/logos.png',
+                      height: 100.0,
+                      width: 100.0,
                     ),
+                    SizedBox(height: 20.0),
                     Text(
-                      "CMU-SASO Disciplinary Records Management System",
+                      'CMU-SASO Disciplinary Records\n         Management System',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color.fromARGB(255, 2, 2, 2),
-                        fontSize: 25.0,
+                        fontSize: 24.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    SizedBox(height: 40),
+
                     const SizedBox(height: 30.0),
                     SizedBox(
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.only(right: 535),
+                            padding: EdgeInsets.only(right: 440),
                             child: Text(
                               "Username",
                               style: TextStyle(
@@ -78,18 +86,27 @@ class _Loginstate extends State<Login> {
                       ),
                     ),
 
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: "Enter your Username",
-                        prefixIcon: Icon(Icons.email_outlined),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                      child: TextField(
+                        controller: usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'Enter your Username',
+                          suffix: Icon(Icons.person),
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
+
+                    SizedBox(height: 20.0),
+
                     const SizedBox(height: 30.0),
                     SizedBox(
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.only(right: 535),
+                            padding: EdgeInsets.only(right: 440),
                             child: Text(
                               "Password",
                               style: TextStyle(
@@ -102,15 +119,42 @@ class _Loginstate extends State<Login> {
                         ],
                       ),
                     ),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: "Enter your Password",
-                        prefixIcon: Icon(Icons.password_outlined),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: passwordVisible,
+                        builder: (context, value, child) {
+                          return TextField(
+                            controller: passwordController,
+                            obscureText: !value,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              hintText: 'Enter your Password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  value
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  passwordVisible.value = !value;
+                                },
+                              ),
+                              border: OutlineInputBorder(),
+                            ),
+                          );
+                        },
                       ),
                     ),
+
                     SizedBox(height: 40.0),
+
                     GestureDetector(
                       onTap: () {
+                        print('Username: ${usernameController.text}');
+                        print('Password: ${passwordController.text}');
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => Dashboard()),
@@ -118,12 +162,12 @@ class _Loginstate extends State<Login> {
                       },
                       child: Container(
                         height: 50.0,
-                        width: MediaQuery.of(context).size.width,
+                        width: 300.0,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Color.fromARGB(255, 228, 6, 248),
-                              Color.fromARGB(255, 2, 100, 117),
+                              Color.fromARGB(255, 130, 153, 229),
+                              Color.fromARGB(255, 46, 183, 207),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.topRight,
@@ -134,7 +178,7 @@ class _Loginstate extends State<Login> {
                           child: Text(
                             "Login",
                             style: TextStyle(
-                              color: Color.fromARGB(255, 255, 255, 255),
+                              color: const Color.fromARGB(255, 0, 0, 0),
                               fontSize: 20.0,
                               fontWeight: FontWeight.bold,
                             ),
@@ -145,8 +189,8 @@ class _Loginstate extends State<Login> {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
