@@ -49,6 +49,7 @@ dependencies:
   hugeicons: ^0.0.11
   easy_sidemenu: ^0.7.1
   flutter_side_menu: ^0.5.41
+  fl_chart: ^1.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
+import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 
@@ -259,7 +260,12 @@ class Dashboard extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.pie_chart),
               title: const Text('Summary of Reports'),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SummaryReportsPage()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.bookmark),

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
-import 'package:flutter_application_1/pages/user_MGT.dart';
-import 'package:flutter_application_1/pages/violation_logs.dart';
 
 void main() {
   runApp(const MyApp());
