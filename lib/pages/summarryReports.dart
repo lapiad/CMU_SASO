@@ -47,10 +47,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     final Map<String, int> counts = {};
     for (var c in cases) {
       String violation = c['violation'] as String;
-      // Normalize if needed (e.g., collapse similar labels)
-      if (violation.toLowerCase().contains('disruptive')) {
-        violation = 'Disruptive Behavior';
-      }
       counts[violation] = (counts[violation] ?? 0) + 1;
     }
     return counts;
@@ -153,14 +149,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
               ListTile(
                 leading: const Icon(Icons.pie_chart),
                 title: const Text('Summary of Reports'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SummaryReportsPage(),
-                    ),
-                  );
-                },
+                onTap: () {},
               ),
               ListTile(
                 leading: const Icon(Icons.bookmark),
@@ -203,6 +192,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
+              // Summary Cards Row
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -259,19 +249,196 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                height: 350,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 500,
-                      child: ViolationPieChartCard(distribution: distribution),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 300,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Violation Types Distribution",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Expanded(
+                                    child: PieChart(
+                                      PieChartData(
+                                        sections: distribution.entries.map((
+                                          entry,
+                                        ) {
+                                          return PieChartSectionData(
+                                            value: entry.value.toDouble(),
+                                            title: entry.key,
+                                            color:
+                                                Colors.primaries[distribution
+                                                        .keys
+                                                        .toList()
+                                                        .indexOf(entry.key) %
+                                                    Colors.primaries.length],
+                                            radius: 50,
+                                          );
+                                        }).toList(),
+                                        borderData: FlBorderData(show: false),
+                                        centerSpaceRadius: 40,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          height: 300,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Weekly Violation Trends",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Expanded(
+                                    child: BarChart(
+                                      BarChartData(
+                                        alignment:
+                                            BarChartAlignment.spaceAround,
+                                        maxY: 20,
+                                        barGroups: [
+                                          BarChartGroupData(
+                                            x: 1,
+                                            barRods: [
+                                              BarChartRodData(
+                                                toY: 14,
+                                                color: Colors.red,
+                                                width: 20,
+                                              ),
+                                              BarChartRodData(
+                                                toY: 16,
+                                                color: Colors.orange,
+                                                width: 20,
+                                              ),
+                                            ],
+                                          ),
+                                          BarChartGroupData(
+                                            x: 2,
+                                            barRods: [
+                                              BarChartRodData(
+                                                toY: 18,
+                                                color: Colors.red,
+                                                width: 20,
+                                              ),
+                                              BarChartRodData(
+                                                toY: 17,
+                                                color: Colors.blueAccent,
+                                                width: 20,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 32),
-                    SizedBox(width: 500, child: WeeklyViolationChartCard()),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 300,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Offense Level Distribution",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  buildProgressRow(
+                                    "First Offense",
+                                    45,
+                                    Colors.blue,
+                                  ),
+                                  buildProgressRow(
+                                    "Second Offense",
+                                    50,
+                                    Colors.blueAccent,
+                                  ),
+                                  buildProgressRow(
+                                    "Third Offense",
+                                    25,
+                                    Colors.lightBlue,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          height: 300,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Most Common Violations",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  buildViolationItem("Late Attendance", 5),
+                                  buildViolationItem("Improper Uniform", 10),
+                                  buildViolationItem("Cheating", 4),
+                                  buildViolationItem("Plagiarism", 25),
+                                  buildViolationItem("Disruptive Behavior", 6),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -290,7 +457,8 @@ Widget buildSummaryCard(
 ) {
   return Container(
     width: 300,
-    height: 180,
+    height: 150,
+    margin: const EdgeInsets.only(right: 16),
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: color.withOpacity(0.1),
@@ -306,7 +474,7 @@ Widget buildSummaryCard(
           title,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8.0),
+        const SizedBox(height: 8),
         Text(
           value,
           style: TextStyle(
@@ -322,248 +490,34 @@ Widget buildSummaryCard(
   );
 }
 
-class ViolationPieChartCard extends StatelessWidget {
-  final Map<String, int> distribution;
-
-  const ViolationPieChartCard({super.key, required this.distribution});
-
-  static const Map<String, Color> colorMap = {
-    'Cheating': Colors.red,
-    'Plagiarism': Colors.blue,
-    'Disruptive Behavior': Colors.green,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final total = distribution.values.fold<int>(0, (prev, e) => prev + e);
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Violation Types Distribution',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20.0),
-            Expanded(
-              child: PieChart(
-                PieChartData(
-                  sections: _buildSections(total),
-                  centerSpaceRadius: 30,
-                  sectionsSpace: 2,
-                  pieTouchData: PieTouchData(enabled: true),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: distribution.entries.map((e) {
-                final label = e.key;
-                final count = e.value;
-                final percentage = total > 0
-                    ? (count / total * 100).toStringAsFixed(1)
-                    : '0';
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: colorMap[label] ?? Colors.grey,
-                        shape: BoxShape.rectangle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text('$label: $count ($percentage%)'),
-                  ],
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<PieChartSectionData> _buildSections(int total) {
-    if (total == 0) {
-      return [
-        PieChartSectionData(
-          value: 1,
-          title: 'No data',
-          color: Colors.grey.shade300,
-          radius: 50,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.black54,
-          ),
-        ),
-      ];
-    }
-
-    return distribution.entries.map((entry) {
-      final label = entry.key;
-      final count = entry.value.toDouble();
-      final color = colorMap[label] ?? Colors.grey;
-      return PieChartSectionData(
+Widget buildProgressRow(String title, int value, Color color) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title),
+      const SizedBox(height: 4),
+      LinearProgressIndicator(
+        value: value / 100,
         color: color,
-        value: count,
-        title: '${((count / total) * 100).toStringAsFixed(0)}%',
-        radius: 50,
-        titleStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      );
-    }).toList();
-  }
+        backgroundColor: Colors.grey[200],
+      ),
+      const SizedBox(height: 8),
+    ],
+  );
 }
 
-class WeeklyViolationChartCard extends StatelessWidget {
-  const WeeklyViolationChartCard({super.key});
-
-  Map<String, int> _countViolationsByWeekday() {
-    final Map<String, int> counts = {
-      'Mon': 0,
-      'Tue': 0,
-      'Wed': 0,
-      'Thu': 0,
-      'Fri': 0,
-      'Sat': 0,
-      'Sun': 0,
-    };
-
-    for (final c in cases) {
-      final dateStr = c['referred'] as String;
-      final date = DateTime.tryParse(dateStr);
-      if (date != null) {
-        final weekday = _weekdayLabel(date.weekday);
-        counts[weekday] = (counts[weekday] ?? 0) + 1;
-      }
-    }
-
-    return counts;
-  }
-
-  String _weekdayLabel(int weekday) {
-    switch (weekday) {
-      case 1:
-        return 'Mon';
-      case 2:
-        return 'Tue';
-      case 3:
-        return 'Wed';
-      case 4:
-        return 'Thu';
-      case 5:
-        return 'Fri';
-      case 6:
-        return 'Sat';
-      case 7:
-        return 'Sun';
-      default:
-        return '';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final data = _countViolationsByWeekday();
-    final barGroups = <BarChartGroupData>[];
-
-    int x = 0;
-    for (final day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
-      final count = data[day]!;
-      barGroups.add(
-        BarChartGroupData(
-          x: x,
-          barRods: [
-            BarChartRodData(
-              toY: count.toDouble(),
-              color: Colors.blue,
-              width: 18,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ],
+Widget buildViolationItem(String violation, int count) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(violation, style: const TextStyle(fontSize: 19)),
+        Text(
+          count.toString(),
+          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
         ),
-      );
-      x++;
-    }
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Weekly Violation Trends',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: BarChart(
-                BarChartData(
-                  maxY: (data.values.reduce((a, b) => a > b ? a : b) + 1)
-                      .toDouble(),
-                  barGroups: barGroups,
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          const days = [
-                            'Mon',
-                            'Tue',
-                            'Wed',
-                            'Thu',
-                            'Fri',
-                            'Sat',
-                            'Sun',
-                          ];
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: Text(
-                              days[value.toInt()],
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        },
-                        reservedSize: 30,
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                      ),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  gridData: FlGridData(show: true),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
 }
