@@ -7,7 +7,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CMU - SASO DRMS'),
+        title: const Text('CMU - Guard DRMS'),
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
