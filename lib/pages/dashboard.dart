@@ -59,7 +59,9 @@ class Dashboard extends StatelessWidget {
         width: 130,
         height: 80,
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            // TODO: Navigate to Add User Page
+          },
           child: const Icon(Icons.add, size: 50),
           tooltip: 'Add New User',
           backgroundColor: Colors.blue,
