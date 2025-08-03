@@ -183,7 +183,6 @@ class RefferedCnl extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Summary Cards Row
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -240,7 +239,7 @@ class RefferedCnl extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              // Case Cards
+
               ListView.builder(
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),

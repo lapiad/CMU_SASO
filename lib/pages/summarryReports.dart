@@ -203,7 +203,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Summary Cards Row
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(

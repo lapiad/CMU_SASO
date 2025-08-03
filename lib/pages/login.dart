@@ -30,7 +30,7 @@ class _LoginState extends State<Login> {
             gradient: LinearGradient(
               colors: [
                 Color.fromARGB(255, 54, 113, 202),
-                Color.fromARGB(255, 148, 68, 214),
+                Color.fromARGB(255, 68, 204, 214),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -58,7 +58,7 @@ class _LoginState extends State<Login> {
                     ),
                     SizedBox(height: 20.0),
                     Text(
-                      'CMU-SASO Disciplinary Records\n         Management System',
+                      'CMU-SASO Disciplinary Records\n Management System',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24.0,
