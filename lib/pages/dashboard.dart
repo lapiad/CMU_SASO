@@ -60,7 +60,7 @@ class Dashboard extends StatelessWidget {
         height: 80,
         child: FloatingActionButton(
           onPressed: () {
-            // TODO: Navigate to Add User Page
+            // Add User Page
           },
           child: const Icon(Icons.add, size: 50),
           tooltip: 'Add New User',
@@ -251,9 +251,7 @@ class Dashboard extends StatelessWidget {
               onTap: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ViolationLogsPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => ViolationLogsPage()),
                 );
               },
             ),

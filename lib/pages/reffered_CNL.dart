@@ -239,7 +239,6 @@ class RefferedCnl extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-
               ListView.builder(
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),

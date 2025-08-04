@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/page/guardprof.dart';
+import 'package:flutter_application_1/page/scanscreen.dart';
 
 class Guardscreen extends StatelessWidget {
   const Guardscreen({super.key});
@@ -51,7 +53,7 @@ class Guardscreen extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 60),
 
               Align(
                 alignment: Alignment.centerLeft,
@@ -66,60 +68,27 @@ class Guardscreen extends StatelessWidget {
                   ActionButton(
                     icon: Icons.qr_code_scanner,
                     label: "Scan Student ID",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Scanscreen(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 10),
-                  ActionButton(icon: Icons.list, label: "View All Violation"),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Recent Violation",
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              Column(
-                children: const [
-                  ViolationItem(
-                    name: "Coco Cruz",
-                    type: "Dress code",
-                    offense: "First Offense",
-                    color: Colors.yellow,
-                  ),
-                  ViolationItem(
-                    name: "Joy Martin",
-                    type: "Late Entry",
-                    offense: "First Offense",
-                    color: Colors.yellow,
-                  ),
-                  ViolationItem(
-                    name: "Nika Luna",
-                    type: "ID",
-                    offense: "First Offense",
-                    color: Colors.yellow,
-                  ),
-                  ViolationItem(
-                    name: "Justine Kim",
-                    type: "Late Entry",
-                    offense: "Second Offense",
-                    color: Colors.orange,
-                  ),
-                  ViolationItem(
-                    name: "Liz Ive",
-                    type: "Dress code",
-                    offense: "Third Offense",
-                    color: Colors.red,
-                  ),
-                  ViolationItem(
-                    name: "Wonu Jeon",
-                    type: "ID",
-                    offense: "First Offense",
-                    color: Colors.yellow,
+                  ActionButton(
+                    icon: Icons.list,
+                    label: "View All Violation",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Guardscreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -132,8 +101,32 @@ class Guardscreen extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: "Scan"),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Reports"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const Guardscreen()),
+              );
+              break;
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Scanscreen()),
+              );
+              break;
+            case 2:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Guardprof()),
+              );
+              break;
+            default:
+              break;
+          }
+        },
       ),
     );
   }
@@ -217,15 +210,21 @@ class DashboardCard extends StatelessWidget {
 class ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback onPressed;
 
-  const ActionButton({required this.icon, required this.label, super.key});
+  const ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       icon: Icon(icon),
       label: Text(label),
-      onPressed: () {},
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         minimumSize: const Size.fromHeight(50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),

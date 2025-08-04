@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/guardscreen.dart';
 import 'package:flutter_application_1/pages/login.dart';
 
 void main() {
@@ -15,7 +14,7 @@ class MyApp extends StatelessWidget {
       title: 'VioTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Guardscreen(),
+      home: Login(),
     );
   }
 }

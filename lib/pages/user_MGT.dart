@@ -52,7 +52,7 @@ class UserMgt extends StatelessWidget {
         elevation: 1,
         actions: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end, // Align to the right
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               const Text(
                 'ADMIN',
@@ -266,9 +266,7 @@ class UserMgt extends StatelessWidget {
               title: const Text('Violation Logs'),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ViolationLogsPage(),
-                ),
+                MaterialPageRoute(builder: (context) => ViolationLogsPage()),
               ),
             ),
             ListTile(
