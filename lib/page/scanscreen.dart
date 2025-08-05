@@ -42,7 +42,7 @@ class _ScanscreenState extends State<Scanscreen> {
       ),
       body: isScanned ? _buildViolationForm() : _buildScannerUI(),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // You're on the Scan screen
+        currentIndex: 1,
         selectedItemColor: Colors.blue,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -50,7 +50,7 @@ class _ScanscreenState extends State<Scanscreen> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
         onTap: (index) {
-          if (index == 1) return; // Already on Scan screen
+          if (index == 1) return;
           switch (index) {
             case 0:
               Navigator.pushReplacement(
