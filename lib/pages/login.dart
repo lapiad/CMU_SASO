@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/page/guardscreen.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 
 class Login extends StatefulWidget {
@@ -30,7 +31,7 @@ class _LoginState extends State<Login> {
             gradient: LinearGradient(
               colors: [
                 Color.fromARGB(255, 54, 113, 202),
-                Color.fromARGB(255, 68, 204, 214),
+                Color.fromARGB(255, 78, 196, 231),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -41,8 +42,8 @@ class _LoginState extends State<Login> {
             children: [
               SizedBox(height: 80.0),
               Container(
-                height: 700,
-                width: 700,
+                height: 600,
+                width: 600,
                 decoration: BoxDecoration(
                   color: Color.fromARGB(255, 245, 242, 242),
                   borderRadius: BorderRadius.circular(30),
@@ -58,21 +59,21 @@ class _LoginState extends State<Login> {
                     ),
                     SizedBox(height: 20.0),
                     Text(
-                      'CMU-SASO Disciplinary Records\n Management System',
+                      'CMU-SASO Disciplinary Records\n         Management System',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 40),
+                    SizedBox(height: 20),
 
-                    const SizedBox(height: 30.0),
+                    const SizedBox(height: 20.0),
                     SizedBox(
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.only(right: 440),
+                            padding: EdgeInsets.only(right: 189),
                             child: Text(
                               "Username",
                               style: TextStyle(
@@ -87,7 +88,7 @@ class _LoginState extends State<Login> {
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
                       child: TextField(
                         controller: usernameController,
                         decoration: InputDecoration(
@@ -99,14 +100,14 @@ class _LoginState extends State<Login> {
                       ),
                     ),
 
-                    SizedBox(height: 20.0),
+                    SizedBox(height: 10.0),
 
-                    const SizedBox(height: 30.0),
+                    const SizedBox(height: 20.0),
                     SizedBox(
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.only(right: 440),
+                            padding: EdgeInsets.only(right: 189),
                             child: Text(
                               "Password",
                               style: TextStyle(
@@ -121,7 +122,7 @@ class _LoginState extends State<Login> {
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 80.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
                       child: ValueListenableBuilder<bool>(
                         valueListenable: passwordVisible,
                         builder: (context, value, child) {
@@ -157,7 +158,9 @@ class _LoginState extends State<Login> {
 
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => Dashboard()),
+                          MaterialPageRoute(
+                            builder: (context) => Guardscreen(),
+                          ),
                         );
                       },
                       child: Container(

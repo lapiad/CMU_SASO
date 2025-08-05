@@ -72,57 +72,60 @@ class Dashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const SizedBox(width: 40.0),
-                SizedBox(
-                  width: 400,
-                  height: 200,
-                  child: buildSummaryCard(
-                    "Total Violations",
-                    "9",
-                    "This Week",
-                    Icons.description,
-                    const Color.fromARGB(255, 216, 230, 22),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  const SizedBox(width: 30.0),
+                  SizedBox(
+                    width: 400,
+                    height: 200,
+                    child: buildSummaryCard(
+                      "Total Cases",
+                      "3",
+                      "Active Referrals",
+                      Icons.cases_outlined,
+                      const Color.fromARGB(255, 240, 48, 48),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 30.0),
-                SizedBox(
-                  width: 400,
-                  height: 200,
-                  child: buildSummaryCard(
-                    "Active Cases",
-                    "8",
-                    "Pending Review",
-                    Icons.bookmark,
-                    const Color.fromARGB(255, 12, 212, 22),
+                  const SizedBox(width: 30.0),
+                  SizedBox(
+                    width: 400,
+                    height: 200,
+                    child: buildSummaryCard(
+                      "Under Review",
+                      "1",
+                      "Being Evaluated",
+                      Icons.reviews,
+                      const Color.fromARGB(255, 52, 96, 241),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 30.0),
-                SizedBox(
-                  width: 400,
-                  height: 200,
-                  child: buildSummaryCard(
-                    "Student Involved",
-                    "15",
-                    "Unique Students",
-                    Icons.people,
-                    const Color.fromARGB(255, 0, 0, 0),
+                  const SizedBox(width: 30.0),
+                  SizedBox(
+                    width: 400,
+                    height: 200,
+                    child: buildSummaryCard(
+                      "Scheduled",
+                      "1",
+                      "Hearings Set",
+                      Icons.schedule,
+                      const Color.fromARGB(255, 13, 200, 224),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 30.0),
-                SizedBox(
-                  width: 430,
-                  height: 200,
-                  child: buildSummaryCard(
-                    "Resolved",
-                    "5",
-                    "This week",
-                    Icons.trending_up_sharp,
-                    const Color.fromARGB(255, 216, 91, 69),
+                  const SizedBox(width: 30.0),
+                  SizedBox(
+                    width: 400,
+                    height: 200,
+                    child: buildSummaryCard(
+                      "Pending",
+                      "1",
+                      "Awaiting Decision",
+                      Icons.pending,
+                      const Color.fromARGB(255, 232, 235, 19),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             Row(
