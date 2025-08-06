@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/guardscreen.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 
 class Login extends StatefulWidget {
@@ -73,7 +72,7 @@ class _LoginState extends State<Login> {
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.only(right: 189),
+                            padding: EdgeInsets.only(right: 420),
                             child: Text(
                               "Username",
                               style: TextStyle(
@@ -107,7 +106,7 @@ class _LoginState extends State<Login> {
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.only(right: 189),
+                            padding: EdgeInsets.only(right: 420),
                             child: Text(
                               "Password",
                               style: TextStyle(
@@ -158,9 +157,7 @@ class _LoginState extends State<Login> {
 
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => Guardscreen(),
-                          ),
+                          MaterialPageRoute(builder: (context) => Dashboard()),
                         );
                       },
                       child: Container(

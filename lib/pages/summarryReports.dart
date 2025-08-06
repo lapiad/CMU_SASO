@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
@@ -37,7 +38,6 @@ const List<Map<String, dynamic>> cases = [
 
 class SummaryReportsPage extends StatefulWidget {
   const SummaryReportsPage({super.key});
-
   @override
   State<SummaryReportsPage> createState() => _SummaryReportsPageState();
 }
@@ -58,6 +58,31 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
         .length;
   }
 
+  void _showAdminMenu(BuildContext context) async {
+    final selected = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      items: [
+        const PopupMenuItem<String>(
+          value: 'profile',
+          child: Text("Profile Settings"),
+        ),
+        const PopupMenuItem<String>(
+          value: 'system',
+          child: Text("System Settings"),
+        ),
+        const PopupMenuItem<String>(value: 'signout', child: Text("Sign Out")),
+      ],
+    );
+
+    if (selected == 'signout') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final distribution = getViolationDistribution();
@@ -76,9 +101,12 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(width: 16),
-              const CircleAvatar(
-                backgroundColor: Color.fromARGB(255, 253, 250, 250),
-                child: Icon(Icons.person, color: Colors.black),
+              GestureDetector(
+                onTap: () => _showAdminMenu(context),
+                child: const CircleAvatar(
+                  backgroundColor: Color.fromARGB(255, 253, 250, 250),
+                  child: Icon(Icons.person, color: Colors.black),
+                ),
               ),
               const SizedBox(width: 40),
             ],
@@ -130,7 +158,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Dashboard()),
+                    MaterialPageRoute(builder: (context) => const Dashboard()),
                   );
                 },
               ),
@@ -141,7 +169,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ViolationLogsPage(),
+                      builder: (context) => const ViolationLogsPage(),
                     ),
                   );
                 },
@@ -179,7 +207,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => UserMgt()),
+                    MaterialPageRoute(builder: (context) => const UserMgt()),
                   );
                 },
               ),
@@ -237,7 +265,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                       width: 400,
                       height: 200,
                       child: buildSummaryCard(
-                        "Reffered",
+                        "Referred",
                         countByStatus('Pending').toString(),
                         "To Council",
                         Icons.move_down_outlined,
@@ -248,7 +276,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 ),
               ),
               const SizedBox(height: 20),
-
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -275,21 +302,30 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                                   Expanded(
                                     child: PieChart(
                                       PieChartData(
-                                        sections: distribution.entries.map((
-                                          entry,
-                                        ) {
-                                          return PieChartSectionData(
-                                            value: entry.value.toDouble(),
-                                            title: entry.key,
-                                            color:
-                                                Colors.primaries[distribution
-                                                        .keys
-                                                        .toList()
-                                                        .indexOf(entry.key) %
-                                                    Colors.primaries.length],
-                                            radius: 50,
-                                          );
-                                        }).toList(),
+                                        sections: distribution.entries
+                                            .toList()
+                                            .asMap()
+                                            .entries
+                                            .map((entry) {
+                                              int index = entry.key;
+                                              String key = entry.value.key;
+                                              int value = entry.value.value;
+                                              return PieChartSectionData(
+                                                value: value.toDouble(),
+                                                title: key,
+                                                color:
+                                                    Colors.primaries[index %
+                                                        Colors
+                                                            .primaries
+                                                            .length],
+                                                radius: 50,
+                                                titleStyle: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            })
+                                            .toList(),
                                         borderData: FlBorderData(show: false),
                                         centerSpaceRadius: 40,
                                       ),
@@ -446,6 +482,8 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     );
   }
 }
+
+// Reusable Widgets
 
 Widget buildSummaryCard(
   String title,

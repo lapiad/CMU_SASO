@@ -125,7 +125,7 @@ class RefferedCnl extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ViolationLogsPage(),
+                      builder: (context) => ViolationLogsPage(),
                     ),
                   );
                 },

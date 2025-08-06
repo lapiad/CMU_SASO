@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
@@ -28,6 +29,35 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AdminDashboardPage();
+  }
+}
+
+class AdminDashboardPage extends StatelessWidget {
+  const AdminDashboardPage({super.key});
+
+  void _showAdminMenu(BuildContext context) {
+    showMenu(
+      context: context,
+      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      items: [
+        const PopupMenuItem(child: Text("Profile Settings")),
+        const PopupMenuItem(child: Text("System Settings")),
+        PopupMenuItem(
+          child: const Text("Sign Out"),
+          onTap: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Login()),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('CMU-SASO DASHBOARD'),
@@ -43,10 +73,10 @@ class Dashboard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               CircleAvatar(
-                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
-                child: const Icon(
-                  Icons.person,
-                  color: Color.fromARGB(255, 0, 0, 0),
+                backgroundColor: Colors.white,
+                child: IconButton(
+                  icon: const Icon(Icons.person, color: Colors.black),
+                  onPressed: () => _showAdminMenu(context),
                 ),
               ),
               const SizedBox(width: 40),
@@ -55,16 +85,16 @@ class Dashboard extends StatelessWidget {
         ],
       ),
       drawer: _buildDrawer(context),
-      floatingActionButton: Container(
+      floatingActionButton: SizedBox(
         width: 130,
         height: 80,
         child: FloatingActionButton(
           onPressed: () {
-            // Add User Page
+            // Add new user action
           },
-          child: const Icon(Icons.add, size: 50),
-          tooltip: 'Add New User',
           backgroundColor: Colors.blue,
+          tooltip: 'Add New User',
+          child: const Icon(Icons.add, size: 50),
         ),
       ),
       body: SingleChildScrollView(
@@ -76,52 +106,52 @@ class Dashboard extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  const SizedBox(width: 30.0),
+                  const SizedBox(width: 90),
                   SizedBox(
                     width: 400,
                     height: 200,
-                    child: buildSummaryCard(
-                      "Total Cases",
-                      "3",
-                      "Active Referrals",
-                      Icons.cases_outlined,
-                      const Color.fromARGB(255, 240, 48, 48),
+                    child: _InfoCard(
+                      title: "Total Cases",
+                      value: "3",
+                      subtitle: "Active Referrals",
+                      icon: Icons.cases_outlined,
+                      iconColor: Colors.red,
                     ),
                   ),
-                  const SizedBox(width: 30.0),
+                  const SizedBox(width: 30),
                   SizedBox(
                     width: 400,
                     height: 200,
-                    child: buildSummaryCard(
-                      "Under Review",
-                      "1",
-                      "Being Evaluated",
-                      Icons.reviews,
-                      const Color.fromARGB(255, 52, 96, 241),
+                    child: _InfoCard(
+                      title: "Under Review",
+                      value: "1",
+                      subtitle: "Being Evaluated",
+                      icon: Icons.reviews,
+                      iconColor: Colors.blue,
                     ),
                   ),
-                  const SizedBox(width: 30.0),
+                  const SizedBox(width: 30),
                   SizedBox(
                     width: 400,
                     height: 200,
-                    child: buildSummaryCard(
-                      "Scheduled",
-                      "1",
-                      "Hearings Set",
-                      Icons.schedule,
-                      const Color.fromARGB(255, 13, 200, 224),
+                    child: _InfoCard(
+                      title: "Scheduled",
+                      value: "1",
+                      subtitle: "Hearings Set",
+                      icon: Icons.schedule,
+                      iconColor: Colors.teal,
                     ),
                   ),
-                  const SizedBox(width: 30.0),
+                  const SizedBox(width: 30),
                   SizedBox(
                     width: 400,
                     height: 200,
-                    child: buildSummaryCard(
-                      "Pending",
-                      "1",
-                      "Awaiting Decision",
-                      Icons.pending,
-                      const Color.fromARGB(255, 232, 235, 19),
+                    child: _InfoCard(
+                      title: "Pending",
+                      value: "1",
+                      subtitle: "Awaiting Decision",
+                      icon: Icons.pending,
+                      iconColor: Colors.yellow,
                     ),
                   ),
                 ],
@@ -132,21 +162,20 @@ class Dashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  flex: 1,
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
+                      children: const [
+                        Text(
                           'Recent Violations',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 30,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _ViolationEntry(
                           name: 'Annie Batumbakal',
                           description: 'Improper Uniform',
@@ -171,21 +200,20 @@ class Dashboard extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  flex: 1,
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
+                      children: const [
+                        Text(
                           'Quick Actions',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 30,
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        SizedBox(height: 30),
                         _QuickActionButton(text: 'Create New Violation Report'),
                         _QuickActionButton(text: 'View Pending Reports'),
                         _QuickActionButton(text: 'Generate Weekly Report'),
@@ -306,6 +334,8 @@ class Dashboard extends StatelessWidget {
     );
   }
 }
+
+// Reusable Widgets (same as your original)
 
 class _InfoCard extends StatelessWidget {
   final String title;
@@ -447,7 +477,7 @@ class _QuickActionButton extends StatelessWidget {
           textStyle: const TextStyle(fontSize: 22),
         ),
         onPressed: () {
-          // Add your logic here
+          // Add action logic
         },
         child: Center(child: Text(text)),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
@@ -7,8 +8,119 @@ import 'package:flutter_application_1/pages/user_MGT.dart';
 class ViolationLogsPage extends StatelessWidget {
   const ViolationLogsPage({super.key});
 
+  void _showAdminMenu(BuildContext context) async {
+    final selected = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      items: [
+        const PopupMenuItem(value: "profile", child: Text("Profile Settings")),
+        const PopupMenuItem(value: "settings", child: Text("System Settings")),
+        const PopupMenuItem(value: "logout", child: Text("Sign Out")),
+      ],
+    );
+
+    if (selected == "logout") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<ViolationRecord> records = [
+      ViolationRecord(
+        studentName: 'Burnok Sual',
+        studentId: '202298765',
+        violation: 'Improper Uniform',
+        status: 'Third Offense',
+        reportstatus: 'Referred',
+        reportedBy: 'Mang Tani',
+        dateTime: '02-14-2025 11:11AM',
+      ),
+      ViolationRecord(
+        studentName: 'Bebot Tibay',
+        studentId: '202245673',
+        violation: 'Late Attendance',
+        status: 'First Offense',
+        reportstatus: 'Pending',
+        reportedBy: 'Nadine Lustre',
+        dateTime: '11-29-2025 12:45AM',
+      ),
+      ViolationRecord(
+        studentName: 'Rebron James',
+        studentId: '202223985',
+        violation: 'Noise Disturbance',
+        status: 'Second Offense',
+        reportstatus: 'Reviewed',
+        reportedBy: 'Leonard Pascal',
+        dateTime: '04-15-2025 3:05PM',
+      ),
+      ViolationRecord(
+        studentName: 'Juan Dela Cruz',
+        studentId: '202212345',
+        violation: 'Smoking on Campus',
+        status: 'Third Offense',
+        reportstatus: 'Referred',
+        reportedBy: 'Nadine Lustre',
+        dateTime: '07-15-2025 5:30PM',
+      ),
+      ViolationRecord(
+        studentName: 'Annie Batumbakal',
+        studentId: '202201234',
+        violation: 'Improper Uniform',
+        status: 'Second Offense',
+        reportstatus: 'Pending',
+        reportedBy: 'Mang Tani',
+        dateTime: '02-15-2025 4:05PM',
+      ),
+      ViolationRecord(
+        studentName: 'Jun-jun Valdez',
+        studentId: '202292453',
+        violation: 'Littering',
+        status: 'Third Offense',
+        reportstatus: 'Reviewed',
+        reportedBy: 'Leonard Pascal',
+        dateTime: '09-15-2025 9:10AM',
+      ),
+      ViolationRecord(
+        studentName: 'Coco Panday',
+        studentId: '202201111',
+        violation: 'Vandalism',
+        status: 'First Offense',
+        reportstatus: 'Pending',
+        reportedBy: 'Nadine Lustre',
+        dateTime: '06-15-2025 7:40AM',
+      ),
+    ];
+
+    Color getActionStatusColor(String status) {
+      switch (status) {
+        case 'Pending':
+          return Colors.yellow;
+        case 'Reviewed':
+          return Colors.green;
+        case 'Referred':
+          return Colors.red;
+        default:
+          return Colors.grey;
+      }
+    }
+
+    Color getStatusColor(String status) {
+      switch (status.toLowerCase()) {
+        case 'first offense':
+          return Colors.yellowAccent;
+        case 'second offense':
+          return Colors.orange;
+        case 'third offense':
+          return Colors.red;
+        default:
+          return Colors.grey;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Violation Logs'),
@@ -17,22 +129,24 @@ class ViolationLogsPage extends StatelessWidget {
         elevation: 1,
         actions: [
           Row(
-            children: const [
-              Text(
+            children: [
+              const Text(
                 'ADMIN',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               CircleAvatar(
-                backgroundColor: Color.fromARGB(255, 253, 250, 250),
-                child: Icon(Icons.person, color: Colors.black),
+                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
+                child: IconButton(
+                  icon: const Icon(Icons.person, color: Colors.black),
+                  onPressed: () => _showAdminMenu(context),
+                ),
               ),
-              SizedBox(width: 40),
+              const SizedBox(width: 40),
             ],
           ),
         ],
       ),
-
       drawer: Drawer(
         child: ListView(
           children: [
@@ -58,7 +172,7 @@ class ViolationLogsPage extends StatelessWidget {
               leading: const Icon(Icons.home),
               title: const Text("Dashboard"),
               onTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const Dashboard()),
                 );
@@ -68,12 +182,7 @@ class ViolationLogsPage extends StatelessWidget {
               leading: const Icon(Icons.list_alt),
               title: const Text("Violation Logs"),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ViolationLogsPage(),
-                  ),
-                );
+                Navigator.pop(context);
               },
             ),
             ListTile(
@@ -110,7 +219,6 @@ class ViolationLogsPage extends StatelessWidget {
           ],
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -135,69 +243,86 @@ class ViolationLogsPage extends StatelessWidget {
                   icon: const Icon(Icons.filter_list),
                   label: const Text(
                     "Filter By",
-                    style: TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: 18),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 780,
-              width: 1200,
-              child: Expanded(
-                child: ListView(
-                  children: const [
-                    SizedBox(
-                      height: 300,
-                      width: 300,
-                      child: ViolationCard(
-                        name: 'Annie Batumbakal',
-                        studentId: '202202549',
-                        violationTitle: 'Improper Uniform',
-                        description:
-                            'Student wearing improper school uniform - missing ID lace',
-                        reportedBy: 'Mang Tani (Guard)',
-                        dateTime: '02-15-2025 4:05PM',
-                        offenseLevel: 'First Offense',
-                        status: 'Pending',
-                        color: Colors.orange,
+            const SizedBox(height: 30),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Table(
+                    columnWidths: const {
+                      0: FixedColumnWidth(250),
+                      1: FixedColumnWidth(250),
+                      2: FixedColumnWidth(250),
+                      3: FixedColumnWidth(250),
+                      4: FixedColumnWidth(250),
+                      5: FixedColumnWidth(250),
+                      6: FixedColumnWidth(250),
+                      7: FixedColumnWidth(135),
+                    },
+                    border: TableBorder.all(color: Colors.black12),
+                    children: [
+                      TableRow(
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE0E0E0),
+                        ),
+                        children: const [
+                          _TableHeader('Student Name'),
+                          _TableHeader('Student ID'),
+                          _TableHeader('Violation'),
+                          _TableHeader('Status'),
+                          _TableHeader('Report Status'),
+                          _TableHeader('Reported By'),
+                          _TableHeader('Date & Time'),
+                          _TableHeader('Actions'),
+                        ],
                       ),
-                    ),
-                    ViolationCard(
-                      name: 'Juan Dela Cruz',
-                      studentId: '202202453',
-                      violationTitle: 'Late Attendance',
-                      description:
-                          'Student arrived 15 minutes late to first period',
-                      reportedBy: 'Nadine Lustre (SASO Officer)',
-                      dateTime: '02-15-2025 5:30PM',
-                      offenseLevel: 'Second Offense',
-                      status: 'Reviewed',
-                      color: Colors.green,
-                    ),
-                    ViolationCard(
-                      name: 'James Reid',
-                      studentId: '202202549',
-                      violationTitle: 'Multiple Violations',
-                      description: 'Violation referred to council',
-                      reportedBy: '',
-                      dateTime: '',
-                      offenseLevel: 'Third Offense',
-                      status: 'Referred',
-                      color: Colors.red,
-                    ),
-                    ViolationCard(
-                      name: 'James Reid',
-                      studentId: '202202549',
-                      violationTitle: 'Multiple Violations',
-                      description: 'Violation referred to council',
-                      reportedBy: '',
-                      dateTime: '',
-                      offenseLevel: 'Third Offense',
-                      status: 'Referred',
-                      color: Colors.red,
-                    ),
-                  ],
+                      for (var record in records)
+                        TableRow(
+                          children: [
+                            _TableCell(record.studentName),
+                            _TableCell(record.studentId),
+                            _TableCell(record.violation, color: Colors.red),
+                            _ColoredCell(
+                              record.status,
+                              bgColor: getStatusColor(record.status),
+                            ),
+                            _ColoredCell(
+                              record.reportstatus,
+                              bgColor: getActionStatusColor(
+                                record.reportstatus,
+                              ),
+                            ),
+                            _TableCell(record.reportedBy),
+                            _TableCell(record.dateTime),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_red_eye),
+                                    onPressed: () {
+                                      // View logic here
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () {
+                                      // Edit logic here
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -208,116 +333,82 @@ class ViolationLogsPage extends StatelessWidget {
   }
 }
 
-class ViolationCard extends StatelessWidget {
-  final String name;
-  final String studentId;
-  final String violationTitle;
-  final String description;
-  final String reportedBy;
-  final String dateTime;
-  final String offenseLevel;
-  final String status;
-  final Color color;
+// === UI Helpers ===
 
-  const ViolationCard({
-    super.key,
-    required this.name,
-    required this.studentId,
-    required this.violationTitle,
-    required this.description,
-    required this.reportedBy,
-    required this.dateTime,
-    required this.offenseLevel,
-    required this.status,
-    required this.color,
-  });
+class _TableHeader extends StatelessWidget {
+  final String label;
+  const _TableHeader(this.label);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 20,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Text(studentId),
-                ),
-              ],
-            ),
-            const SizedBox(height: 3),
-
-            Text(
-              violationTitle,
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(description, style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 10),
-
-            if (reportedBy.isNotEmpty && dateTime.isNotEmpty)
-              Row(
-                children: [
-                  const Icon(Icons.person, size: 16),
-                  const SizedBox(width: 4),
-                  Text(reportedBy, style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.calendar_today, size: 16),
-                  const SizedBox(width: 4),
-                  Text(dateTime, style: TextStyle(fontSize: 18)),
-                ],
-              ),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Chip(
-                  label: Text(offenseLevel),
-                  backgroundColor: const Color.fromARGB(255, 102, 100, 97),
-                  labelStyle: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(width: 8),
-                Chip(
-                  label: Text(status),
-                  backgroundColor: color,
-                  labelStyle: const TextStyle(color: Colors.white),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.visibility),
-                  onPressed: () {},
-                ),
-                IconButton(icon: const Icon(Icons.edit), onPressed: () {}),
-              ],
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Text(
+        label,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
       ),
     );
   }
+}
+
+class _TableCell extends StatelessWidget {
+  final String value;
+  final Color? color;
+  const _TableCell(this.value, {this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Text(
+        value,
+        style: TextStyle(fontSize: 18, color: color ?? Colors.black),
+      ),
+    );
+  }
+}
+
+class _ColoredCell extends StatelessWidget {
+  final String value;
+  final Color bgColor;
+  const _ColoredCell(this.value, {required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(6),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        value,
+        style: const TextStyle(fontSize: 18, color: Colors.black),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+// === Model ===
+
+class ViolationRecord {
+  final String studentName;
+  final String studentId;
+  final String violation;
+  final String status;
+  final String reportstatus;
+  final String reportedBy;
+  final String dateTime;
+
+  ViolationRecord({
+    required this.studentName,
+    required this.studentId,
+    required this.violation,
+    required this.status,
+    required this.reportstatus,
+    required this.reportedBy,
+    required this.dateTime,
+  });
 }
