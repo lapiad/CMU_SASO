@@ -63,15 +63,26 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       context: context,
       position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
       items: [
-        const PopupMenuItem<String>(
+        PopupMenuItem(
           value: 'profile',
-          child: Text("Profile Settings"),
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'system',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+          ),
         ),
         const PopupMenuItem<String>(
-          value: 'system',
-          child: Text("System Settings"),
+          value: 'signout',
+          child: Text("Sign Out", style: TextStyle(fontSize: 20)),
         ),
-        const PopupMenuItem<String>(value: 'signout', child: Text("Sign Out")),
       ],
     );
 

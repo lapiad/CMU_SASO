@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
@@ -7,7 +8,7 @@ import 'package:flutter_application_1/pages/violation_logs.dart';
 class UserMgt extends StatelessWidget {
   const UserMgt({super.key});
 
-  final List<Map<String, dynamic>> users = const [
+  static const List<Map<String, dynamic>> users = [
     {
       'name': 'Nadine Lustre',
       'email': 'nadine.l@cityofmalabonuniversity.edu.ph',
@@ -42,6 +43,60 @@ class UserMgt extends StatelessWidget {
     },
   ];
 
+  void _onMenuSelected(BuildContext context, String value) {
+    switch (value) {
+      case 'profile':
+        // TODO: Implement Profile Settings page navigation
+        break;
+      case 'system':
+        // TODO: Implement System Settings page navigation
+        break;
+      case 'logout':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Login()),
+        );
+        break;
+    }
+  }
+
+  Future<void> _showPopupMenu(BuildContext context, Offset position) async {
+    final value = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(1000, 80, 50, 0),
+      items: const [
+        PopupMenuItem(
+          value: 'profile',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'system',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'logout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('Sign Out', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+      ],
+    );
+
+    if (value != null) {
+      _onMenuSelected(context, value);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,29 +106,42 @@ class UserMgt extends StatelessWidget {
         foregroundColor: Colors.black,
         elevation: 1,
         actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const Text(
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
                 'ADMIN',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black,
+                ),
               ),
-              const SizedBox(width: 16),
-              const CircleAvatar(
+            ),
+          ),
+          GestureDetector(
+            onTapDown: (TapDownDetails details) {
+              _showPopupMenu(context, details.globalPosition);
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: CircleAvatar(
                 backgroundColor: Color.fromARGB(255, 253, 250, 250),
                 child: Icon(Icons.person, color: Colors.black),
               ),
-              const SizedBox(width: 40),
-            ],
+            ),
           ),
+          const SizedBox(width: 16),
         ],
       ),
       drawer: _buildDrawer(context),
-      floatingActionButton: Container(
+      floatingActionButton: SizedBox(
         width: 130,
         height: 80,
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            // TODO: Implement Add New User action
+          },
           child: const Icon(Icons.add, size: 50),
           tooltip: 'Add New User',
           backgroundColor: Colors.blue,
@@ -90,7 +158,7 @@ class UserMgt extends StatelessWidget {
                   const SizedBox(width: 30.0),
                   _buildSummaryCard(
                     "Total Users",
-                    "4",
+                    users.length.toString(),
                     "Registered Users",
                     Icons.supervised_user_circle_outlined,
                     const Color.fromARGB(255, 33, 31, 196),
@@ -98,7 +166,10 @@ class UserMgt extends StatelessWidget {
                   const SizedBox(width: 30.0),
                   _buildSummaryCard(
                     "Active Users",
-                    "4",
+                    users
+                        .where((u) => u['status'] == 'Active')
+                        .length
+                        .toString(),
                     "Currently Active",
                     Icons.online_prediction,
                     const Color.fromARGB(255, 24, 206, 33),
@@ -106,7 +177,10 @@ class UserMgt extends StatelessWidget {
                   const SizedBox(width: 30.0),
                   _buildSummaryCard(
                     "SASO Officers",
-                    "1",
+                    users
+                        .where((u) => u['role'] == 'SASO Officer')
+                        .length
+                        .toString(),
                     "Officers Assigned",
                     Icons.shield,
                     const Color.fromARGB(255, 47, 199, 204),
@@ -114,7 +188,7 @@ class UserMgt extends StatelessWidget {
                   const SizedBox(width: 30.0),
                   _buildSummaryCard(
                     "Admins",
-                    "1",
+                    users.where((u) => u['role'] == 'Admin').length.toString(),
                     "System Administrators",
                     Icons.admin_panel_settings,
                     const Color.fromARGB(255, 44, 71, 194),
@@ -123,8 +197,8 @@ class UserMgt extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            TextField(
-              decoration: const InputDecoration(
+            const TextField(
+              decoration: InputDecoration(
                 hintText: "Search by name, ID, or violation...",
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.search),

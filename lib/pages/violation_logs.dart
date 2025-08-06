@@ -13,9 +13,26 @@ class ViolationLogsPage extends StatelessWidget {
       context: context,
       position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
       items: [
-        const PopupMenuItem(value: "profile", child: Text("Profile Settings")),
-        const PopupMenuItem(value: "settings", child: Text("System Settings")),
-        const PopupMenuItem(value: "logout", child: Text("Sign Out")),
+        PopupMenuItem(
+          value: 'profile',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'system',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        const PopupMenuItem(
+          value: "logout",
+          child: Text("Sign Out", style: TextStyle(fontSize: 20)),
+        ),
       ],
     );
 

@@ -41,10 +41,24 @@ class AdminDashboardPage extends StatelessWidget {
       context: context,
       position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
       items: [
-        const PopupMenuItem(child: Text("Profile Settings")),
-        const PopupMenuItem(child: Text("System Settings")),
         PopupMenuItem(
-          child: const Text("Sign Out"),
+          value: 'profile',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'system',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+        PopupMenuItem(
+          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
           onTap: () {
             Navigator.pushReplacement(
               context,
