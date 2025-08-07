@@ -5,9 +5,14 @@ import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 
-class ViolationLogsPage extends StatelessWidget {
+class ViolationLogsPage extends StatefulWidget {
   const ViolationLogsPage({super.key});
 
+  @override
+  State<ViolationLogsPage> createState() => _ViolationLogsPageState();
+}
+
+class _ViolationLogsPageState extends State<ViolationLogsPage> {
   void _showAdminMenu(BuildContext context) async {
     final selected = await showMenu<String>(
       context: context,
@@ -44,100 +49,311 @@ class ViolationLogsPage extends StatelessWidget {
     }
   }
 
+  List<ViolationRecord> records = [
+    ViolationRecord(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      violation: 'Improper Uniform',
+      status: 'Third Offense',
+      reportstatus: 'Referred',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+    ),
+    ViolationRecord(
+      studentName: 'Bebot Tibay',
+      studentId: '202245673',
+      violation: 'Late Attendance',
+      status: 'First Offense',
+      reportstatus: 'Pending',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '11-29-2025 12:45AM',
+    ),
+    ViolationRecord(
+      studentName: 'Rebron James',
+      studentId: '202223985',
+      violation: 'Noise Disturbance',
+      status: 'Second Offense',
+      reportstatus: 'Reviewed',
+      reportedBy: 'Leonard Pascal',
+      dateTime: '04-15-2025 3:05PM',
+    ),
+    ViolationRecord(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      violation: 'Smoking on Campus',
+      status: 'Third Offense',
+      reportstatus: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+    ),
+    ViolationRecord(
+      studentName: 'Annie Batumbakal',
+      studentId: '202201234',
+      violation: 'Improper Uniform',
+      status: 'Second Offense',
+      reportstatus: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-15-2025 4:05PM',
+    ),
+    ViolationRecord(
+      studentName: 'Jun-jun Valdez',
+      studentId: '202292453',
+      violation: 'Littering',
+      status: 'Third Offense',
+      reportstatus: 'Reviewed',
+      reportedBy: 'Leonard Pascal',
+      dateTime: '09-15-2025 9:10AM',
+    ),
+    ViolationRecord(
+      studentName: 'Coco Panday',
+      studentId: '202201111',
+      violation: 'Vandalism',
+      status: 'First Offense',
+      reportstatus: 'Pending',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '06-15-2025 7:40AM',
+    ),
+  ];
+
+  // === Filter State ===
+  bool filterFirstOffense = false;
+  bool filterSecondOffense = false;
+  bool filterThirdOffense = false;
+
+  bool filterPending = false;
+  bool filterUnderReview = false;
+  bool filterReviewed = false;
+
+  bool filterImproperUniform = false;
+  bool filterLateAttendance = false;
+  bool filterSeriousMisconduct = false;
+
+  bool filterGuard = false;
+  bool filterSASOOfficer = false;
+  bool filterProfessor = false;
+  bool filterAdministration = false;
+
+  Color getActionStatusColor(String status) {
+    switch (status) {
+      case 'Pending':
+        return Colors.yellow;
+      case 'Reviewed':
+        return Colors.green;
+      case 'Referred':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'first offense':
+        return Colors.yellowAccent;
+      case 'second offense':
+        return Colors.orange;
+      case 'third offense':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _showFilterDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Filter Dialog",
+      pageBuilder: (context, anim1, anim2) {
+        return Stack(
+          children: [
+            Positioned(
+              left: 1325,
+              top: 33,
+              child: Material(
+                type: MaterialType.transparency,
+                child: AlertDialog(
+                  title: const Text('Filter Options'),
+                  content: SingleChildScrollView(
+                    child: SizedBox(
+                      width: 500,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Status'),
+                          CheckboxListTile(
+                            title: const Text("First Offense"),
+                            value: filterFirstOffense,
+                            onChanged: (val) {
+                              setState(() {
+                                filterFirstOffense = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Second Offense"),
+                            value: filterSecondOffense,
+                            onChanged: (val) {
+                              setState(() {
+                                filterSecondOffense = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Third Offense"),
+                            value: filterThirdOffense,
+                            onChanged: (val) {
+                              setState(() {
+                                filterThirdOffense = val ?? false;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                          const Text('Action Status'),
+                          CheckboxListTile(
+                            title: const Text("Pending"),
+                            value: filterPending,
+                            onChanged: (val) {
+                              setState(() {
+                                filterPending = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Under Review"),
+                            value: filterUnderReview,
+                            onChanged: (val) {
+                              setState(() {
+                                filterUnderReview = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Reviewed"),
+                            value: filterReviewed,
+                            onChanged: (val) {
+                              setState(() {
+                                filterReviewed = val ?? false;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                          const Text('Violation Type'),
+                          CheckboxListTile(
+                            title: const Text("Improper Uniform"),
+                            value: filterImproperUniform,
+                            onChanged: (val) {
+                              setState(() {
+                                filterImproperUniform = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Late Attendance"),
+                            value: filterLateAttendance,
+                            onChanged: (val) {
+                              setState(() {
+                                filterLateAttendance = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Serious Misconduct"),
+                            value: filterSeriousMisconduct,
+                            onChanged: (val) {
+                              setState(() {
+                                filterSeriousMisconduct = val ?? false;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                          const Text('Reported By'),
+                          CheckboxListTile(
+                            title: const Text("Guard"),
+                            value: filterGuard,
+                            onChanged: (val) {
+                              setState(() {
+                                filterGuard = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("SASO Officer"),
+                            value: filterSASOOfficer,
+                            onChanged: (val) {
+                              setState(() {
+                                filterSASOOfficer = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Professor"),
+                            value: filterProfessor,
+                            onChanged: (val) {
+                              setState(() {
+                                filterProfessor = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Administration"),
+                            value: filterAdministration,
+                            onChanged: (val) {
+                              setState(() {
+                                filterAdministration = val ?? false;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          filterFirstOffense = false;
+                          filterSecondOffense = false;
+                          filterThirdOffense = false;
+                          filterPending = false;
+                          filterUnderReview = false;
+                          filterReviewed = false;
+                          filterImproperUniform = false;
+                          filterLateAttendance = false;
+                          filterSeriousMisconduct = false;
+                          filterGuard = false;
+                          filterSASOOfficer = false;
+                          filterProfessor = false;
+                          filterAdministration = false;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Clear Filters',
+                        style: TextStyle(fontSize: 20, color: Colors.black),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Apply',
+                        style: TextStyle(fontSize: 20, color: Colors.black),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<ViolationRecord> records = [
-      ViolationRecord(
-        studentName: 'Burnok Sual',
-        studentId: '202298765',
-        violation: 'Improper Uniform',
-        status: 'Third Offense',
-        reportstatus: 'Referred',
-        reportedBy: 'Mang Tani',
-        dateTime: '02-14-2025 11:11AM',
-      ),
-      ViolationRecord(
-        studentName: 'Bebot Tibay',
-        studentId: '202245673',
-        violation: 'Late Attendance',
-        status: 'First Offense',
-        reportstatus: 'Pending',
-        reportedBy: 'Nadine Lustre',
-        dateTime: '11-29-2025 12:45AM',
-      ),
-      ViolationRecord(
-        studentName: 'Rebron James',
-        studentId: '202223985',
-        violation: 'Noise Disturbance',
-        status: 'Second Offense',
-        reportstatus: 'Reviewed',
-        reportedBy: 'Leonard Pascal',
-        dateTime: '04-15-2025 3:05PM',
-      ),
-      ViolationRecord(
-        studentName: 'Juan Dela Cruz',
-        studentId: '202212345',
-        violation: 'Smoking on Campus',
-        status: 'Third Offense',
-        reportstatus: 'Referred',
-        reportedBy: 'Nadine Lustre',
-        dateTime: '07-15-2025 5:30PM',
-      ),
-      ViolationRecord(
-        studentName: 'Annie Batumbakal',
-        studentId: '202201234',
-        violation: 'Improper Uniform',
-        status: 'Second Offense',
-        reportstatus: 'Pending',
-        reportedBy: 'Mang Tani',
-        dateTime: '02-15-2025 4:05PM',
-      ),
-      ViolationRecord(
-        studentName: 'Jun-jun Valdez',
-        studentId: '202292453',
-        violation: 'Littering',
-        status: 'Third Offense',
-        reportstatus: 'Reviewed',
-        reportedBy: 'Leonard Pascal',
-        dateTime: '09-15-2025 9:10AM',
-      ),
-      ViolationRecord(
-        studentName: 'Coco Panday',
-        studentId: '202201111',
-        violation: 'Vandalism',
-        status: 'First Offense',
-        reportstatus: 'Pending',
-        reportedBy: 'Nadine Lustre',
-        dateTime: '06-15-2025 7:40AM',
-      ),
-    ];
-
-    Color getActionStatusColor(String status) {
-      switch (status) {
-        case 'Pending':
-          return Colors.yellow;
-        case 'Reviewed':
-          return Colors.green;
-        case 'Referred':
-          return Colors.red;
-        default:
-          return Colors.grey;
-      }
-    }
-
-    Color getStatusColor(String status) {
-      switch (status.toLowerCase()) {
-        case 'first offense':
-          return Colors.yellowAccent;
-        case 'second offense':
-          return Colors.orange;
-        case 'third offense':
-          return Colors.red;
-        default:
-          return Colors.grey;
-      }
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Violation Logs'),
@@ -256,7 +472,7 @@ class ViolationLogsPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: _showFilterDialog,
                   icon: const Icon(Icons.filter_list),
                   label: const Text(
                     "Filter By",
@@ -323,15 +539,11 @@ class ViolationLogsPage extends StatelessWidget {
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.remove_red_eye),
-                                    onPressed: () {
-                                      // View logic here
-                                    },
+                                    onPressed: () {},
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      // Edit logic here
-                                    },
+                                    onPressed: () {},
                                   ),
                                 ],
                               ),

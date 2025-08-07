@@ -5,9 +5,14 @@ import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 
-class RefferedCnl extends StatelessWidget {
+class RefferedCnl extends StatefulWidget {
   RefferedCnl({super.key});
 
+  @override
+  State<RefferedCnl> createState() => _RefferedCnlState();
+}
+
+class _RefferedCnlState extends State<RefferedCnl> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu<String>(
       context: context,
@@ -95,6 +100,23 @@ class RefferedCnl extends StatelessWidget {
 
   int countByStatus(String status) =>
       records.where((r) => r.status == status).length;
+
+  bool filterFirstOffense = false;
+  bool filterSecondOffense = false;
+  bool filterThirdOffense = false;
+
+  bool filterPending = false;
+  bool filterUnderReview = false;
+  bool filterReviewed = false;
+
+  bool filterImproperUniform = false;
+  bool filterLateAttendance = false;
+  bool filterSeriousMisconduct = false;
+
+  bool filterGuard = false;
+  bool filterSASOOfficer = false;
+  bool filterProfessor = false;
+  bool filterAdministration = false;
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +286,7 @@ class RefferedCnl extends StatelessWidget {
               leading: const Icon(Icons.bookmark),
               title: const Text('Referred to Council'),
               onTap: () {
-                Navigator.pop(context); // Close drawer instead of reloading
+                Navigator.pop(context);
               },
             ),
             const SizedBox(height: 20),
@@ -339,125 +361,310 @@ class RefferedCnl extends StatelessWidget {
   }
 
   Widget buildCaseTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: 1887,
-        child: Table(
-          border: TableBorder.all(color: Colors.grey.shade400),
-          columnWidths: const {
-            0: FixedColumnWidth(180),
-            1: FixedColumnWidth(180),
-            2: FixedColumnWidth(180),
-            3: FixedColumnWidth(180),
-            4: FixedColumnWidth(180),
-            5: FixedColumnWidth(180),
-            6: FixedColumnWidth(180),
-            7: FixedColumnWidth(180),
-            8: FixedColumnWidth(150),
-          },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            TableRow(
-              decoration: BoxDecoration(color: Colors.grey.shade300),
-              children: const [
-                _TableCell('Student Name', bold: true),
-                _TableCell('Student ID', bold: true),
-                _TableCell('Violation', bold: true),
-                _TableCell('Priority', bold: true, center: true),
-                _TableCell('Status', bold: true, center: true),
-                _TableCell('Reported By', bold: true),
-                _TableCell('Referred Date', bold: true),
-                _TableCell('Hearing Date', bold: true),
-                _TableCell('Actions', bold: true, center: true),
-              ],
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText:
+                      'Search by student name, student ID, or violation...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onChanged: (value) {},
+              ),
             ),
-            ...records.map((record) {
-              return TableRow(
-                children: [
-                  _TableCell(record.studentName),
-                  _TableCell(record.studentId),
-                  _TableCell(record.violation, color: Colors.red, bold: true),
-                  _TableCell(
-                    record.priority ?? '-',
-                    bgColor: Colors.red.shade100,
-                    center: true,
-                  ),
-                  _TableCell(
-                    record.status,
-                    bgColor: Colors.blue.shade100,
-                    center: true,
-                  ),
-                  _TableCell(record.reportedBy),
-                  _TableCell(record.referredDate ?? '-'),
-                  _TableCell(record.hearingDate ?? '-'),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.visibility),
-                          tooltip: 'View',
-                          onPressed: () {
-                            // Implement view logic
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy),
-                          tooltip: 'Documents',
-                          onPressed: () {
-                            // Implement copy logic
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          tooltip: 'Edit',
-                          onPressed: () {
-                            // Implement edit logic
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
+            const SizedBox(width: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                _showFilterDialog();
+              },
+              icon: const Icon(Icons.filter_list),
+              label: const Text("Filter By", style: TextStyle(fontSize: 18)),
+            ),
           ],
         ),
-      ),
+        const SizedBox(height: 20),
+
+        // Table
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: 1887,
+            child: Table(
+              border: TableBorder.all(color: Colors.grey.shade400),
+              columnWidths: const {
+                0: FixedColumnWidth(180),
+                1: FixedColumnWidth(180),
+                2: FixedColumnWidth(180),
+                3: FixedColumnWidth(180),
+                4: FixedColumnWidth(180),
+                5: FixedColumnWidth(180),
+                6: FixedColumnWidth(180),
+                7: FixedColumnWidth(180),
+                8: FixedColumnWidth(150),
+              },
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.grey.shade300),
+                  children: const [
+                    _TableCell('Student Name', bold: true),
+                    _TableCell('Student ID', bold: true),
+                    _TableCell('Violation', bold: true),
+                    _TableCell('Priority', bold: true, center: true),
+                    _TableCell('Status', bold: true, center: true),
+                    _TableCell('Reported By', bold: true),
+                    _TableCell('Referred Date', bold: true),
+                    _TableCell('Hearing Date', bold: true),
+                    _TableCell('Actions', bold: true, center: true),
+                  ],
+                ),
+                ...records.map((record) {
+                  return TableRow(
+                    children: [
+                      _TableCell(record.studentName),
+                      _TableCell(record.studentId),
+                      _TableCell(
+                        record.violation,
+                        color: Colors.red,
+                        bold: true,
+                      ),
+                      _TableCell(
+                        record.priority ?? '-',
+                        bgColor: Colors.red.shade100,
+                        center: true,
+                      ),
+                      _TableCell(
+                        record.status,
+                        bgColor: Colors.blue.shade100,
+                        center: true,
+                      ),
+                      _TableCell(record.reportedBy),
+                      _TableCell(record.referredDate ?? '-'),
+                      _TableCell(record.hearingDate ?? '-'),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.visibility),
+                              tooltip: 'View',
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.copy),
+                              tooltip: 'Documents',
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              tooltip: 'Edit',
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
-}
 
-class _TableCell extends StatelessWidget {
-  final String value;
-  final Color? color;
-  final Color? bgColor;
-  final bool bold;
-  final bool center;
-
-  const _TableCell(
-    this.value, {
-    this.color,
-    this.bgColor,
-    this.bold = false,
-    this.center = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: center ? Alignment.center : Alignment.centerLeft,
-      padding: const EdgeInsets.all(12),
-      color: bgColor,
-      child: Text(
-        value,
-        style: TextStyle(
-          fontSize: 20,
-          color: color ?? Colors.black,
-          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
+  void _showFilterDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Filter Dialog",
+      pageBuilder: (context, anim1, anim2) {
+        return Stack(
+          children: [
+            Positioned(
+              left: 1325,
+              top: 33,
+              child: Material(
+                type: MaterialType.transparency,
+                child: AlertDialog(
+                  title: const Text('Filter Options'),
+                  content: SingleChildScrollView(
+                    child: SizedBox(
+                      width: 500,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Status'),
+                          CheckboxListTile(
+                            title: const Text("First Offense"),
+                            value: filterFirstOffense,
+                            onChanged: (val) {
+                              setState(() {
+                                filterFirstOffense = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Second Offense"),
+                            value: filterSecondOffense,
+                            onChanged: (val) {
+                              setState(() {
+                                filterSecondOffense = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Third Offense"),
+                            value: filterThirdOffense,
+                            onChanged: (val) {
+                              setState(() {
+                                filterThirdOffense = val ?? false;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                          const Text('Action Status'),
+                          CheckboxListTile(
+                            title: const Text("Pending"),
+                            value: filterPending,
+                            onChanged: (val) {
+                              setState(() {
+                                filterPending = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Under Review"),
+                            value: filterUnderReview,
+                            onChanged: (val) {
+                              setState(() {
+                                filterUnderReview = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Reviewed"),
+                            value: filterReviewed,
+                            onChanged: (val) {
+                              setState(() {
+                                filterReviewed = val ?? false;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                          const Text('Violation Type'),
+                          CheckboxListTile(
+                            title: const Text("Improper Uniform"),
+                            value: filterImproperUniform,
+                            onChanged: (val) {
+                              setState(() {
+                                filterImproperUniform = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Late Attendance"),
+                            value: filterLateAttendance,
+                            onChanged: (val) {
+                              setState(() {
+                                filterLateAttendance = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Serious Misconduct"),
+                            value: filterSeriousMisconduct,
+                            onChanged: (val) {
+                              setState(() {
+                                filterSeriousMisconduct = val ?? false;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                          const Text('Reported By'),
+                          CheckboxListTile(
+                            title: const Text("Guard"),
+                            value: filterGuard,
+                            onChanged: (val) {
+                              setState(() {
+                                filterGuard = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("SASO Officer"),
+                            value: filterSASOOfficer,
+                            onChanged: (val) {
+                              setState(() {
+                                filterSASOOfficer = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Professor"),
+                            value: filterProfessor,
+                            onChanged: (val) {
+                              setState(() {
+                                filterProfessor = val ?? false;
+                              });
+                            },
+                          ),
+                          CheckboxListTile(
+                            title: const Text("Administration"),
+                            value: filterAdministration,
+                            onChanged: (val) {
+                              setState(() {
+                                filterAdministration = val ?? false;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          filterFirstOffense = false;
+                          filterSecondOffense = false;
+                          filterThirdOffense = false;
+                          filterPending = false;
+                          filterUnderReview = false;
+                          filterReviewed = false;
+                          filterImproperUniform = false;
+                          filterLateAttendance = false;
+                          filterSeriousMisconduct = false;
+                          filterGuard = false;
+                          filterSASOOfficer = false;
+                          filterProfessor = false;
+                          filterAdministration = false;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Clear Filters'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Apply'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -484,4 +691,37 @@ class ViolationRecord {
     this.referredDate,
     this.hearingDate,
   });
+}
+
+class _TableCell extends StatelessWidget {
+  final String text;
+  final bool bold;
+  final bool center;
+  final Color? color;
+  final Color? bgColor;
+
+  const _TableCell(
+    this.text, {
+    this.bold = false,
+    this.center = false,
+    this.color,
+    this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: bgColor,
+      padding: const EdgeInsets.all(12),
+      alignment: center ? Alignment.center : Alignment.centerLeft,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          color: color,
+          fontSize: 20,
+        ),
+      ),
+    );
+  }
 }
