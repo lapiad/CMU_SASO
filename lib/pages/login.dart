@@ -1,195 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 
-class Login extends StatefulWidget {
-  @override
-  _LoginState createState() => _LoginState();
-}
-
-class _LoginState extends State<Login> {
+class Login extends StatelessWidget {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final ValueNotifier<bool> passwordVisible = ValueNotifier<bool>(false);
 
-  @override
-  void dispose() {
-    usernameController.dispose();
-    passwordController.dispose();
-    passwordVisible.dispose();
-    super.dispose();
-  }
+  Login({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 54, 113, 202),
-                Color.fromARGB(255, 78, 196, 231),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      backgroundColor: Colors.blue[900],
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 80.0),
-              Container(
-                height: 600,
-                width: 600,
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 245, 242, 242),
-                  borderRadius: BorderRadius.circular(30),
+            width: 500,
+            height: 600,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 20.0),
+                Image.asset('images/logos.png', height: 100.0, width: 100.0),
+                const SizedBox(height: 16),
+                // Title
+                const Text(
+                  'CMU SASO',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: 20.0),
-                    Image.asset(
-                      'images/logos.png',
-                      height: 100.0,
-                      width: 100.0,
+                const SizedBox(height: 4),
+                const Text(
+                  'Disciplinary Records Management System',
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                // Username Field
+                TextField(
+                  controller: usernameController,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.person_outline),
+                    labelText: 'Username',
+                    hintText: 'Enter your username',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    SizedBox(height: 20.0),
-                    Text(
-                      'CMU-SASO Disciplinary Records\n         Management System',
-                      textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Password Field
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Sign In Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[900],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Dashboard()),
+                      );
+                    },
+                    child: const Text(
+                      'Sign In',
                       style: TextStyle(
-                        fontSize: 24.0,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 20),
-
-                    const SizedBox(height: 20.0),
-                    SizedBox(
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.only(right: 420),
-                            child: Text(
-                              "Username",
-                              style: TextStyle(
-                                color: Color.fromARGB(255, 2, 2, 2),
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                      child: TextField(
-                        controller: usernameController,
-                        decoration: InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'Enter your Username',
-                          suffix: Icon(Icons.person),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 10.0),
-
-                    const SizedBox(height: 20.0),
-                    SizedBox(
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.only(right: 420),
-                            child: Text(
-                              "Password",
-                              style: TextStyle(
-                                color: Color.fromARGB(255, 2, 2, 2),
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: passwordVisible,
-                        builder: (context, value, child) {
-                          return TextField(
-                            controller: passwordController,
-                            obscureText: !value,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              hintText: 'Enter your Password',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  value
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                                onPressed: () {
-                                  passwordVisible.value = !value;
-                                },
-                              ),
-                              border: OutlineInputBorder(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    SizedBox(height: 40.0),
-
-                    GestureDetector(
-                      onTap: () {
-                        print('Username: ${usernameController.text}');
-                        print('Password: ${passwordController.text}');
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Dashboard()),
-                        );
-                      },
-                      child: Container(
-                        height: 50.0,
-                        width: 300.0,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color.fromARGB(255, 130, 153, 229),
-                              Color.fromARGB(255, 46, 183, 207),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.topRight,
-                          ),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Center(
-                          child: Text(
-                            "Login",
-                            style: TextStyle(
-                              color: const Color.fromARGB(255, 0, 0, 0),
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 50),
+                GestureDetector(
+                  onTap: () {
+                    // Navigate to admin portal
+                  },
+                  child: const Text(
+                    'Admin Access Portal',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
