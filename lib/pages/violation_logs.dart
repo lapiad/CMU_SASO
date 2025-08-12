@@ -85,7 +85,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       ViolationRecord(
         studentName: 'Rebron James',
         studentId: '202223985',
-        violation: 'Noise Disturbance', // fixed typo
+        violation: 'Noise Disturbance',
         status: 'Second Offense',
         reportStatus: 'Reviewed',
         reportedBy: 'Leonard Pascal',
@@ -112,7 +112,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       ViolationRecord(
         studentName: 'Rebron James',
         studentId: '202223985',
-        violation: 'Noise Disturbance', // fixed typo
+        violation: 'Noise Disturbance',
         status: 'Second Offense',
         reportStatus: 'Reviewed',
         reportedBy: 'Leonard Pascal',
@@ -139,7 +139,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       ViolationRecord(
         studentName: 'Rebron James',
         studentId: '202223985',
-        violation: 'Noise Disturbance', // fixed typo
+        violation: 'Noise Disturbance',
         status: 'Second Offense',
         reportStatus: 'Reviewed',
         reportedBy: 'Leonard Pascal',
@@ -234,7 +234,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               leading: const Icon(Icons.list_alt),
               title: const Text("Violation Logs"),
               onTap: () {
-                Navigator.pop(context); // Don’t reload same page
+                Navigator.pop(context);
               },
             ),
             ListTile(

@@ -494,8 +494,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
   }
 }
 
-// Reusable Widgets
-
 Widget buildSummaryCard(
   String title,
   String value,

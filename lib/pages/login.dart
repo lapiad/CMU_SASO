@@ -96,9 +96,7 @@ class Login extends StatelessWidget {
                 ),
                 const SizedBox(height: 50),
                 GestureDetector(
-                  onTap: () {
-                    // Navigate to admin portal
-                  },
+                  onTap: () {},
                   child: const Text(
                     'Admin Access Portal',
                     style: TextStyle(color: Colors.black),
