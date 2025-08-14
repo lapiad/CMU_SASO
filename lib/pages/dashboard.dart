@@ -27,28 +27,18 @@ Future<String> getName() async {
   }
 }
 
-class Dashboard extends StatefulWidget {
+class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
 
-  @override
-  State<Dashboard> createState() => _DashboardState();
-}
-
-class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return const AdminDashboardPage();
   }
 }
 
-class AdminDashboardPage extends StatefulWidget {
+class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
 
-  @override
-  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
-}
-
-class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
