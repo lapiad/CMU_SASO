@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/page/guardscreen.dart';
 import 'package:flutter_application_1/page/scanscreen.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:get_storage/get_storage.dart';
 
 class Guardprof extends StatefulWidget {
   const Guardprof({super.key});
@@ -82,6 +83,8 @@ class _GuardProfileScreenState extends State<Guardprof> {
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () {
+                        final box = GetStorage();
+                        box.remove('user_id');
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => Login()),

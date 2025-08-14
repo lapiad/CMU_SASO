@@ -1,22 +1,54 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
 
-class Dashboard extends StatelessWidget {
+Future<String> getName() async {
+  final box = GetStorage();
+  final url = Uri.parse(
+    '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+  ); // Replace with your FastAPI URL
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    print(data['first_name']);
+    return data['first_name'];
+  } else {
+    // error message
+    return "null";
+  }
+}
+
+class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
+  @override
+  State<Dashboard> createState() => _DashboardState();
+}
+
+class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return const AdminDashboardPage();
   }
 }
 
-class AdminDashboardPage extends StatelessWidget {
+class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
+  @override
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
@@ -41,6 +73,8 @@ class AdminDashboardPage extends StatelessWidget {
         PopupMenuItem(
           child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
           onTap: () {
+            final box = GetStorage();
+            box.remove('user_id');
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => Login()),
@@ -87,13 +121,20 @@ class AdminDashboardPage extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 182, 175, 175),
         foregroundColor: Colors.black,
         elevation: 1,
+        leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
         actions: [
           Row(
             children: [
-              const Text(
-                'ADMIN',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              FutureBuilder(
+                future: getName(),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.hasData ? snapshot.data! : "Loading...",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  );
+                },
               ),
+
               const SizedBox(width: 16),
               CircleAvatar(
                 backgroundColor: Colors.white,
@@ -102,12 +143,14 @@ class AdminDashboardPage extends StatelessWidget {
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
+
               const SizedBox(width: 40),
             ],
           ),
         ],
+        automaticallyImplyLeading: false,
       ),
-      drawer: _buildDrawer(context),
+      // drawer: _buildDrawer(context),
       floatingActionButton: SizedBox(
         width: 130,
         height: 80,
