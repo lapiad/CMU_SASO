@@ -1,8 +1,30 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
+
+Future<String> getName() async {
+  final box = GetStorage();
+  final url = Uri.parse(
+    '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+  ); // Replace with your FastAPI URL
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    print(data['first_name']);
+    return data['first_name'];
+  } else {
+    // error message
+    return "null";
+  }
+}
 
 double expandedClass = 400.0;
 
@@ -14,12 +36,29 @@ class ViolationLogsPage extends StatefulWidget {
 }
 
 class _ViolationLogsPageState extends State<ViolationLogsPage> {
-  void _showAdminMenu(BuildContext context) {
-    showMenu(
+  Future<String> getName() async {
+    final box = GetStorage();
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+    ); // Replace with your FastAPI URL
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data['first_name']);
+      return data['first_name'];
+    } else {
+      // error message
+      return "null";
+    }
+  }
+
+  void _showAdminMenu(BuildContext context) async {
+    final result = await showMenu(
       context: context,
       position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
       items: [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
@@ -35,12 +74,26 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
             child: Text('System Settings', style: TextStyle(fontSize: 20)),
           ),
         ),
-        const PopupMenuItem<String>(
-          value: 'logout',
-          child: Text("Sign Out", style: TextStyle(fontSize: 20)),
+        PopupMenuItem(
+          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
+          onTap: () {
+            final box = GetStorage();
+            box.remove('user_id');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Login()),
+            );
+          },
         ),
       ],
     );
+
+    if (result == 'signout') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
   }
 
   int countByStatus(String status, List<ViolationRecord> records) =>
@@ -184,9 +237,14 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
         actions: [
           Row(
             children: [
-              const Text(
-                'ADMIN',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              FutureBuilder(
+                future: getName(),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.hasData ? snapshot.data! : "Loading...",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  );
+                },
               ),
               const SizedBox(width: 16),
               CircleAvatar(

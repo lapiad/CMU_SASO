@@ -1,9 +1,31 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
+
 import 'package:flutter_application_1/pages/violation_logs.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
+
+Future<String> getName() async {
+  final box = GetStorage();
+  final url = Uri.parse(
+    '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+  ); // Replace with your FastAPI URL
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    print(data['first_name']);
+    return data['first_name'];
+  } else {
+    // error message
+    return "null";
+  }
+}
 
 class UserMgt extends StatefulWidget {
   const UserMgt({super.key});
@@ -13,6 +35,23 @@ class UserMgt extends StatefulWidget {
 }
 
 class _UserMgtState extends State<UserMgt> {
+  Future<String> getName() async {
+    final box = GetStorage();
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+    ); // Replace with your FastAPI URL
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data['first_name']);
+      return data['first_name'];
+    } else {
+      // error message
+      return "null";
+    }
+  }
+
   static const List<Map<String, dynamic>> _initialUsers = [
     {
       'name': 'Nadine Lustre',
@@ -50,29 +89,12 @@ class _UserMgtState extends State<UserMgt> {
 
   List<Map<String, dynamic>> users = List.from(_initialUsers);
 
-  void _onMenuSelected(BuildContext context, String value) {
-    switch (value) {
-      case 'profile':
-        // TODO: Implement Profile Settings navigation
-        break;
-      case 'system':
-        // TODO: Implement System Settings navigation
-        break;
-      case 'logout':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Login()),
-        );
-        break;
-    }
-  }
-
-  Future<void> _showPopupMenu(BuildContext context, Offset position) async {
-    final value = await showMenu<String>(
+  Future<void> _showPopupMenu(BuildContext context) async {
+    final result = await showMenu(
       context: context,
-      position: RelativeRect.fromLTRB(1000, 80, 50, 0),
-      items: const [
-        PopupMenuItem(
+      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      items: [
+        const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
@@ -80,7 +102,7 @@ class _UserMgtState extends State<UserMgt> {
             child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'system',
           child: SizedBox(
             width: 300,
@@ -88,19 +110,24 @@ class _UserMgtState extends State<UserMgt> {
             child: Text('System Settings', style: TextStyle(fontSize: 20)),
           ),
         ),
-        PopupMenuItem(
-          value: 'logout',
+        const PopupMenuItem(
+          value: 'signout',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Sign Out', style: TextStyle(fontSize: 20)),
+            child: Text("Sign Out", style: TextStyle(fontSize: 20)),
           ),
         ),
       ],
     );
 
-    if (value != null) {
-      _onMenuSelected(context, value);
+    if (result == 'signout') {
+      final box = GetStorage();
+      box.remove('user_id');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
     }
   }
 
@@ -113,30 +140,27 @@ class _UserMgtState extends State<UserMgt> {
         foregroundColor: Colors.black,
         elevation: 1,
         actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                'ADMIN',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.black,
+          Row(
+            children: [
+              FutureBuilder(
+                future: getName(),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.hasData ? snapshot.data! : "Loading...",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  );
+                },
+              ),
+              const SizedBox(width: 16),
+              CircleAvatar(
+                backgroundColor: Colors.white,
+                child: IconButton(
+                  icon: const Icon(Icons.person, color: Colors.black),
+                  onPressed: () => _showPopupMenu(context),
                 ),
               ),
-            ),
-          ),
-          GestureDetector(
-            onTapDown: (TapDownDetails details) {
-              _showPopupMenu(context, details.globalPosition);
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: CircleAvatar(
-                backgroundColor: Color.fromARGB(255, 253, 250, 250),
-                child: Icon(Icons.person, color: Colors.black),
-              ),
-            ),
+              const SizedBox(width: 40),
+            ],
           ),
           const SizedBox(width: 16),
         ],
