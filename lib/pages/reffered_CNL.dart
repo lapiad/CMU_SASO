@@ -98,6 +98,34 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ),
   ];
 
+  Color getActionStatusColor(String status) {
+    switch (status) {
+      case 'Pending':
+        return Colors.yellow;
+      case 'Reviewed':
+        return Colors.green;
+      case 'Referred':
+        return Colors.red;
+      case 'Under Review':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'first offense':
+        return Colors.yellowAccent;
+      case 'second offense':
+        return Colors.orange;
+      case 'high':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   int countByStatus(String status) =>
       records.where((r) => r.status == status).length;
 
@@ -390,90 +418,167 @@ class _RefferedCnlState extends State<RefferedCnl> {
           ],
         ),
         const SizedBox(height: 20),
-
-        // Table
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: 1887,
-            child: Table(
-              border: TableBorder.all(color: Colors.grey.shade400),
-              columnWidths: const {
-                0: FixedColumnWidth(180),
-                1: FixedColumnWidth(180),
-                2: FixedColumnWidth(180),
-                3: FixedColumnWidth(180),
-                4: FixedColumnWidth(180),
-                5: FixedColumnWidth(180),
-                6: FixedColumnWidth(180),
-                7: FixedColumnWidth(180),
-                8: FixedColumnWidth(150),
-              },
-              children: [
-                TableRow(
-                  decoration: BoxDecoration(color: Colors.grey.shade300),
-                  children: const [
-                    _TableCell('Student Name', bold: true),
-                    _TableCell('Student ID', bold: true),
-                    _TableCell('Violation', bold: true),
-                    _TableCell('Priority', bold: true, center: true),
-                    _TableCell('Status', bold: true, center: true),
-                    _TableCell('Reported By', bold: true),
-                    _TableCell('Referred Date', bold: true),
-                    _TableCell('Hearing Date', bold: true),
-                    _TableCell('Actions', bold: true, center: true),
-                  ],
+        SizedBox(
+          width: 1900,
+          height: 700,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: const [
+                DataColumn(
+                  label: Text(
+                    'Student Name',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                ...records.map((record) {
-                  return TableRow(
-                    children: [
-                      _TableCell(record.studentName),
-                      _TableCell(record.studentId),
-                      _TableCell(
+                DataColumn(
+                  label: Text(
+                    'Student ID',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Violation',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Priority',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Status',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Reported By',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Referred Date',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Hearing Date',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Actions',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+              rows: records.map((record) {
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        record.studentName,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        record.studentId,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
                         record.violation,
-                        color: Colors.red,
-                        bold: true,
-                      ),
-                      _TableCell(
-                        record.priority ?? '-',
-                        bgColor: Colors.red.shade100,
-                        center: true,
-                      ),
-                      _TableCell(
-                        record.status,
-                        bgColor: Colors.blue.shade100,
-                        center: true,
-                      ),
-                      _TableCell(record.reportedBy),
-                      _TableCell(record.referredDate ?? '-'),
-                      _TableCell(record.hearingDate ?? '-'),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.visibility),
-                              tooltip: 'View',
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.copy),
-                              tooltip: 'Documents',
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              tooltip: 'Edit',
-                              onPressed: () {},
-                            ),
-                          ],
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
                       ),
-                    ],
-                  );
-                }).toList(),
-              ],
+                    ),
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: getStatusColor(record.priority ?? ''),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          record.priority ?? '',
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: getActionStatusColor(record.status),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          record.status,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        record.reportedBy,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        record.referredDate ?? '-',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        record.hearingDate ?? '-',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    DataCell(
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.visibility, size: 25),
+                            tooltip: 'View',
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, size: 25),
+                            tooltip: 'Documents',
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 25),
+                            tooltip: 'Edit',
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         ),
@@ -650,13 +755,25 @@ class _RefferedCnlState extends State<RefferedCnl> {
                         });
                         Navigator.pop(context);
                       },
-                      child: const Text('Clear Filters'),
+                      child: const Text(
+                        'Clear Filters',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text('Apply'),
+                      child: const Text(
+                        'Apply',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -691,37 +808,4 @@ class ViolationRecord {
     this.referredDate,
     this.hearingDate,
   });
-}
-
-class _TableCell extends StatelessWidget {
-  final String text;
-  final bool bold;
-  final bool center;
-  final Color? color;
-  final Color? bgColor;
-
-  const _TableCell(
-    this.text, {
-    this.bold = false,
-    this.center = false,
-    this.color,
-    this.bgColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: bgColor,
-      padding: const EdgeInsets.all(12),
-      alignment: center ? Alignment.center : Alignment.centerLeft,
-      child: Text(
-        text,
-        style: TextStyle(
-          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-          color: color,
-          fontSize: 20,
-        ),
-      ),
-    );
-  }
 }

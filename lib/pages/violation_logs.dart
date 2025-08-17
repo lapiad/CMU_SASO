@@ -4,6 +4,8 @@ import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 
+double expandedClass = 400.0;
+
 class ViolationLogsPage extends StatefulWidget {
   const ViolationLogsPage({super.key});
 
@@ -677,13 +679,25 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                         });
                         Navigator.pop(context);
                       },
-                      child: const Text('Clear Filters'),
+                      child: const Text(
+                        'Clear Filters',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text('Apply'),
+                      child: const Text(
+                        'Apply',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),

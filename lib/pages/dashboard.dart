@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
@@ -36,8 +35,32 @@ class Dashboard extends StatelessWidget {
   }
 }
 
-class AdminDashboardPage extends StatelessWidget {
+double expandedClass = 400.0;
+
+class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
+
+  @override
+  _AdminDashboardPageState createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  Future<String> getName() async {
+    final box = GetStorage();
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+    ); // Replace with your FastAPI URL
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data['first_name']);
+      return data['first_name'];
+    } else {
+      // error message
+      return "null";
+    }
+  }
 
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
@@ -98,7 +121,11 @@ class AdminDashboardPage extends StatelessWidget {
         ),
         icon: Icon(icon, size: 28),
         label: Text(label, style: const TextStyle(fontSize: 18)),
-        onPressed: onPressed,
+        onPressed: () async {
+          setState(() {
+            expandedClass = 200.0;
+          });
+        },
       ),
     );
   }
@@ -124,7 +151,6 @@ class AdminDashboardPage extends StatelessWidget {
                   );
                 },
               ),
-
               const SizedBox(width: 16),
               CircleAvatar(
                 backgroundColor: Colors.white,
@@ -133,14 +159,12 @@ class AdminDashboardPage extends StatelessWidget {
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
-
               const SizedBox(width: 40),
             ],
           ),
         ],
         automaticallyImplyLeading: false,
       ),
-      // drawer: _buildDrawer(context),
       floatingActionButton: SizedBox(
         width: 130,
         height: 80,
@@ -164,53 +188,37 @@ class AdminDashboardPage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    const SizedBox(width: 90),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: _InfoCard(
-                        title: "Total Cases",
-                        value: "3",
-                        subtitle: "Active Referrals",
-                        icon: Icons.cases_outlined,
-                        iconColor: Colors.red,
-                      ),
+                    const SizedBox(width: 40),
+                    _InfoCard(
+                      title: "Total Cases",
+                      value: "3",
+                      subtitle: "Active Referrals",
+                      icon: Icons.cases_outlined,
+                      iconColor: Colors.red,
                     ),
                     const SizedBox(width: 30),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: _InfoCard(
-                        title: "Under Review",
-                        value: "1",
-                        subtitle: "Being Evaluated",
-                        icon: Icons.reviews,
-                        iconColor: Colors.blue,
-                      ),
+                    _InfoCard(
+                      title: "Under Review",
+                      value: "1",
+                      subtitle: "Being Evaluated",
+                      icon: Icons.reviews,
+                      iconColor: Colors.blue,
                     ),
                     const SizedBox(width: 30),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: _InfoCard(
-                        title: "Scheduled",
-                        value: "1",
-                        subtitle: "Hearings Set",
-                        icon: Icons.schedule,
-                        iconColor: Colors.teal,
-                      ),
+                    _InfoCard(
+                      title: "Scheduled",
+                      value: "1",
+                      subtitle: "Hearings Set",
+                      icon: Icons.schedule,
+                      iconColor: Colors.teal,
                     ),
                     const SizedBox(width: 30),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: _InfoCard(
-                        title: "Pending",
-                        value: "1",
-                        subtitle: "Awaiting Decision",
-                        icon: Icons.pending,
-                        iconColor: Colors.yellow,
-                      ),
+                    _InfoCard(
+                      title: "Pending",
+                      value: "1",
+                      subtitle: "Awaiting Decision",
+                      icon: Icons.pending,
+                      iconColor: Colors.yellow,
                     ),
                   ],
                 ),
@@ -446,8 +454,8 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 300,
-      height: 180,
+      width: 420,
+      height: 200,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: iconColor.withOpacity(0.1),

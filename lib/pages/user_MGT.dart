@@ -5,10 +5,15 @@ import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 
-class UserMgt extends StatelessWidget {
+class UserMgt extends StatefulWidget {
   const UserMgt({super.key});
 
-  static const List<Map<String, dynamic>> users = [
+  @override
+  State<UserMgt> createState() => _UserMgtState();
+}
+
+class _UserMgtState extends State<UserMgt> {
+  static const List<Map<String, dynamic>> _initialUsers = [
     {
       'name': 'Nadine Lustre',
       'email': 'nadine.l@cityofmalabonuniversity.edu.ph',
@@ -43,13 +48,15 @@ class UserMgt extends StatelessWidget {
     },
   ];
 
+  List<Map<String, dynamic>> users = List.from(_initialUsers);
+
   void _onMenuSelected(BuildContext context, String value) {
     switch (value) {
       case 'profile':
-        // TODO: Implement Profile Settings page navigation
+        // TODO: Implement Profile Settings navigation
         break;
       case 'system':
-        // TODO: Implement System Settings page navigation
+        // TODO: Implement System Settings navigation
         break;
       case 'logout':
         Navigator.pushReplacement(

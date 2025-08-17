@@ -36,6 +36,8 @@ const List<Map<String, dynamic>> cases = [
   },
 ];
 
+double expandedClass = 400.0;
+
 class SummaryReportsPage extends StatefulWidget {
   const SummaryReportsPage({super.key});
   @override
@@ -236,52 +238,36 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 child: Row(
                   children: [
                     const SizedBox(width: 30.0),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: buildSummaryCard(
-                        "This Week",
-                        cases.length.toString(),
-                        "Total Violations",
-                        Icons.next_week_outlined,
-                        const Color.fromARGB(255, 240, 48, 48),
-                      ),
+                    buildSummaryCard(
+                      "This Week",
+                      cases.length.toString(),
+                      "Total Violations",
+                      Icons.next_week_outlined,
+                      const Color.fromARGB(255, 240, 48, 48),
                     ),
                     const SizedBox(width: 30.0),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: buildSummaryCard(
-                        "Resolved",
-                        countByStatus('Under Review').toString(),
-                        "Case Closed",
-                        Icons.done,
-                        const Color.fromARGB(255, 52, 96, 241),
-                      ),
+                    buildSummaryCard(
+                      "Resolved",
+                      countByStatus('Under Review').toString(),
+                      "Case Closed",
+                      Icons.done,
+                      const Color.fromARGB(255, 52, 96, 241),
                     ),
                     const SizedBox(width: 30.0),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: buildSummaryCard(
-                        "Pending",
-                        countByStatus('Scheduled Hearing').toString(),
-                        "Awaiting Review",
-                        Icons.pending,
-                        const Color.fromARGB(255, 13, 200, 224),
-                      ),
+                    buildSummaryCard(
+                      "Pending",
+                      countByStatus('Scheduled Hearing').toString(),
+                      "Awaiting Review",
+                      Icons.pending,
+                      const Color.fromARGB(255, 13, 200, 224),
                     ),
                     const SizedBox(width: 30.0),
-                    SizedBox(
-                      width: 400,
-                      height: 200,
-                      child: buildSummaryCard(
-                        "Referred",
-                        countByStatus('Pending').toString(),
-                        "To Council",
-                        Icons.move_down_outlined,
-                        const Color.fromARGB(255, 232, 235, 19),
-                      ),
+                    buildSummaryCard(
+                      "Referred",
+                      countByStatus('Pending').toString(),
+                      "To Council",
+                      Icons.move_down_outlined,
+                      const Color.fromARGB(255, 232, 235, 19),
                     ),
                   ],
                 ),
@@ -502,8 +488,8 @@ Widget buildSummaryCard(
   Color color,
 ) {
   return Container(
-    width: 300,
-    height: 150,
+    width: 430,
+    height: 200,
     margin: const EdgeInsets.only(right: 16),
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
