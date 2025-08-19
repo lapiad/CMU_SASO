@@ -293,8 +293,8 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
-                        width: 75,
-                        height: 75,
+                        width: 100,
+                        height: 100,
                         child: Image.asset(
                           'images/logos.png',
                           color: Colors.white,
