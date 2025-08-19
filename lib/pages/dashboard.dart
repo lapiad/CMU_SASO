@@ -9,6 +9,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter_application_1/components/summaryWidget.dart';
+import 'package:flutter_application_1/components/violationEntryWidget.dart';
+
 Future<String> getName() async {
   final box = GetStorage();
   final url = Uri.parse(
@@ -112,6 +115,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -130,15 +134,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'CMU-SASO DASHBOARD',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
         backgroundColor: Colors.blue[900],
         foregroundColor: Colors.black,
-        elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.menu),
+          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
+          padding: EdgeInsets.zero,
           onPressed: () {
             setState(() {
               sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
@@ -165,7 +169,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: const Icon(Icons.person, color: Colors.black),
+                  icon: const Icon(
+                    Icons.person,
+                    size: 25,
+                    color: Color.fromARGB(255, 10, 44, 158),
+                  ),
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
@@ -188,482 +196,307 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: sideMenuSize,
-                  child: sideMenuSize != 0.0
-                      ? Container(
-                          decoration: BoxDecoration(color: Colors.blue[900]),
-                          padding: const EdgeInsets.all(16),
-                          margin: const EdgeInsets.only(right: 16),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height - 90,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 30),
-                                SizedBox(
-                                  width: 100,
-                                  height: 100,
-                                  child: Image.asset(
-                                    'images/logos.png',
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 30),
-                                const Text(
-                                  "CMU_SASO DRMS",
-                                  style: TextStyle(
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 30),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16.0,
-                                  ),
-                                  child: Text(
-                                    'GENERAL',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.home,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  title: const Text(
-                                    'Dashboard',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  tileColor: Colors.white,
-                                  onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const Dashboard(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                SizedBox(height: 10),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.list_alt,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  title: const Text(
-                                    'Violation Logs',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  tileColor: Colors.white,
-                                  onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ViolationLogsPage(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                SizedBox(height: 10),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.pie_chart,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  title: const Text(
-                                    'Summary of Reports',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  tileColor: Colors.white,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SummaryReportsPage(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                SizedBox(height: 10),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.bookmark,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  title: const Text(
-                                    'Referred to Council',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  tileColor: Colors.white,
-                                  onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => RefferedCnl(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16.0,
-                                  ),
-                                  child: Text(
-                                    'ADMINISTRATION',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  title: const Text(
-                                    'User management',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => UserMgt(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : SizedBox(),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: SizedBox(
-                    child: Expanded(
-                      child: Container(
-                        padding: EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            Scrollbar(
-                              thumbVisibility: true,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    const SizedBox(width: 40),
-                                    _InfoCard(
-                                      title: "Total Cases",
-                                      value: "3",
-                                      subtitle: "Active Referrals",
-                                      icon: Icons.cases_outlined,
-                                      iconColor: Colors.red,
-                                    ),
-                                    const SizedBox(width: 30),
-                                    _InfoCard(
-                                      title: "Under Review",
-                                      value: "1",
-                                      subtitle: "Being Evaluated",
-                                      icon: Icons.reviews,
-                                      iconColor: Colors.blue,
-                                    ),
-                                    const SizedBox(width: 30),
-                                    _InfoCard(
-                                      title: "Scheduled",
-                                      value: "1",
-                                      subtitle: "Hearings Set",
-                                      icon: Icons.schedule,
-                                      iconColor: Colors.teal,
-                                    ),
-                                    const SizedBox(width: 30),
-                                    _InfoCard(
-                                      title: "Pending",
-                                      value: "1",
-                                      subtitle: "Awaiting Decision",
-                                      icon: Icons.pending,
-                                      iconColor: Colors.yellow,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    color: Colors.white,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: const [
-                                        Text(
-                                          'Recent Violations',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 30,
-                                          ),
-                                        ),
-                                        SizedBox(height: 20),
-                                        _ViolationEntry(
-                                          name: 'Annie Batumbakal',
-                                          description: 'Improper Uniform',
-                                          offenseType: 'First Offense',
-                                          offenseColor: Colors.amber,
-                                        ),
-                                        _ViolationEntry(
-                                          name: 'Juan Dela Cruz',
-                                          description: 'Late Attendance',
-                                          offenseType: 'Second Offense',
-                                          offenseColor: Colors.deepOrange,
-                                        ),
-                                        _ViolationEntry(
-                                          name: 'James Reid',
-                                          description: 'Serious Misconduct',
-                                          offenseType: 'Third Offense',
-                                          offenseColor: Colors.red,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(25),
-                                    color: Colors.white,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Quick Actions",
-                                          style: TextStyle(
-                                            fontSize: 30,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        SizedBox(
-                                          width: 800,
-                                          height: 80,
-                                          child: buildActionButton(
-                                            Icons.add,
-                                            "Create New Violation Report",
-                                            () {
-                                              showDialog(
-                                                context: context,
-                                                builder: (_) =>
-                                                    const CreateViolationDialog(),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 800,
-                                          height: 80,
-                                          child: buildActionButton(
-                                            Icons.article_outlined,
-                                            " View Pending Reports",
-                                            () {
-                                              showDialog(
-                                                context: context,
-                                                builder: (_) =>
-                                                    PendingReportsDialog(),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 800,
-                                          height: 80,
-                                          child: buildActionButton(
-                                            Icons.bar_chart,
-                                            "Generate Weekly Report",
-                                            () {},
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+            if (sideMenuSize != 0.0)
+              SizedBox(
+                width: sideMenuSize,
+                height: 900,
+                child: Container(
+                  decoration: BoxDecoration(color: Colors.blue[900]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 75,
+                        height: 75,
+                        child: Image.asset(
+                          'images/logos.png',
+                          color: Colors.white,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "  CMU_SASO DRMS",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'GENERAL',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.home,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Dashboard',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Dashboard(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.list_alt,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Violation Logs',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViolationLogsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.pie_chart,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Summary of Reports',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SummaryReportsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Referred to Council',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RefferedCnl(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'ADMINISTRATION',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'User management',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => UserMgt()),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
+            Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(width: 40),
+                      SummaryWidget(
+                        title: "Total Cases",
+                        value: "3",
+                        subtitle: "Active Referrals",
+                        icon: Icons.cases_outlined,
+                        iconColor: Colors.red,
+                      ),
+                      SizedBox(width: 30),
+                      SummaryWidget(
+                        title: "Under Review",
+                        value: "1",
+                        subtitle: "Being Evaluated",
+                        icon: Icons.reviews,
+                        iconColor: Colors.blue,
+                      ),
+                      SizedBox(width: 30),
+                      SummaryWidget(
+                        title: "Scheduled",
+                        value: "1",
+                        subtitle: "Hearings Set",
+                        icon: Icons.schedule,
+                        iconColor: Colors.teal,
+                      ),
+                      SizedBox(width: 30),
+                      SummaryWidget(
+                        title: "Pending",
+                        value: "1",
+                        subtitle: "Awaiting Decision",
+                        icon: Icons.pending,
+                        iconColor: Colors.yellow,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.white,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Recent Violations',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                ),
+                              ),
+                              SizedBox(height: 20),
+                              ViolationEntry(
+                                name: 'Annie Batumbakal',
+                                description: 'Improper Uniform',
+                                offenseType: 'First Offense',
+                                offenseColor: Colors.amber,
+                              ),
+                              ViolationEntry(
+                                name: 'Juan Dela Cruz',
+                                description: 'Late Attendance',
+                                offenseType: 'Second Offense',
+                                offenseColor: Colors.deepOrange,
+                              ),
+                              ViolationEntry(
+                                name: 'James Reid',
+                                description: 'Serious Misconduct',
+                                offenseType: 'Third Offense',
+                                offenseColor: Colors.red,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(25),
+                          color: Colors.white,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Quick Actions",
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 80,
+                                child: buildActionButton(
+                                  Icons.add,
+                                  "Create New Violation Report",
+                                  () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) =>
+                                          const CreateViolationDialog(),
+                                    );
+                                  },
+                                ),
+                              ),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 80,
+                                child: buildActionButton(
+                                  Icons.article_outlined,
+                                  " View Pending Reports",
+                                  () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => PendingReportsDialog(),
+                                    );
+                                  },
+                                ),
+                              ),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 80,
+                                child: buildActionButton(
+                                  Icons.bar_chart,
+                                  "Generate Weekly Report",
+                                  () {},
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String subtitle;
-  final IconData icon;
-  final Color iconColor;
-
-  const _InfoCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 420,
-      height: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: iconColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              Icon(icon, color: iconColor, size: 40),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ViolationEntry extends StatelessWidget {
-  final String name;
-  final String description;
-  final String offenseType;
-  final Color offenseColor;
-
-  const _ViolationEntry({
-    required this.name,
-    required this.description,
-    required this.offenseType,
-    required this.offenseColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(4),
-        color: Colors.white,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 20, color: Colors.black87),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: offenseColor,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              offenseType,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
-            ),
-          ),
-        ],
       ),
     );
   }

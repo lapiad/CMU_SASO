@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
@@ -135,10 +136,21 @@ class _UserMgtState extends State<UserMgt> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Management'),
-        backgroundColor: const Color.fromARGB(255, 182, 175, 175),
+        title: const Text(
+          'User Management',
+          style: TextStyle(color: Colors.white, fontSize: 30),
+        ),
+        backgroundColor: Colors.blue[900],
         foregroundColor: Colors.black,
-        elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            setState(() {
+              sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
+            });
+          },
+        ),
         actions: [
           Row(
             children: [
@@ -147,7 +159,11 @@ class _UserMgtState extends State<UserMgt> {
                 builder: (context, snapshot) {
                   return Text(
                     snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
                   );
                 },
               ),
@@ -165,7 +181,6 @@ class _UserMgtState extends State<UserMgt> {
           const SizedBox(width: 16),
         ],
       ),
-      drawer: _buildDrawer(context),
       floatingActionButton: SizedBox(
         width: 130,
         height: 80,
@@ -178,114 +193,238 @@ class _UserMgtState extends State<UserMgt> {
           backgroundColor: Colors.blue,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  const SizedBox(width: 30.0),
-                  _buildSummaryCard(
-                    "Total Users",
-                    users.length.toString(),
-                    "Registered Users",
-                    Icons.supervised_user_circle_outlined,
-                    const Color.fromARGB(255, 33, 31, 196),
+            if (sideMenuSize != 0.0)
+              SizedBox(
+                width: sideMenuSize,
+                height: 900,
+                child: Container(
+                  decoration: BoxDecoration(color: Colors.blue[900]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 75,
+                        height: 75,
+                        child: Image.asset(
+                          'images/logos.png',
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "  CMU_SASO DRMS",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'GENERAL',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.home,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Dashboard',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Dashboard(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.list_alt,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Violation Logs',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViolationLogsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.pie_chart,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Summary of Reports',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SummaryReportsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Referred to Council',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RefferedCnl(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'ADMINISTRATION',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'User management',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => UserMgt()),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 30.0),
-                  _buildSummaryCard(
-                    "Active Users",
-                    users
-                        .where((u) => u['status'] == 'Active')
-                        .length
-                        .toString(),
-                    "Currently Active",
-                    Icons.online_prediction,
-                    const Color.fromARGB(255, 24, 206, 33),
-                  ),
-                  const SizedBox(width: 30.0),
-                  _buildSummaryCard(
-                    "SASO Officers",
-                    users
-                        .where((u) => u['role'] == 'SASO Officer')
-                        .length
-                        .toString(),
-                    "Officers Assigned",
-                    Icons.shield,
-                    const Color.fromARGB(255, 47, 199, 204),
-                  ),
-                  const SizedBox(width: 30.0),
-                  _buildSummaryCard(
-                    "Admins",
-                    users.where((u) => u['role'] == 'Admin').length.toString(),
-                    "System Administrators",
-                    Icons.admin_panel_settings,
-                    const Color.fromARGB(255, 44, 71, 194),
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            const TextField(
-              decoration: InputDecoration(
-                hintText: "Search by name, ID, or violation...",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-            ),
-            const SizedBox(height: 20),
+            SizedBox(height: 30),
             Expanded(
-              child: ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  return _buildUserCard(users[index]);
-                },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Total Users",
+                          value: '15',
+                          subtitle: "Registered Users",
+                          icon: Icons.supervised_user_circle_outlined,
+                          iconColor: const Color.fromARGB(255, 33, 31, 196),
+                        ),
+                        const SizedBox(width: 30.0),
+
+                        SummaryWidget(
+                          title: "Active Users",
+                          value: users
+                              .where((u) => u['status'] == 'Active')
+                              .length
+                              .toString(),
+                          subtitle: "Currently Active",
+                          icon: Icons.online_prediction,
+                          iconColor: Color.fromARGB(255, 24, 206, 33),
+                        ),
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "SASO Officers",
+                          value: users
+                              .where((u) => u['role'] == 'SASO Officer')
+                              .length
+                              .toString(),
+                          subtitle: "Officers Assigned",
+                          icon: Icons.shield,
+                          iconColor: const Color.fromARGB(255, 47, 199, 204),
+                        ),
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Admins",
+                          value: users
+                              .where((u) => u['role'] == 'Admin')
+                              .length
+                              .toString(),
+                          subtitle: "System Administrators",
+                          icon: Icons.admin_panel_settings,
+                          iconColor: const Color.fromARGB(255, 44, 71, 194),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: "Search by name, ID, or violation...",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.search),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-    String title,
-    String value,
-    String subtitle,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      width: 430,
-      height: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 40),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          Text(subtitle, style: const TextStyle(color: Colors.black54)),
-        ],
       ),
     );
   }
@@ -315,102 +454,6 @@ class _UserMgtState extends State<UserMgt> {
             ),
             IconButton(icon: const Icon(Icons.edit), onPressed: () {}),
             IconButton(icon: const Icon(Icons.delete), onPressed: () {}),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Container(
-        color: Colors.grey[200],
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxHeight: 70.0,
-                      maxWidth: 70.0,
-                    ),
-                    child: Image.asset('images/logos.png'),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "CMU_SASO DRMS",
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'GENERAL',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black54,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Dashboard'),
-              tileColor: Colors.grey[300],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const Dashboard()),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.list_alt),
-              title: const Text('Violation Logs'),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ViolationLogsPage()),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.pie_chart),
-              title: const Text('Summary of Reports'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SummaryReportsPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.bookmark),
-              title: const Text('Referred to Council'),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RefferedCnl()),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'ADMINISTRATION',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black54,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('User management'),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const UserMgt()),
-              ),
-            ),
           ],
         ),
       ),

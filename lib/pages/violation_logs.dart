@@ -230,10 +230,21 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Violation Logs'),
-        backgroundColor: const Color.fromARGB(255, 182, 175, 175),
+        title: const Text(
+          'Violation Logs',
+          style: TextStyle(color: Colors.white, fontSize: 30),
+        ),
+        backgroundColor: Colors.blue[900],
         foregroundColor: Colors.black,
-        elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            setState(() {
+              sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
+            });
+          },
+        ),
         actions: [
           Row(
             children: [
@@ -242,7 +253,11 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 builder: (context, snapshot) {
                   return Text(
                     snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
                   );
                 },
               ),
@@ -250,7 +265,11 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               CircleAvatar(
                 backgroundColor: const Color.fromARGB(255, 253, 250, 250),
                 child: IconButton(
-                  icon: const Icon(Icons.person, color: Colors.black),
+                  icon: const Icon(
+                    Icons.person,
+                    size: 25,
+                    color: Color.fromARGB(255, 10, 44, 158),
+                  ),
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
@@ -259,306 +278,402 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxHeight: 70.0,
-                      maxWidth: 70.0,
-                    ),
-                    child: Image.asset('images/logos.png'),
-                  ),
-                  const Text(
-                    "CMU_SASO DRMS",
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text("Dashboard"),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Dashboard()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.list_alt),
-              title: const Text("Violation Logs"),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.pie_chart),
-              title: const Text("Summary of Reports"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SummaryReportsPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.bookmark),
-              title: const Text("Referred to Council"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RefferedCnl()),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.people),
-              title: const Text("User management"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const UserMgt()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      hintText:
-                          'Search by student name, student ID, or violation...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+            if (sideMenuSize != 0.0)
+              SizedBox(
+                width: sideMenuSize,
+                height: 900,
+                child: Container(
+                  decoration: BoxDecoration(color: Colors.blue[900]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 75,
+                        height: 75,
+                        child: Image.asset(
+                          'images/logos.png',
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _showFilterDialog();
-                  },
-                  icon: const Icon(Icons.filter_list),
-                  label: const Text(
-                    "Filter By",
-                    style: TextStyle(fontSize: 19),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: 1900,
-              height: 700,
-              child: Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Student Name',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "  CMU_SASO DRMS",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'GENERAL',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Student ID',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.home,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Dashboard',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Dashboard(),
                             ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.list_alt,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Violation Logs',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViolationLogsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.pie_chart,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Summary of Reports',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SummaryReportsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Referred to Council',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RefferedCnl(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'ADMINISTRATION',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Violation',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 30,
                         ),
-                      ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Status',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        title: const Text(
+                          'User management',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
-                      ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Report Status',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Reported By',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 185,
-                          child: Text(
-                            'Date & Time',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      DataColumn(
-                        label: SizedBox(
-                          width: 190,
-                          child: Text(
-                            'Actions',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => UserMgt()),
+                          );
+                        },
                       ),
                     ],
-                    rows: records.map((record) {
-                      return DataRow(
-                        cells: [
-                          DataCell(
-                            Text(
-                              record.studentName,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              record.studentId,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              record.violation,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: getStatusColor(record.status),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                record.status,
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: getActionStatusColor(
-                                  record.reportStatus,
-                                ),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                record.reportStatus,
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              record.reportedBy,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              record.dateTime,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          DataCell(
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.remove_red_eye,
-                                    size: 30,
-                                  ),
-                                  onPressed: () {},
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit, size: 30),
-                                  onPressed: () {},
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
                   ),
+                ),
+              ),
+            SizedBox(height: 30),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search),
+                              hintText:
+                                  'Search by student name, student ID, or violation...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _showFilterDialog();
+                          },
+                          icon: const Icon(Icons.filter_list),
+                          label: const Text(
+                            "Filter By",
+                            style: TextStyle(fontSize: 19),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: 1900,
+                      height: 700,
+                      child: Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: const [
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Student Name',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Student ID',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Violation',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Status',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Report Status',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Reported By',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 185,
+                                  child: Text(
+                                    'Date & Time',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 190,
+                                  child: Text(
+                                    'Actions',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            rows: records.map((record) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(
+                                      record.studentName,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      record.studentId,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      record.violation,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: getStatusColor(record.status),
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(
+                                        record.status,
+                                        style: const TextStyle(fontSize: 18),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: getActionStatusColor(
+                                          record.reportStatus,
+                                        ),
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(
+                                        record.reportStatus,
+                                        style: const TextStyle(fontSize: 18),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      record.reportedBy,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      record.dateTime,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.remove_red_eye,
+                                            size: 30,
+                                          ),
+                                          onPressed: () {},
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            size: 30,
+                                          ),
+                                          onPressed: () {},
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

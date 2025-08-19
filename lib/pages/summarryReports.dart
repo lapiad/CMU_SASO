@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
@@ -57,7 +58,7 @@ const List<Map<String, dynamic>> cases = [
   },
 ];
 
-double expandedClass = 400.0;
+double expandedClass = 0.0;
 
 class SummaryReportsPage extends StatefulWidget {
   const SummaryReportsPage({super.key});
@@ -147,10 +148,21 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Summary of Reports'),
-        backgroundColor: const Color.fromARGB(255, 182, 175, 175),
+        title: const Text(
+          'Summary of Reports',
+          style: TextStyle(color: Colors.white, fontSize: 30),
+        ),
+        backgroundColor: Colors.blue[900],
         foregroundColor: Colors.black,
-        elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            setState(() {
+              sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
+            });
+          },
+        ),
         actions: [
           Row(
             children: [
@@ -159,7 +171,11 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 builder: (context, snapshot) {
                   return Text(
                     snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
                   );
                 },
               ),
@@ -167,7 +183,11 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
               CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: const Icon(Icons.person, color: Colors.black),
+                  icon: const Icon(
+                    Icons.person,
+                    size: 25,
+                    color: Color.fromARGB(255, 10, 44, 158),
+                  ),
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
@@ -176,400 +196,434 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: Container(
-          color: Colors.grey[200],
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxHeight: 70.0,
-                        maxWidth: 70.0,
-                      ),
-                      child: Image.asset('images/logos.png'),
-                    ),
-                    const Text(
-                      "CMU_SASO DRMS",
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'GENERAL',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Dashboard'),
-                tileColor: Colors.grey[300],
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Dashboard()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.list_alt),
-                title: const Text('Violation Logs'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ViolationLogsPage(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.pie_chart),
-                title: const Text('Summary of Reports'),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.bookmark),
-                title: const Text('Referred to Council'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RefferedCnl()),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'ADMINISTRATION',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('User management'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const UserMgt()),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (sideMenuSize != 0.0)
+              SizedBox(
+                width: sideMenuSize,
+                height: 900,
+                child: Container(
+                  decoration: BoxDecoration(color: Colors.blue[900]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 75,
+                        height: 75,
+                        child: Image.asset(
+                          'images/logos.png',
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "  CMU_SASO DRMS",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'GENERAL',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.home,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Dashboard',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Dashboard(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.list_alt,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Violation Logs',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViolationLogsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.pie_chart,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Summary of Reports',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SummaryReportsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Referred to Council',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RefferedCnl(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'ADMINISTRATION',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'User management',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => UserMgt()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   children: [
-                    const SizedBox(width: 30.0),
-                    buildSummaryCard(
-                      "This Week",
-                      cases.length.toString(),
-                      "Total Violations",
-                      Icons.next_week_outlined,
-                      const Color.fromARGB(255, 240, 48, 48),
+                    Row(
+                      children: [
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "This Week",
+                          value: cases.length.toString(),
+                          subtitle: "Total Violations",
+                          icon: Icons.next_week_outlined,
+                          iconColor: const Color.fromARGB(255, 240, 48, 48),
+                        ),
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Resolved",
+                          value: countByStatus('Under Review').toString(),
+                          subtitle: "Case Closed",
+                          icon: Icons.done,
+                          iconColor: const Color.fromARGB(255, 52, 96, 241),
+                        ),
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Pending",
+                          value: countByStatus('Scheduled Hearing').toString(),
+                          subtitle: "Awaiting Review",
+                          icon: Icons.pending,
+                          iconColor: const Color.fromARGB(255, 13, 200, 224),
+                        ),
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Referred",
+                          value: countByStatus('Pending').toString(),
+                          subtitle: "To Council",
+                          icon: Icons.move_down_outlined,
+                          iconColor: const Color.fromARGB(255, 232, 235, 19),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 30.0),
-                    buildSummaryCard(
-                      "Resolved",
-                      countByStatus('Under Review').toString(),
-                      "Case Closed",
-                      Icons.done,
-                      const Color.fromARGB(255, 52, 96, 241),
-                    ),
-                    const SizedBox(width: 30.0),
-                    buildSummaryCard(
-                      "Pending",
-                      countByStatus('Scheduled Hearing').toString(),
-                      "Awaiting Review",
-                      Icons.pending,
-                      const Color.fromARGB(255, 13, 200, 224),
-                    ),
-                    const SizedBox(width: 30.0),
-                    buildSummaryCard(
-                      "Referred",
-                      countByStatus('Pending').toString(),
-                      "To Council",
-                      Icons.move_down_outlined,
-                      const Color.fromARGB(255, 232, 235, 19),
+
+                    const SizedBox(height: 20),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 300,
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Violation Types Distribution",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Expanded(
+                                          child: PieChart(
+                                            PieChartData(
+                                              sections: distribution.entries
+                                                  .toList()
+                                                  .asMap()
+                                                  .entries
+                                                  .map((entry) {
+                                                    int index = entry.key;
+                                                    String key =
+                                                        entry.value.key;
+                                                    int value =
+                                                        entry.value.value;
+                                                    return PieChartSectionData(
+                                                      value: value.toDouble(),
+                                                      title: key,
+                                                      color:
+                                                          Colors
+                                                              .primaries[index %
+                                                              Colors
+                                                                  .primaries
+                                                                  .length],
+                                                      radius: 50,
+                                                      titleStyle:
+                                                          const TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                    );
+                                                  })
+                                                  .toList(),
+                                              borderData: FlBorderData(
+                                                show: false,
+                                              ),
+                                              centerSpaceRadius: 40,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                height: 300,
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Weekly Violation Trends",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Expanded(
+                                          child: BarChart(
+                                            BarChartData(
+                                              alignment:
+                                                  BarChartAlignment.spaceAround,
+                                              maxY: 20,
+                                              barGroups: [
+                                                BarChartGroupData(
+                                                  x: 1,
+                                                  barRods: [
+                                                    BarChartRodData(
+                                                      toY: 14,
+                                                      color: Colors.red,
+                                                      width: 20,
+                                                    ),
+                                                    BarChartRodData(
+                                                      toY: 16,
+                                                      color: Colors.orange,
+                                                      width: 20,
+                                                    ),
+                                                  ],
+                                                ),
+                                                BarChartGroupData(
+                                                  x: 2,
+                                                  barRods: [
+                                                    BarChartRodData(
+                                                      toY: 18,
+                                                      color: Colors.red,
+                                                      width: 20,
+                                                    ),
+                                                    BarChartRodData(
+                                                      toY: 17,
+                                                      color: Colors.blueAccent,
+                                                      width: 20,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 300,
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Offense Level Distribution",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        buildProgressRow(
+                                          "First Offense",
+                                          45,
+                                          Colors.blue,
+                                        ),
+                                        buildProgressRow(
+                                          "Second Offense",
+                                          50,
+                                          Colors.blueAccent,
+                                        ),
+                                        buildProgressRow(
+                                          "Third Offense",
+                                          25,
+                                          Colors.lightBlue,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                height: 300,
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Most Common Violations",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        buildViolationItem(
+                                          "Late Attendance",
+                                          5,
+                                        ),
+                                        buildViolationItem(
+                                          "Improper Uniform",
+                                          10,
+                                        ),
+                                        buildViolationItem("Cheating", 4),
+                                        buildViolationItem("Plagiarism", 25),
+                                        buildViolationItem(
+                                          "Disruptive Behavior",
+                                          6,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: 300,
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Violation Types Distribution",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Expanded(
-                                    child: PieChart(
-                                      PieChartData(
-                                        sections: distribution.entries
-                                            .toList()
-                                            .asMap()
-                                            .entries
-                                            .map((entry) {
-                                              int index = entry.key;
-                                              String key = entry.value.key;
-                                              int value = entry.value.value;
-                                              return PieChartSectionData(
-                                                value: value.toDouble(),
-                                                title: key,
-                                                color:
-                                                    Colors.primaries[index %
-                                                        Colors
-                                                            .primaries
-                                                            .length],
-                                                radius: 50,
-                                                titleStyle: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              );
-                                            })
-                                            .toList(),
-                                        borderData: FlBorderData(show: false),
-                                        centerSpaceRadius: 40,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          height: 300,
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Weekly Violation Trends",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Expanded(
-                                    child: BarChart(
-                                      BarChartData(
-                                        alignment:
-                                            BarChartAlignment.spaceAround,
-                                        maxY: 20,
-                                        barGroups: [
-                                          BarChartGroupData(
-                                            x: 1,
-                                            barRods: [
-                                              BarChartRodData(
-                                                toY: 14,
-                                                color: Colors.red,
-                                                width: 20,
-                                              ),
-                                              BarChartRodData(
-                                                toY: 16,
-                                                color: Colors.orange,
-                                                width: 20,
-                                              ),
-                                            ],
-                                          ),
-                                          BarChartGroupData(
-                                            x: 2,
-                                            barRods: [
-                                              BarChartRodData(
-                                                toY: 18,
-                                                color: Colors.red,
-                                                width: 20,
-                                              ),
-                                              BarChartRodData(
-                                                toY: 17,
-                                                color: Colors.blueAccent,
-                                                width: 20,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: 300,
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Offense Level Distribution",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  buildProgressRow(
-                                    "First Offense",
-                                    45,
-                                    Colors.blue,
-                                  ),
-                                  buildProgressRow(
-                                    "Second Offense",
-                                    50,
-                                    Colors.blueAccent,
-                                  ),
-                                  buildProgressRow(
-                                    "Third Offense",
-                                    25,
-                                    Colors.lightBlue,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          height: 300,
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Most Common Violations",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  buildViolationItem("Late Attendance", 5),
-                                  buildViolationItem("Improper Uniform", 10),
-                                  buildViolationItem("Cheating", 4),
-                                  buildViolationItem("Plagiarism", 25),
-                                  buildViolationItem("Disruptive Behavior", 6),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
-
-Widget buildSummaryCard(
-  String title,
-  String value,
-  String subtitle,
-  IconData icon,
-  Color color,
-) {
-  return Container(
-    width: 430,
-    height: 200,
-    margin: const EdgeInsets.only(right: 16),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: color.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: color),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: color, size: 36),
-        const SizedBox(height: 12),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(subtitle, style: const TextStyle(color: Colors.black54)),
-      ],
-    ),
-  );
 }
 
 Widget buildProgressRow(String title, int value, Color color) {
