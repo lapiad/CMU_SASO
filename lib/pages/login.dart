@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/guardscreen.dart';
+import 'package:flutter_application_1/page/Guard_DSH.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
@@ -20,7 +20,7 @@ void _onItemTapped(BuildContext context) async {
       // Navigate to the admin dashboard
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Guardscreen()),
+        MaterialPageRoute(builder: (context) => SchoolGuardHome()),
       );
     } else {
       box.write('user_role', data['role']);
@@ -59,6 +59,8 @@ Future<String?> loginUser(String username, String password) async {
 }
 
 class Login extends StatelessWidget {
+  const Login({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

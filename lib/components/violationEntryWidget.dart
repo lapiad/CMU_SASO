@@ -7,6 +7,7 @@ class ViolationEntry extends StatelessWidget {
   final Color offenseColor;
 
   const ViolationEntry({
+    super.key,
     required this.name,
     required this.description,
     required this.offenseType,

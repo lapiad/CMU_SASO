@@ -28,7 +28,7 @@ Future<String> getName() async {
 }
 
 class RefferedCnl extends StatefulWidget {
-  RefferedCnl({super.key});
+  const RefferedCnl({super.key});
 
   @override
   State<RefferedCnl> createState() => _RefferedCnlState();

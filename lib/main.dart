@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/guardscreen.dart';
+import 'package:flutter_application_1/page/Guard_DSH.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 
@@ -16,7 +17,7 @@ Widget firstScreen(BuildContext context) {
   final box = GetStorage();
   if (box.read('user_id') != null) {
     if (box.read('user_role') == 'guard') {
-      return Guardscreen();
+      return SchoolGuardHome();
     } else {
       return Dashboard();
     }
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
       title: 'VioTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Dashboard(), //firstScreen(context),
+      home: UserMgt(), //firstScreen(context),
     );
   }
 }

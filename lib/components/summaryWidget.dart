@@ -8,6 +8,7 @@ class SummaryWidget extends StatelessWidget {
   final Color iconColor;
 
   const SummaryWidget({
+    super.key,
     required this.title,
     required this.value,
     required this.subtitle,

@@ -656,6 +656,8 @@ class CreateViolationDialog extends StatelessWidget {
 }
 
 class PendingReportsDialog extends StatelessWidget {
+  const PendingReportsDialog({super.key});
+
   void _confirmAction(BuildContext context, String action) {
     Navigator.pop(context); // Close dialog
     ScaffoldMessenger.of(context).showSnackBar(
