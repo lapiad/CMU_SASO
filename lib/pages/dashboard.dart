@@ -108,6 +108,53 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  final List<ViolationRecord> allRecords = [
+    ViolationRecord(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      referredDate: '02-15-2025',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecord(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      violation: 'Smoking on Campus',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      referredDate: '07-16-2025',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecord(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      referredDate: '02-15-2025',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecord(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      violation: 'Smoking on Campus',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      referredDate: '07-16-2025',
+      hearingDate: '07-20-2025',
+    ),
+  ];
+
   Widget buildActionButton(
     IconData icon,
     String label,
@@ -128,6 +175,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         onPressed: onPressed,
       ),
     );
+  }
+
+  int countByStatus(String statusMatch) {
+    return cases
+        .where((c) => (c['status'] as String).contains(statusMatch))
+        .length;
   }
 
   @override
@@ -184,15 +237,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         automaticallyImplyLeading: false,
       ),
       floatingActionButton: SizedBox(
-        width: 130,
-        height: 80,
+        width: 150,
+        height: 70,
         child: FloatingActionButton(
           onPressed: () {
             // Add new user logic here
           },
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.blue[900],
           tooltip: 'Add New User',
-          child: const Icon(Icons.add, size: 50),
+          child: const Text(
+            'Add User',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -357,37 +417,40 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 children: [
                   Row(
                     children: [
-                      SizedBox(width: 40),
+                      const SizedBox(width: 10.0),
                       SummaryWidget(
                         title: "Total Cases",
-                        value: "3",
+                        value: allRecords.length.toString(),
                         subtitle: "Active Referrals",
                         icon: Icons.cases_outlined,
-                        iconColor: Colors.red,
+                        iconColor: const Color.fromARGB(255, 33, 31, 196),
                       ),
-                      SizedBox(width: 30),
+
+                      const SizedBox(width: 30.0),
                       SummaryWidget(
                         title: "Under Review",
-                        value: "1",
+                        value: countByStatus("Under Review").toString(),
                         subtitle: "Being Evaluated",
                         icon: Icons.reviews,
-                        iconColor: Colors.blue,
+                        iconColor: const Color.fromARGB(255, 24, 206, 33),
                       ),
-                      SizedBox(width: 30),
+
+                      const SizedBox(width: 30.0),
                       SummaryWidget(
-                        title: "Scheduled",
-                        value: "1",
+                        title: "Sceduled",
+                        value: countByStatus("Sceduled").toString(),
                         subtitle: "Hearings Set",
                         icon: Icons.schedule,
-                        iconColor: Colors.teal,
+                        iconColor: const Color.fromARGB(255, 97, 77, 197),
                       ),
-                      SizedBox(width: 30),
+
+                      const SizedBox(width: 30.0),
                       SummaryWidget(
                         title: "Pending",
-                        value: "1",
+                        value: countByStatus("Pending").toString(),
                         subtitle: "Awaiting Decision",
                         icon: Icons.pending,
-                        iconColor: Colors.yellow,
+                        iconColor: const Color.fromARGB(255, 44, 71, 194),
                       ),
                     ],
                   ),
@@ -790,4 +853,28 @@ class PendingReportsDialog extends StatelessWidget {
       ),
     );
   }
+}
+
+class ViolationRecord {
+  final String studentName;
+  final String studentId;
+  final String violation;
+  final String status;
+  final String reportedBy;
+  final String dateTime;
+  final String? priority;
+  final String? referredDate;
+  final String? hearingDate;
+
+  ViolationRecord({
+    required this.studentName,
+    required this.studentId,
+    required this.violation,
+    required this.status,
+    required this.reportedBy,
+    required this.dateTime,
+    this.priority,
+    this.referredDate,
+    this.hearingDate,
+  });
 }

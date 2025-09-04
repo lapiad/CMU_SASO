@@ -78,6 +78,146 @@ class _UserManagementPageState extends State<UserMgt> {
       role: "Admin",
       status: "Active",
     ),
+    User(
+      name: "Nadine Lustre",
+      email: "nadine.l@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "SASO Officer",
+      status: "Active",
+    ),
+    User(
+      name: "Mang Tani",
+      email: "tani.guard@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Sarah Geronimo",
+      email: "sarahg@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Admin User",
+      email: "admin@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "Admin",
+      status: "Active",
+    ),
+    User(
+      name: "Nadine Lustre",
+      email: "nadine.l@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "SASO Officer",
+      status: "Active",
+    ),
+    User(
+      name: "Mang Tani",
+      email: "tani.guard@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Sarah Geronimo",
+      email: "sarahg@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Admin User",
+      email: "admin@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "Admin",
+      status: "Active",
+    ),
+    User(
+      name: "Nadine Lustre",
+      email: "nadine.l@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "SASO Officer",
+      status: "Active",
+    ),
+    User(
+      name: "Mang Tani",
+      email: "tani.guard@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Sarah Geronimo",
+      email: "sarahg@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Admin User",
+      email: "admin@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "Admin",
+      status: "Active",
+    ),
+    User(
+      name: "Nadine Lustre",
+      email: "nadine.l@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "SASO Officer",
+      status: "Active",
+    ),
+    User(
+      name: "Mang Tani",
+      email: "tani.guard@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Sarah Geronimo",
+      email: "sarahg@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Admin User",
+      email: "admin@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "Admin",
+      status: "Active",
+    ),
+    User(
+      name: "Nadine Lustre",
+      email: "nadine.l@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "SASO Officer",
+      status: "Active",
+    ),
+    User(
+      name: "Mang Tani",
+      email: "tani.guard@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Sarah Geronimo",
+      email: "sarahg@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
+    User(
+      name: "Admin User",
+      email: "admin@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "Admin",
+      status: "Active",
+    ),
   ];
 
   void _showAdminMenu(BuildContext context) async {
@@ -311,7 +451,7 @@ class _UserManagementPageState extends State<UserMgt> {
               ),
             ),
           Expanded(
-            child: Padding(
+            child: Container(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
@@ -355,90 +495,109 @@ class _UserManagementPageState extends State<UserMgt> {
                             .toString(),
                         subtitle: "System Administrators",
                         icon: Icons.admin_panel_settings,
-                        iconColor: const Color.fromARGB(255, 101, 54, 230),
+                        iconColor: const Color.fromARGB(255, 101, 54, 250),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.search),
-                            hintText:
-                                'Search by student name, student ID, or violation...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search),
+                              hintText:
+                                  'Search by student name, student ID, or violation...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
+                            onChanged: (value) {},
                           ),
-                          onChanged: (value) {},
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                   SizedBox(
-                    height: 500,
                     width: 1900,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
+                    height: 560,
+                    child: Expanded(
                       child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                        scrollDirection: Axis.vertical,
                         child: DataTable(
                           columns: const [
                             DataColumn(
-                              label: Text(
-                                'Name',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 200,
+                                child: Text(
+                                  'Name',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Email',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 250,
+                                child: Text(
+                                  'Email',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Office',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 300,
+                                child: Text(
+                                  'Office',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Role',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 150,
+                                child: Text(
+                                  'Role',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 150,
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Actions',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 150,
+                                child: Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
@@ -520,12 +679,24 @@ class _UserManagementPageState extends State<UserMgt> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Add user logic
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
+      floatingActionButton: SizedBox(
+        width: 130,
+        height: 60,
+        child: FloatingActionButton(
+          onPressed: () {
+            // Add new user logic here
+          },
+          backgroundColor: Colors.blue[900],
+          tooltip: 'Add New User',
+          child: const Text(
+            'Add User',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
