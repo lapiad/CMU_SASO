@@ -258,3 +258,4 @@ ios/*
 macos/*
 linux/*
 windows/*
+.flutter-plugins-dependencies
