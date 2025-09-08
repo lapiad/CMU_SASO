@@ -17,7 +17,7 @@ Future<String> getName() async {
   ); // Replace with your FastAPI URL
   final response = await http.get(url);
 
-  if (response.statusCode == 150) {
+  if (response.statusCode == 200) {
     final data = json.decode(response.body);
     print(data['first_name']);
     return data['first_name'];
@@ -42,7 +42,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ); // Replace with your FastAPI URL
     final response = await http.get(url);
 
-    if (response.statusCode == 150) {
+    if (response.statusCode == 200) {
       final data = json.decode(response.body);
       print(data['first_name']);
       return data['first_name'];
@@ -110,7 +110,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ViolationRecord(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
-      violation: 'Dress code',
+      violation: 'Smoking on Campus',
       status: 'Referred',
       reportedBy: 'Nadine Lustre',
       dateTime: '07-15-2025 5:30PM',
@@ -132,95 +132,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ViolationRecord(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Reviewed',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Under Review',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Referred',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Pending',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Reviewed',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Under Review',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Referred',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Pending',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
+      violation: 'Smoking on Campus',
       status: 'Reviewed',
       reportedBy: 'Nadine Lustre',
       dateTime: '07-15-2025 5:30PM',
@@ -365,209 +277,210 @@ class _RefferedCnlState extends State<RefferedCnl> {
           ),
         ],
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (sideMenuSize != 0.0)
-            SizedBox(
-              width: sideMenuSize,
-              height: 900,
-              child: Container(
-                decoration: BoxDecoration(color: Colors.blue[900]),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: Image.asset(
-                        'images/logos.png',
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    const Text(
-                      "  CMU_SASO DRMS",
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'GENERAL',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.home,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Dashboard',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Dashboard(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.list_alt,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Violation Logs',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ViolationLogsPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.pie_chart,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Summary of Reports',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SummaryReportsPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.bookmark,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Referred to Council',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RefferedCnl(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'ADMINISTRATION',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'User management',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => UserMgt()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Row(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.zero,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (sideMenuSize != 0.0)
+              SizedBox(
+                width: sideMenuSize,
+                height: 900,
+                child: Container(
+                  decoration: BoxDecoration(color: Colors.blue[900]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(width: 10.0),
-                      SummaryWidget(
-                        title: "Total Cases",
-                        value: allRecords.length.toString(),
-                        subtitle: "Active Referrals",
-                        icon: Icons.cases_outlined,
-                        iconColor: const Color.fromARGB(255, 33, 31, 196),
+                      SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: Image.asset(
+                          'images/logos.png',
+                          color: Colors.white,
+                        ),
                       ),
-
-                      const SizedBox(width: 30.0),
-                      SummaryWidget(
-                        title: "Under Review",
-                        value: countByStatus("Under Review").toString(),
-                        subtitle: "Being Evaluated",
-                        icon: Icons.reviews,
-                        iconColor: const Color.fromARGB(255, 24, 206, 33),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "  CMU_SASO DRMS",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-
-                      const SizedBox(width: 30.0),
-                      SummaryWidget(
-                        title: "Reviewed",
-                        value: countByStatus("Under Review").toString(),
-                        subtitle: "Finalized Cases",
-                        icon: Icons.check_circle_outline,
-                        iconColor: const Color.fromARGB(255, 97, 77, 197),
+                      const SizedBox(height: 30),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'GENERAL',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
-
-                      const SizedBox(width: 30.0),
-                      SummaryWidget(
-                        title: "Pending",
-                        value: countByStatus("Pending").toString(),
-                        subtitle: "Awaiting Decision",
-                        icon: Icons.pending,
-                        iconColor: const Color.fromARGB(255, 44, 71, 194),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.home,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Dashboard',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Dashboard(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.list_alt,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Violation Logs',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ViolationLogsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.pie_chart,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Summary of Reports',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SummaryReportsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'Referred to Council',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RefferedCnl(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'ADMINISTRATION',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        title: const Text(
+                          'User management',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => UserMgt()),
+                          );
+                        },
                       ),
                     ],
                   ),
+                ),
+              ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const SizedBox(width: 10.0),
+                        SummaryWidget(
+                          title: "Total Cases",
+                          value: allRecords.length.toString(),
+                          subtitle: "Active Referrals",
+                          icon: Icons.cases_outlined,
+                          iconColor: const Color.fromARGB(255, 33, 31, 196),
+                        ),
 
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: Row(
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Under Review",
+                          value: countByStatus("Under Review").toString(),
+                          subtitle: "Being Evaluated",
+                          icon: Icons.reviews,
+                          iconColor: const Color.fromARGB(255, 24, 206, 33),
+                        ),
+
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Sceduled",
+                          value: countByStatus("Sceduled").toString(),
+                          subtitle: "Hearings Set",
+                          icon: Icons.check_circle_outline,
+                          iconColor: const Color.fromARGB(255, 97, 77, 197),
+                        ),
+
+                        const SizedBox(width: 30.0),
+                        SummaryWidget(
+                          title: "Pending",
+                          value: countByStatus("Pending").toString(),
+                          subtitle: "Awaiting Decision",
+                          icon: Icons.pending,
+                          iconColor: const Color.fromARGB(255, 44, 71, 194),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
@@ -593,19 +506,16 @@ class _RefferedCnlState extends State<RefferedCnl> {
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: 1900,
-                    height: 552,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: DataTable(
-                        columns: const [
-                          DataColumn(
-                            label: SizedBox(
-                              width: 200,
-                              child: Text(
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width: 1900,
+                      height: 700,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(
+                              label: Text(
                                 'Student Name',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -613,11 +523,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 150,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Student ID',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -625,11 +532,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 170,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Violation',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -637,11 +541,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 100,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Priority',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -649,11 +550,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 140,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Status',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -661,11 +559,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 173,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Reported By',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -673,11 +568,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 184,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Referred Date',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -685,11 +577,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 175,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Hearing Date',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -697,11 +586,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 120,
-                              child: Text(
+                            DataColumn(
+                              label: Text(
                                 'Actions',
                                 style: TextStyle(
                                   fontSize: 30,
@@ -709,120 +595,122 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                        rows: filteredRecords.map((record) {
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                Text(
-                                  record.studentName,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  record.studentId,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  record.violation,
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
+                          ],
+                          rows: filteredRecords.map((record) {
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    record.studentName,
+                                    style: const TextStyle(fontSize: 20),
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                DataCell(
+                                  Text(
+                                    record.studentId,
+                                    style: const TextStyle(fontSize: 20),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: getStatusColor(
-                                      record.priority ?? '',
+                                ),
+                                DataCell(
+                                  Text(
+                                    record.violation,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Text(
-                                    record.priority ?? '',
-                                    style: const TextStyle(fontSize: 20),
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: getActionStatusColor(record.status),
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Text(
-                                    record.status,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  record.reportedBy,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  record.referredDate ?? '-',
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  record.hearingDate ?? '-',
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.visibility,
-                                        size: 25,
+                                DataCell(
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: getStatusColor(
+                                        record.priority ?? '',
                                       ),
-                                      tooltip: 'View',
-                                      onPressed: () {},
+                                      borderRadius: BorderRadius.circular(5),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.copy, size: 25),
-                                      tooltip: 'Documents',
-                                      onPressed: () {},
+                                    child: Text(
+                                      record.priority ?? '',
+                                      style: const TextStyle(fontSize: 20),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, size: 25),
-                                      tooltip: 'Edit',
-                                      onPressed: () {},
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                                DataCell(
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: getActionStatusColor(
+                                        record.status,
+                                      ),
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Text(
+                                      record.status,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    record.reportedBy,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    record.referredDate ?? '-',
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    record.hearingDate ?? '-',
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                DataCell(
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.visibility,
+                                          size: 25,
+                                        ),
+                                        tooltip: 'View',
+                                        onPressed: () {},
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.copy, size: 25),
+                                        tooltip: 'Documents',
+                                        onPressed: () {},
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, size: 25),
+                                        tooltip: 'Edit',
+                                        onPressed: () {},
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
