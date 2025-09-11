@@ -393,7 +393,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         'Summary of Reports',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.push(
+                      onTap: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => SummaryReportsPage(),

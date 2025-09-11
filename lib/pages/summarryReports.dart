@@ -291,7 +291,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => SummaryReportsPage(),

@@ -208,13 +208,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               FutureBuilder(
                 future: getName(),
                 builder: (context, snapshot) {
-                  return Text(
-                    snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
+                  return Column(
+                    children: [
+                      Text(
+                        snapshot.hasData ? snapshot.data! : "Loading...",
+                        style: TextStyle(fontSize: 19, color: Colors.white),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -350,7 +350,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => SummaryReportsPage(),
@@ -577,18 +577,51 @@ class CreateViolationDialog extends StatelessWidget {
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       content: SizedBox(
-        width: 500,
+        width: 600,
+        height: 500,
         child: SingleChildScrollView(
           child: Column(
             children: [
-              buildTextField("Student ID"),
-              buildTextField("Student Name"),
-              buildDropdown("Violation Type"),
-              buildOffenseDropdown("Offense Level"),
-              buildDatePicker(context),
-              buildFilePicker("Photo Evidence (optional)"),
-              buildTextField("Reported by"),
-              buildRoleDropdown("Role"),
+              FutureBuilder(
+                future: getName(),
+                builder: (context, snapshot) {
+                  return Column(
+                    children: [
+                      buildTextField("Student ID"),
+                      buildTextField("Student Name"),
+                      buildDropdown("Violation Type"),
+                      buildOffenseDropdown("Offense Level"),
+                      buildDatePicker(context),
+                      buildFilePicker("Photo Evidence (optional)"),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: "Reported By",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        controller: TextEditingController(
+                          text: snapshot.hasData
+                              ? snapshot.data!
+                              : "Loading...",
+                        ),
+                        readOnly: true,
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: "Role",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        controller: TextEditingController(text: " Adimn"),
+                        readOnly: true,
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -718,137 +751,217 @@ class CreateViolationDialog extends StatelessWidget {
   }
 }
 
-class PendingReportsDialog extends StatelessWidget {
-  const PendingReportsDialog({super.key});
+class Report {
+  final String id;
+  final String date;
+  final String studentName;
+  final String studentId;
+  final String violation;
+  final String reporter;
+  final String offenseLevel;
+  bool isSelected;
 
-  void _confirmAction(BuildContext context, String action) {
-    Navigator.pop(context); // Close dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Report $action'),
-        backgroundColor: action == 'approved' ? Colors.green : Colors.red,
-      ),
-    );
-  }
+  Report({
+    required this.id,
+    required this.date,
+    required this.studentName,
+    required this.studentId,
+    required this.violation,
+    required this.reporter,
+    required this.offenseLevel,
+    this.isSelected = false,
+  });
+}
 
-  void _showRejectConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Icon(Icons.cancel, color: Colors.red, size: 48),
-        content: Text(
-          'Are you sure you want to reject this violation report? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            child: Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Report rejected'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            child: Text('Confirm Reject'),
-          ),
-        ],
-      ),
-    );
+class PendingReportsDialog extends StatefulWidget {
+  PendingReportsDialog({super.key});
+
+  @override
+  _PendingReportsDialogState createState() => _PendingReportsDialogState();
+}
+
+class _PendingReportsDialogState extends State<PendingReportsDialog> {
+  final List<Report> reports = [
+    Report(
+      id: 'VR-2025-001',
+      date: '02-15-2025',
+      studentName: 'John Doe',
+      studentId: '202201234',
+      violation: 'Bullying',
+      reporter: 'Mang Tani (Guard)',
+      offenseLevel: 'First Offense',
+    ),
+    Report(
+      id: 'VR-2025-002',
+      date: '02-16-2025',
+      studentName: 'Jane Smith',
+      studentId: '202201235',
+      violation: 'Cheating',
+      reporter: 'Nadine Lustre',
+      offenseLevel: 'Second Offense',
+    ),
+    Report(
+      id: 'VR-2025-003',
+      date: '02-17-2025',
+      studentName: 'Carlos Reyes',
+      studentId: '202201236',
+      violation: 'Vandalism',
+      reporter: 'James Reid',
+      offenseLevel: 'Third Offense',
+    ),
+  ];
+
+  Color getOffenseColor(String offenseLevel) {
+    switch (offenseLevel) {
+      case 'Third Offense':
+        return Colors.red;
+      case 'Second Offense':
+        return Colors.orange;
+      default:
+        return Colors.amber;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Pending Violation Reports"),
+      title: const Text("Pending Reports"),
       content: SizedBox(
         width: 900,
-        height: 400,
+        height: 600,
         child: SingleChildScrollView(
           child: Column(
             children: [
-              pendingReportTile(
-                context,
-                id: "1",
-                student: "Annie Batumbakal",
-                violation: "Improper Uniform",
-                offense: "First Offense",
+              Padding(
+                padding: EdgeInsets.all(12),
+                child: Text(
+                  'Unapproved reports are automatically deleted after 15 days.',
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
               ),
-              pendingReportTile(
-                context,
-                id: "2",
-                student: "Juan Dela Cruz",
-                violation: "Late Attendance",
-                offense: "Second Offense",
+              SizedBox(
+                height: 600,
+                child: Expanded(
+                  child: ListView.builder(
+                    itemCount: reports.length,
+                    itemBuilder: (context, index) {
+                      final report = reports[index];
+                      return Container(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: report.isSelected,
+                              onChanged: (value) {
+                                setState(() {
+                                  report.isSelected = value!;
+                                });
+                              },
+                            ),
+                            SizedBox(width: 10),
+                            Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey[300],
+                              child: Icon(Icons.person, size: 30),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    report.id,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Reported on ${report.date}",
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    "Student: ${report.studentName} (${report.studentId})",
+                                  ),
+                                  Text("Violation: ${report.violation}"),
+                                  Text("Reported by: ${report.reporter}"),
+                                  SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      Chip(
+                                        label: Text(
+                                          report.offenseLevel,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        backgroundColor: getOffenseColor(
+                                          report.offenseLevel,
+                                        ),
+                                      ),
+                                      Chip(
+                                        label: Text(
+                                          "Under Review",
+                                          style: TextStyle(color: Colors.blue),
+                                        ),
+                                        backgroundColor: Colors.transparent,
+                                        shape: StadiumBorder(
+                                          side: BorderSide(color: Colors.blue),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
-              pendingReportTile(
-                context,
-                id: "3",
-                student: "James Reid",
-                violation: "Serious Misconduct",
-                offense: "Third Offense",
-              ),
-              pendingReportTile(
-                context,
-                id: "4",
-                student: "burnok",
-                violation: "Serious Misconduct",
-                offense: "Third Offense",
-              ),
+              if (reports.any((r) => r.isSelected))
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[900],
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                    onPressed: () {
+                      // Approve selected reports
+                    },
+                    icon: Icon(Icons.check, color: Colors.white, size: 20),
+                    label: Text(
+                      "Approve",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            "Close",
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget pendingReportTile(
-    BuildContext context, {
-    required String id,
-    required String student,
-    required String violation,
-    required String offense,
-  }) {
-    Color offenseColor = offense == 'Third Offense'
-        ? Colors.red
-        : offense == 'Second Offense'
-        ? Colors.orange
-        : Colors.amber;
-
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        title: Text('$id - $student'),
-        subtitle: Text(violation),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(offense, style: TextStyle(color: offenseColor)),
-            SizedBox(width: 8),
-            IconButton(
-              icon: Icon(Icons.check_circle, color: Colors.green),
-              onPressed: () => _confirmAction(context, 'approved'),
-            ),
-            IconButton(
-              icon: Icon(Icons.cancel, color: Colors.red),
-              onPressed: () => _showRejectConfirmation(context),
-            ),
-          ],
         ),
       ),
     );

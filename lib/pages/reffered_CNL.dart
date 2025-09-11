@@ -458,7 +458,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
                       onTap: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => SummaryReportsPage(),
