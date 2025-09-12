@@ -167,276 +167,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       reportedBy: 'Leonard Pascal',
       dateTime: '04-15-2025 3:05PM',
     ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-    ),
   ];
 
   List<ViolationRecord> get filteredRecords {
@@ -920,7 +650,16 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                     children: [
                                       IconButton(
                                         icon: const Icon(Icons.remove_red_eye),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return ViolationDetailsDialog(
+                                                allRecords: record,
+                                              );
+                                            },
+                                          );
+                                        },
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.edit),
@@ -1094,6 +833,118 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           },
         );
       },
+    );
+  }
+}
+
+class ViolationDetailsDialog extends StatelessWidget {
+  final ViolationRecord allRecords;
+
+  const ViolationDetailsDialog({super.key, required this.allRecords});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Violation Details"),
+      content: SizedBox(
+        width: 450,
+        height: 550,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: 10),
+              Text(
+                "Student Name",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              _buildField(allRecords.studentName, "Student Name"),
+              SizedBox(height: 10),
+              Text(
+                "Student ID",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              _buildField(allRecords.studentId, "Student ID"),
+              SizedBox(height: 10),
+              Text(
+                "Violation",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              _buildField(allRecords.violation, "Violation"),
+              SizedBox(height: 10),
+              Text(
+                "Offense Level",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              _buildField(allRecords.status, "Offense Level"),
+              SizedBox(height: 10),
+              Text(
+                "Reported By",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              _buildField(allRecords.reportedBy, "Reported By"),
+              SizedBox(height: 10),
+              Text(
+                "Date & Time",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              _buildField(allRecords.dateTime, "Date & Time"),
+              SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            "Close",
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue[900],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: TextField(
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: value,
+          border: OutlineInputBorder(),
+        ),
+      ),
     );
   }
 }

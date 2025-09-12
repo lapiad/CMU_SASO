@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/GenerateReport.dart';
+import 'package:flutter_application_1/components/createviolation.dart';
+import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
@@ -237,22 +240,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         automaticallyImplyLeading: false,
       ),
       floatingActionButton: SizedBox(
-        width: 150,
+        width: 200,
         height: 70,
-        child: FloatingActionButton(
+        child: FloatingActionButton.extended(
           onPressed: () {
             // Add new user logic here
           },
-          backgroundColor: Colors.blue[900],
-          tooltip: 'Add New User',
-          child: const Text(
-            'Add User',
+          icon: Icon(Icons.add, color: Colors.white, size: 35),
+          label: const Text(
+            "Add New-User",
             style: TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
-              fontSize: 20,
               color: Colors.white,
             ),
           ),
+          backgroundColor: Colors.blue[900],
         ),
       ),
       body: SingleChildScrollView(
@@ -546,7 +549,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 child: buildActionButton(
                                   Icons.bar_chart,
                                   "Generate Weekly Report",
-                                  () {},
+                                  () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => ReportDialog(),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -559,409 +567,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class CreateViolationDialog extends StatelessWidget {
-  const CreateViolationDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      contentPadding: const EdgeInsets.all(16),
-      title: const Text(
-        "Create New Violation Report",
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
-      content: SizedBox(
-        width: 600,
-        height: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              FutureBuilder(
-                future: getName(),
-                builder: (context, snapshot) {
-                  return Column(
-                    children: [
-                      buildTextField("Student ID"),
-                      buildTextField("Student Name"),
-                      buildDropdown("Violation Type"),
-                      buildOffenseDropdown("Offense Level"),
-                      buildDatePicker(context),
-                      buildFilePicker("Photo Evidence (optional)"),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: "Reported By",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        controller: TextEditingController(
-                          text: snapshot.hasData
-                              ? snapshot.data!
-                              : "Loading...",
-                        ),
-                        readOnly: true,
-                      ),
-                      SizedBox(height: 20),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: "Role",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        controller: TextEditingController(text: " Adimn"),
-                        readOnly: true,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            "Cancel",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {},
-          child: const Text(
-            "Submit",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildTextField(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-    );
-  }
-
-  Widget buildDropdown(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        items: [
-          "Bullying",
-          "Cheating",
-          "Vandalism",
-          "Disrespect",
-          "Dress Code Violation",
-          "Substance Abuse",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (value) {},
-      ),
-    );
-  }
-
-  Widget buildOffenseDropdown(String offenseType) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: offenseType,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        items: [
-          "First Offense",
-          "Second Offense",
-          "Third Offense",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (value) {},
-      ),
-    );
-  }
-
-  Widget buildRoleDropdown(String roleLabel) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: roleLabel,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        items: [
-          "SASO Officer",
-          "School Guard",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (value) {},
-      ),
-    );
-  }
-
-  Widget buildDatePicker(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: "Date of Incident",
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        onTap: () async {
-          await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2100),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget buildFilePicker(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          suffixIcon: const Icon(Icons.attach_file),
-        ),
-        onTap: () {},
-      ),
-    );
-  }
-}
-
-class Report {
-  final String id;
-  final String date;
-  final String studentName;
-  final String studentId;
-  final String violation;
-  final String reporter;
-  final String offenseLevel;
-  bool isSelected;
-
-  Report({
-    required this.id,
-    required this.date,
-    required this.studentName,
-    required this.studentId,
-    required this.violation,
-    required this.reporter,
-    required this.offenseLevel,
-    this.isSelected = false,
-  });
-}
-
-class PendingReportsDialog extends StatefulWidget {
-  PendingReportsDialog({super.key});
-
-  @override
-  _PendingReportsDialogState createState() => _PendingReportsDialogState();
-}
-
-class _PendingReportsDialogState extends State<PendingReportsDialog> {
-  final List<Report> reports = [
-    Report(
-      id: 'VR-2025-001',
-      date: '02-15-2025',
-      studentName: 'John Doe',
-      studentId: '202201234',
-      violation: 'Bullying',
-      reporter: 'Mang Tani (Guard)',
-      offenseLevel: 'First Offense',
-    ),
-    Report(
-      id: 'VR-2025-002',
-      date: '02-16-2025',
-      studentName: 'Jane Smith',
-      studentId: '202201235',
-      violation: 'Cheating',
-      reporter: 'Nadine Lustre',
-      offenseLevel: 'Second Offense',
-    ),
-    Report(
-      id: 'VR-2025-003',
-      date: '02-17-2025',
-      studentName: 'Carlos Reyes',
-      studentId: '202201236',
-      violation: 'Vandalism',
-      reporter: 'James Reid',
-      offenseLevel: 'Third Offense',
-    ),
-  ];
-
-  Color getOffenseColor(String offenseLevel) {
-    switch (offenseLevel) {
-      case 'Third Offense':
-        return Colors.red;
-      case 'Second Offense':
-        return Colors.orange;
-      default:
-        return Colors.amber;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Pending Reports"),
-      content: SizedBox(
-        width: 900,
-        height: 600,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(12),
-                child: Text(
-                  'Unapproved reports are automatically deleted after 15 days.',
-                  style: TextStyle(color: Colors.grey[700]),
-                ),
-              ),
-              SizedBox(
-                height: 600,
-                child: Expanded(
-                  child: ListView.builder(
-                    itemCount: reports.length,
-                    itemBuilder: (context, index) {
-                      final report = reports[index];
-                      return Container(
-                        margin: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              blurRadius: 5,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Checkbox(
-                              value: report.isSelected,
-                              onChanged: (value) {
-                                setState(() {
-                                  report.isSelected = value!;
-                                });
-                              },
-                            ),
-                            SizedBox(width: 10),
-                            Container(
-                              width: 50,
-                              height: 50,
-                              color: Colors.grey[300],
-                              child: Icon(Icons.person, size: 30),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    report.id,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    "Reported on ${report.date}",
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    "Student: ${report.studentName} (${report.studentId})",
-                                  ),
-                                  Text("Violation: ${report.violation}"),
-                                  Text("Reported by: ${report.reporter}"),
-                                  SizedBox(height: 8),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: [
-                                      Chip(
-                                        label: Text(
-                                          report.offenseLevel,
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        backgroundColor: getOffenseColor(
-                                          report.offenseLevel,
-                                        ),
-                                      ),
-                                      Chip(
-                                        label: Text(
-                                          "Under Review",
-                                          style: TextStyle(color: Colors.blue),
-                                        ),
-                                        backgroundColor: Colors.transparent,
-                                        shape: StadiumBorder(
-                                          side: BorderSide(color: Colors.blue),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              if (reports.any((r) => r.isSelected))
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[900],
-                      minimumSize: Size(double.infinity, 50),
-                    ),
-                    onPressed: () {
-                      // Approve selected reports
-                    },
-                    icon: Icon(Icons.check, color: Colors.white, size: 20),
-                    label: Text(
-                      "Approve",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
         ),
       ),
     );

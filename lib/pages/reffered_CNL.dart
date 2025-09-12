@@ -800,11 +800,6 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                       onPressed: () {},
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.copy, size: 25),
-                                      tooltip: 'Documents',
-                                      onPressed: () {},
-                                    ),
-                                    IconButton(
                                       icon: const Icon(Icons.edit, size: 25),
                                       tooltip: 'Edit',
                                       onPressed: () {},

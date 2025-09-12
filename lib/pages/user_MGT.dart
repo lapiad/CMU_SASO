@@ -488,9 +488,9 @@ class _UserManagementPageState extends State<UserMgt> {
                       ),
                       const SizedBox(width: 30),
                       SummaryWidget(
-                        title: "Admins",
+                        title: "Guards",
                         value: users
-                            .where((u) => u.role == "Admin")
+                            .where((u) => u.role == "Guard")
                             .length
                             .toString(),
                         subtitle: "System Administrators",
@@ -531,7 +531,7 @@ class _UserManagementPageState extends State<UserMgt> {
                           columns: const [
                             DataColumn(
                               label: SizedBox(
-                                width: 200,
+                                width: 170,
                                 child: Text(
                                   'Name',
                                   style: TextStyle(
@@ -543,7 +543,7 @@ class _UserManagementPageState extends State<UserMgt> {
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 250,
+                                width: 230,
                                 child: Text(
                                   'Email',
                                   style: TextStyle(
@@ -555,7 +555,7 @@ class _UserManagementPageState extends State<UserMgt> {
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 300,
+                                width: 280,
                                 child: Text(
                                   'Office',
                                   style: TextStyle(
@@ -579,7 +579,7 @@ class _UserManagementPageState extends State<UserMgt> {
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 150,
+                                width: 100,
                                 child: Text(
                                   'Status',
                                   style: TextStyle(
@@ -591,7 +591,7 @@ class _UserManagementPageState extends State<UserMgt> {
                             ),
                             DataColumn(
                               label: SizedBox(
-                                width: 150,
+                                width: 100,
                                 child: Text(
                                   'Actions',
                                   style: TextStyle(
@@ -680,22 +680,22 @@ class _UserManagementPageState extends State<UserMgt> {
         ],
       ),
       floatingActionButton: SizedBox(
-        width: 130,
-        height: 60,
-        child: FloatingActionButton(
+        width: 150,
+        height: 50,
+        child: FloatingActionButton.extended(
           onPressed: () {
             // Add new user logic here
           },
-          backgroundColor: Colors.blue[900],
-          tooltip: 'Add New User',
-          child: const Text(
-            'Add User',
+          icon: Icon(Icons.add, color: Colors.white, size: 30),
+          label: const Text(
+            "Add User",
             style: TextStyle(
-              fontWeight: FontWeight.bold,
               fontSize: 20,
+              fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
+          backgroundColor: Colors.blue[900],
         ),
       ),
     );
