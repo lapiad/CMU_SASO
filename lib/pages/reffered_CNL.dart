@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/components/refferedView.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
@@ -102,6 +102,13 @@ class _RefferedCnlState extends State<RefferedCnl> {
         ),
       ],
     );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
 
     if (result == 'signout') {
       Navigator.pushReplacement(

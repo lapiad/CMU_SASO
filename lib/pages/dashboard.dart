@@ -4,6 +4,7 @@ import 'package:flutter_application_1/components/GenerateReport.dart';
 import 'package:flutter_application_1/components/createviolation.dart';
 import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
@@ -118,6 +119,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ],
     );
 
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
+
     if (result == 'signout') {
       Navigator.pushReplacement(
         context,
@@ -226,19 +234,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               FutureBuilder(
                 future: getName(),
                 builder: (context, snapshot) {
-                  return Column(
-                    children: [
-                      Text(
-                        snapshot.hasData ? snapshot.data! : "Loading...",
-                        style: TextStyle(fontSize: 19, color: Colors.white),
-                      ),
-                    ],
+                  return Text(
+                    snapshot.hasData ? snapshot.data! : "Loading...",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
                   );
                 },
               ),
               const SizedBox(width: 16),
               CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
                 child: IconButton(
                   icon: const Icon(
                     Icons.person,

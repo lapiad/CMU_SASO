@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/components/violationView.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
@@ -87,6 +87,13 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
         ),
       ],
     );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
 
     if (result == 'signout') {
       Navigator.pushReplacement(

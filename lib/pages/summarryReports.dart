@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
@@ -148,6 +149,13 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
         ),
       ],
     );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
 
     if (result == 'signout') {
       Navigator.pushReplacement(
