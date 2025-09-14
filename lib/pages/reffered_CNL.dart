@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/refferedView.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
@@ -55,14 +56,20 @@ class _RefferedCnlState extends State<RefferedCnl> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
         const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
@@ -70,19 +77,28 @@ class _RefferedCnlState extends State<RefferedCnl> {
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.settings, size: 30),
+                SizedBox(width: 16),
+                Text('System Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
-          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
-          onTap: () {
-            final box = GetStorage();
-            box.remove('user_id');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => Login()),
-            );
-          },
+          value: 'signout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -95,95 +111,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
     }
   }
 
-  final List<ViolationRecord> allRecords = [
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Under Review',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Referred',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Pending',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Reviewed',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Under Review',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Referred',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Pending',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecord(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Dress code',
-      status: 'Reviewed',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
+  final List<ViolationRecord> allRecord = [
     ViolationRecord(
       studentName: 'Burnok Sual',
       studentId: '202298765',
@@ -231,7 +159,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
   ];
 
   List<ViolationRecord> get filteredRecords {
-    return allRecords.where((record) {
+    return allRecord.where((record) {
       final query = searchQuery.toLowerCase();
       final matchesSearch =
           query.isEmpty ||
@@ -530,7 +458,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                       const SizedBox(width: 10.0),
                       SummaryWidget(
                         title: "Total Cases",
-                        value: allRecords.length.toString(),
+                        value: allRecord.length.toString(),
                         subtitle: "Active Referrals",
                         icon: Icons.cases_outlined,
                         iconColor: const Color.fromARGB(255, 33, 31, 196),
@@ -797,7 +725,16 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                         size: 25,
                                       ),
                                       tooltip: 'View',
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return Refferedview(
+                                              allRecord: record,
+                                            );
+                                          },
+                                        );
+                                      },
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 25),
@@ -971,6 +908,105 @@ class _RefferedCnlState extends State<RefferedCnl> {
           },
         );
       },
+    );
+  }
+}
+
+class Refferedview extends StatelessWidget {
+  final ViolationRecord allRecord;
+
+  const Refferedview({super.key, required this.allRecord});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      titlePadding: EdgeInsets.zero,
+      title: Container(
+        color: Colors.blue,
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.person_outline, size: 40, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              "Violation Details",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+      content: SizedBox(
+        width: 500,
+        height: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 10),
+              _buildField("Student Name", allRecord.studentName),
+              SizedBox(height: 10),
+              _buildField("Student ID", allRecord.studentId),
+              SizedBox(height: 10),
+              _buildField("Violation", allRecord.violation),
+              SizedBox(height: 10),
+              _buildField("Offense Level", allRecord.status),
+              SizedBox(height: 10),
+              _buildField("Reported By", allRecord.reportedBy),
+              SizedBox(height: 10),
+              _buildField("Date & Time", allRecord.dateTime),
+              SizedBox(height: 10),
+              if (allRecord.priority != null)
+                _buildField("Priority", allRecord.priority!),
+              SizedBox(height: 10),
+              if (allRecord.referredDate != null)
+                _buildField("Referred Date", allRecord.referredDate!),
+              SizedBox(height: 10),
+              if (allRecord.hearingDate != null) SizedBox(height: 10),
+              _buildField("Hearing Date", allRecord.hearingDate!),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            "Close",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(
+              label,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 20),
+              softWrap: true,
+              overflow: TextOverflow.visible,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

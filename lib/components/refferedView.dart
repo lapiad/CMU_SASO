@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class ViolationDetailsDialogs extends StatelessWidget {
-  final ViolationRecord allRecords;
+class Refferedview extends StatelessWidget {
+  final ViolationRecord allRecord;
 
-  const ViolationDetailsDialogs({super.key, required this.allRecords});
+  const Refferedview({super.key, required this.allRecord});
 
   @override
   Widget build(BuildContext context) {
@@ -28,24 +28,33 @@ class ViolationDetailsDialogs extends StatelessWidget {
         ),
       ),
       content: SizedBox(
-        height: 370,
-        width: 450,
+        width: 500,
+        height: 520,
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: 10),
-              _buildDetailRow("Student Name:", allRecords.studentName),
+              _buildField("Student Name", allRecord.studentName),
               SizedBox(height: 10),
-              _buildDetailRow("Student ID:", allRecords.studentId),
+              _buildField("Student ID", allRecord.studentId),
               SizedBox(height: 10),
-              _buildDetailRow("Violation:", allRecords.violation),
+              _buildField("Violation", allRecord.violation),
               SizedBox(height: 10),
-              _buildDetailRow("Offense Level:", allRecords.status),
+              _buildField("Offense Level", allRecord.status),
               SizedBox(height: 10),
-              _buildDetailRow("Reported By:", allRecords.reportedBy),
+              _buildField("Reported By", allRecord.reportedBy),
               SizedBox(height: 10),
-              _buildDetailRow("Date & Time:", allRecords.dateTime),
+              _buildField("Date & Time", allRecord.dateTime),
+              SizedBox(height: 10),
+              if (allRecord.priority != null)
+                _buildField("Priority", allRecord.priority!),
+              SizedBox(height: 10),
+              if (allRecord.referredDate != null)
+                _buildField("Referred Date", allRecord.referredDate!),
+              SizedBox(height: 10),
+              if (allRecord.hearingDate != null) SizedBox(height: 10),
+              _buildField("Hearing Date", allRecord.hearingDate!),
             ],
           ),
         ),
@@ -62,7 +71,7 @@ class ViolationDetailsDialogs extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildField(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -76,7 +85,7 @@ class ViolationDetailsDialogs extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 5,
             child: Text(
               value,
               style: TextStyle(fontSize: 20),
@@ -95,17 +104,21 @@ class ViolationRecord {
   final String studentId;
   final String violation;
   final String status;
-  final String reportStatus;
   final String reportedBy;
   final String dateTime;
+  final String? priority;
+  final String? referredDate;
+  final String? hearingDate;
 
   ViolationRecord({
     required this.studentName,
     required this.studentId,
     required this.violation,
     required this.status,
-    required this.reportStatus,
     required this.reportedBy,
     required this.dateTime,
+    this.priority,
+    this.referredDate,
+    this.hearingDate,
   });
 }

@@ -71,14 +71,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
         const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
@@ -86,19 +92,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.settings, size: 30),
+                SizedBox(width: 16),
+                Text('System Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
-          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
-          onTap: () {
-            final box = GetStorage();
-            box.remove('user_id');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => Login()),
-            );
-          },
+          value: 'signout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PendingReportsDialog extends StatefulWidget {
-  PendingReportsDialog({super.key});
+  const PendingReportsDialog({super.key});
 
   @override
   _PendingReportsDialogState createState() => _PendingReportsDialogState();

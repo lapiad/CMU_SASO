@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ReportDialog extends StatefulWidget {
+  const ReportDialog({super.key});
+
   @override
   _ReportDialogState createState() => _ReportDialogState();
 }

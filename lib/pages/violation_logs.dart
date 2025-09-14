@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/violationView.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
@@ -654,7 +655,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                           showDialog(
                                             context: context,
                                             builder: (context) {
-                                              return ViolationDetailsDialog(
+                                              return ViolationDetailsDialogs(
                                                 allRecords: record,
                                               );
                                             },
@@ -663,7 +664,16 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.edit),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return ViolationDetailsDialogs(
+                                                allRecords: record,
+                                              );
+                                            },
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -837,113 +847,91 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   }
 }
 
-class ViolationDetailsDialog extends StatelessWidget {
+class ViolationDetailsDialogs extends StatelessWidget {
   final ViolationRecord allRecords;
 
-  const ViolationDetailsDialog({super.key, required this.allRecords});
+  const ViolationDetailsDialogs({super.key, required this.allRecords});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Violation Details"),
+      titlePadding: EdgeInsets.zero,
+      title: Container(
+        color: Colors.blue,
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.person_outline, size: 40, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              "Violation Details",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
       content: SizedBox(
+        height: 370,
         width: 450,
-        height: 550,
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 10),
-              Text(
-                "Student Name",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              _buildField(allRecords.studentName, "Student Name"),
+              _buildDetailRow("Student Name:", allRecords.studentName),
               SizedBox(height: 10),
-              Text(
-                "Student ID",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              _buildField(allRecords.studentId, "Student ID"),
+              _buildDetailRow("Student ID:", allRecords.studentId),
               SizedBox(height: 10),
-              Text(
-                "Violation",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              _buildField(allRecords.violation, "Violation"),
+              _buildDetailRow("Violation:", allRecords.violation),
               SizedBox(height: 10),
-              Text(
-                "Offense Level",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              _buildField(allRecords.status, "Offense Level"),
+              _buildDetailRow("Offense Level:", allRecords.status),
               SizedBox(height: 10),
-              Text(
-                "Reported By",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              _buildField(allRecords.reportedBy, "Reported By"),
+              _buildDetailRow("Reported By:", allRecords.reportedBy),
               SizedBox(height: 10),
-              Text(
-                "Date & Time",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              _buildField(allRecords.dateTime, "Date & Time"),
-              SizedBox(height: 10),
+              _buildDetailRow("Date & Time:", allRecords.dateTime),
             ],
           ),
         ),
       ),
-
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
             "Close",
-            style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[900],
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildField(String label, String value) {
+  Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextField(
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: value,
-          border: OutlineInputBorder(),
-        ),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(
+              label,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 20),
+              softWrap: true,
+              overflow: TextOverflow.visible,
+            ),
+          ),
+        ],
       ),
     );
   }

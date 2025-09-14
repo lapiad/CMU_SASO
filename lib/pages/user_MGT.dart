@@ -92,168 +92,63 @@ class _UserManagementPageState extends State<UserMgt> {
       role: "Guard",
       status: "Active",
     ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
   ];
 
   void _showAdminMenu(BuildContext context) async {
-    await showMenu(
+    final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
         const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'system',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.settings, size: 30),
+                SizedBox(width: 16),
+                Text('System Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
-          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
-          onTap: () {
-            final box = GetStorage();
-            box.remove('user_id');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const Login()),
-            );
-          },
+          value: 'signout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );
+    if (result == 'signout') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
   }
 
   @override
