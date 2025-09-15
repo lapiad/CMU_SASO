@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/violationView.dart';
+import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
@@ -663,7 +665,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                             context: context,
                                             builder: (context) {
                                               return ViolationDetailsDialogs(
-                                                allRecords: record,
+                                                allRecords: allRecords.first,
                                               );
                                             },
                                           );
@@ -852,114 +854,4 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       },
     );
   }
-}
-
-class ViolationDetailsDialogs extends StatelessWidget {
-  final ViolationRecord allRecords;
-
-  const ViolationDetailsDialogs({super.key, required this.allRecords});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      titlePadding: EdgeInsets.zero,
-      title: Container(
-        color: Colors.blue,
-        padding: EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(Icons.person_outline, size: 40, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              "Violation Details",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-      content: SizedBox(
-        height: 370,
-        width: 450,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 10),
-              _buildDetailRow("Student Name:", allRecords.studentName),
-              SizedBox(height: 10),
-              _buildDetailRow("Student ID:", allRecords.studentId),
-              SizedBox(height: 10),
-              _buildDetailRow("Violation:", allRecords.violation),
-              SizedBox(height: 10),
-              _buildDetailRow("Offense Level:", allRecords.status),
-              SizedBox(height: 10),
-              _buildDetailRow("Reported By:", allRecords.reportedBy),
-              SizedBox(height: 10),
-              _buildDetailRow("Date & Time:", allRecords.dateTime),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            "Close",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 4,
-            child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 20),
-              softWrap: true,
-              overflow: TextOverflow.visible,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ViolationRecord {
-  final String studentName;
-  final String studentId;
-  final String violation;
-  final String status;
-  final String reportStatus;
-  final String reportedBy;
-  final String dateTime;
-
-  ViolationRecord({
-    required this.studentName,
-    required this.studentId,
-    required this.violation,
-    required this.status,
-    required this.reportStatus,
-    required this.reportedBy,
-    required this.dateTime,
-  });
 }

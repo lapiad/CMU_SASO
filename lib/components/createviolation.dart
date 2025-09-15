@@ -66,9 +66,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                           ),
                         ),
                         controller: TextEditingController(
-                          text: snapshot.hasData
-                              ? snapshot.data!
-                              : "Loading...",
+                          text: GetStorage().read('user_details')['first_name'],
                         ),
                         readOnly: true,
                       ),
@@ -80,7 +78,9 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        controller: TextEditingController(text: " Adimn"),
+                        controller: TextEditingController(
+                          text: GetStorage().read('user_details')['role'],
+                        ),
                         readOnly: true,
                       ),
                     ],

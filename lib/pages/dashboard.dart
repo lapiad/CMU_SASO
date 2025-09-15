@@ -134,8 +134,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
-  final List<ViolationRecord> allRecords = [
-    ViolationRecord(
+  final List<ViolationRecords> allRecords = [
+    ViolationRecords(
       studentName: 'Burnok Sual',
       studentId: '202298765',
       violation: 'Improper Uniform',
@@ -146,7 +146,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       referredDate: '02-15-2025',
       hearingDate: '02-20-2025',
     ),
-    ViolationRecord(
+    ViolationRecords(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
       violation: 'Smoking on Campus',
@@ -157,7 +157,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       referredDate: '07-16-2025',
       hearingDate: '07-20-2025',
     ),
-    ViolationRecord(
+    ViolationRecords(
       studentName: 'Burnok Sual',
       studentId: '202298765',
       violation: 'Improper Uniform',
@@ -168,7 +168,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       referredDate: '02-15-2025',
       hearingDate: '02-20-2025',
     ),
-    ViolationRecord(
+    ViolationRecords(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
       violation: 'Smoking on Campus',
@@ -596,7 +596,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 }
 
-class ViolationRecord {
+class ViolationRecords {
   final String studentName;
   final String studentId;
   final String violation;
@@ -607,7 +607,7 @@ class ViolationRecord {
   final String? referredDate;
   final String? hearingDate;
 
-  ViolationRecord({
+  ViolationRecords({
     required this.studentName,
     required this.studentId,
     required this.violation,

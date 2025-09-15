@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/editRefferedcnl.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
@@ -43,7 +44,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ); // Replace with your FastAPI URL
     final response = await http.get(url);
 
-    if (response.statusCode == 150) {
+    if (response.statusCode == 200) {
       final data = json.decode(response.body);
       print(data['first_name']);
       return data['first_name'];
@@ -118,8 +119,8 @@ class _RefferedCnlState extends State<RefferedCnl> {
     }
   }
 
-  final List<ViolationRecord> allRecord = [
-    ViolationRecord(
+  final List<ViolationRecords> allRecord = [
+    ViolationRecords(
       studentName: 'Burnok Sual',
       studentId: '202298765',
       violation: 'Improper Uniform',
@@ -130,7 +131,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
       referredDate: '02-15-2025',
       hearingDate: '02-20-2025',
     ),
-    ViolationRecord(
+    ViolationRecords(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
       violation: 'Dress code',
@@ -141,7 +142,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
       referredDate: '07-16-2025',
       hearingDate: '07-20-2025',
     ),
-    ViolationRecord(
+    ViolationRecords(
       studentName: 'Burnok Sual',
       studentId: '202298765',
       violation: 'Improper Uniform',
@@ -152,7 +153,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
       referredDate: '02-15-2025',
       hearingDate: '02-20-2025',
     ),
-    ViolationRecord(
+    ViolationRecords(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
       violation: 'Dress code',
@@ -165,7 +166,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ),
   ];
 
-  List<ViolationRecord> get filteredRecords {
+  List<ViolationRecords> get filteredRecords {
     return allRecord.where((record) {
       final query = searchQuery.toLowerCase();
       final matchesSearch =
@@ -746,7 +747,14 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 25),
                                       tooltip: 'Edit',
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return EditCaseDialog();
+                                          },
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -920,7 +928,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
 }
 
 class Refferedview extends StatelessWidget {
-  final ViolationRecord allRecord;
+  final ViolationRecords allRecord;
 
   const Refferedview({super.key, required this.allRecord});
 
@@ -936,7 +944,7 @@ class Refferedview extends StatelessWidget {
             Icon(Icons.person_outline, size: 40, color: Colors.white),
             SizedBox(width: 8),
             Text(
-              "Violation Details",
+              "Case Details",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -1018,7 +1026,7 @@ class Refferedview extends StatelessWidget {
   }
 }
 
-class ViolationRecord {
+class ViolationRecords {
   final String studentName;
   final String studentId;
   final String violation;
@@ -1029,7 +1037,7 @@ class ViolationRecord {
   final String? referredDate;
   final String? hearingDate;
 
-  ViolationRecord({
+  ViolationRecords({
     required this.studentName,
     required this.studentId,
     required this.violation,

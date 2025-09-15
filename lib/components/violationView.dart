@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
 class ViolationDetailsDialogs extends StatelessWidget {
   final ViolationRecord allRecords;
@@ -88,24 +89,4 @@ class ViolationDetailsDialogs extends StatelessWidget {
       ),
     );
   }
-}
-
-class ViolationRecord {
-  final String studentName;
-  final String studentId;
-  final String violation;
-  final String status;
-  final String reportStatus;
-  final String reportedBy;
-  final String dateTime;
-
-  ViolationRecord({
-    required this.studentName,
-    required this.studentId,
-    required this.violation,
-    required this.status,
-    required this.reportStatus,
-    required this.reportedBy,
-    required this.dateTime,
-  });
 }
