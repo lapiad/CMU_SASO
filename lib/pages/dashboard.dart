@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/GenerateReport.dart';
+import 'package:flutter_application_1/components/addNewuser.dart';
 import 'package:flutter_application_1/components/createviolation.dart';
 import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
-import 'package:flutter_application_1/pages/sample.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
@@ -271,7 +271,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             showDialog(
               context: context,
               builder: (context) {
-                return AddNewUserScreen();
+                return AddUserDialog();
               },
             );
           },

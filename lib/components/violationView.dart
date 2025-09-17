@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
-class ViolationDetailsDialogs extends StatelessWidget {
+class ViolationDetailsDialogs extends StatefulWidget {
   final ViolationRecord allRecords;
 
   const ViolationDetailsDialogs({super.key, required this.allRecords});
 
+  @override
+  State<ViolationDetailsDialogs> createState() =>
+      _ViolationDetailsDialogsState();
+}
+
+class _ViolationDetailsDialogsState extends State<ViolationDetailsDialogs> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -36,19 +42,19 @@ class ViolationDetailsDialogs extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 10),
-              _buildDetailRow("Images", allRecords.studentId),
+              _buildDetailRow("Images", widget.allRecords.studentId),
               SizedBox(height: 10),
-              _buildDetailRow("Student Name:", allRecords.studentName),
+              _buildDetailRow("Student Name:", widget.allRecords.studentName),
               SizedBox(height: 10),
-              _buildDetailRow("Student ID:", allRecords.studentId),
+              _buildDetailRow("Student ID:", widget.allRecords.studentId),
               SizedBox(height: 10),
-              _buildDetailRow("Violation:", allRecords.violation),
+              _buildDetailRow("Violation:", widget.allRecords.violation),
               SizedBox(height: 10),
-              _buildDetailRow("Offense Level:", allRecords.status),
+              _buildDetailRow("Offense Level:", widget.allRecords.status),
               SizedBox(height: 10),
-              _buildDetailRow("Reported By:", allRecords.reportedBy),
+              _buildDetailRow("Reported By:", widget.allRecords.reportedBy),
               SizedBox(height: 10),
-              _buildDetailRow("Date & Time:", allRecords.dateTime),
+              _buildDetailRow("Date & Time:", widget.allRecords.dateTime),
             ],
           ),
         ),

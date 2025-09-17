@@ -34,7 +34,7 @@ class _EditCaseDialogState extends State<EditCaseDialog> {
       titlePadding: EdgeInsets.zero,
       title: Container(
         color: Colors.blue,
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(17),
         child: Row(
           children: [
             Icon(Icons.edit, size: 30, color: Colors.white),
@@ -52,14 +52,14 @@ class _EditCaseDialogState extends State<EditCaseDialog> {
       ),
 
       content: SizedBox(
-        height: 250,
-        width: 400,
+        height: 310,
+        width: 500,
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 20),
+              SizedBox(height: 30),
               DropdownButtonFormField<String>(
                 value: priority,
                 items: ['High Priority', 'Medium Priority', 'Low Priority']
@@ -77,7 +77,7 @@ class _EditCaseDialogState extends State<EditCaseDialog> {
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Select priority' : null,
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 30),
               DropdownButtonFormField<String>(
                 value: status,
                 items: ['Under Review', 'Resolved', 'Pending']
@@ -126,9 +126,14 @@ class _EditCaseDialogState extends State<EditCaseDialog> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
           child: Text(
             "Save Changes",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           onPressed: () {
             if (_formKey.currentState!.validate()) {

@@ -1,40 +1,5 @@
 import 'package:flutter/material.dart';
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Dashboard"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.account_circle),
-            onPressed: () {
-              // Add functionality for the user icon
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            // Show the Add User Dialog
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AddUserDialog();
-              },
-            );
-          },
-          child: Text("Add New User"),
-        ),
-      ),
-    );
-  }
-}
-
 class AddUserDialog extends StatefulWidget {
   const AddUserDialog({super.key});
 
@@ -53,12 +18,24 @@ class _AddUserDialogState extends State<AddUserDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Add New User"),
-      content: SingleChildScrollView(
+      title: Row(
+        children: [
+          Icon(Icons.person, size: 40, color: Colors.black),
+          SizedBox(width: 10),
+          Text(
+            "Add New User",
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 500,
+        height: 400, // Adjusted to accommodate more fields
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              SizedBox(height: 20),
               TextFormField(
                 controller: firstNameController,
                 decoration: InputDecoration(labelText: "First Name"),
@@ -69,6 +46,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
               TextFormField(
                 controller: lastNameController,
                 decoration: InputDecoration(labelText: "Last Name"),
@@ -79,6 +57,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(labelText: "Email Address"),
@@ -89,6 +68,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
               DropdownButtonFormField<String>(
                 value: selectedRole,
                 decoration: InputDecoration(labelText: "Role"),
@@ -106,6 +86,24 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     })
                     .toList(),
               ),
+              SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: selectedDepartment,
+                decoration: InputDecoration(labelText: "Department"),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedDepartment = newValue!;
+                  });
+                },
+                items: <String>['Select department', 'HR', 'IT', 'Finance']
+                    .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    })
+                    .toList(),
+              ),
             ],
           ),
         ),
@@ -115,17 +113,33 @@ class _AddUserDialogState extends State<AddUserDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text("Cancel"),
+          child: Text(
+            "Cancel",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                Colors.blue[900], // Correct way to add color to the button
+          ),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               // Add the user here
-              print("User added");
+              print(
+                "User added: ${firstNameController.text} ${lastNameController.text}, ${emailController.text}, Role: $selectedRole, Department: $selectedDepartment",
+              );
               Navigator.of(context).pop();
             }
           },
-          child: Text("Add User"),
+          child: Text(
+            "Add User",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ),
       ],
     );

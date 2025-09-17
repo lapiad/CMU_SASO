@@ -661,13 +661,15 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       IconButton(
                                         icon: const Icon(Icons.remove_red_eye),
                                         onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return ViolationDetailsDialogs(
-                                                allRecords: allRecords.first,
-                                              );
-                                            },
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) {
+                                                return ViolationDetailsDialogs(
+                                                  allRecords: allRecords.first,
+                                                );
+                                              },
+                                            ),
                                           );
                                         },
                                       ),
