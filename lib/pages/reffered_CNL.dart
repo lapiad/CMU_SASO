@@ -738,7 +738,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                           context: context,
                                           builder: (context) {
                                             return Refferedview(
-                                              allRecord: record,
+                                              allRecords: record,
                                             );
                                           },
                                         );
@@ -928,80 +928,91 @@ class _RefferedCnlState extends State<RefferedCnl> {
 }
 
 class Refferedview extends StatelessWidget {
-  final ViolationRecords allRecord;
+  final ViolationRecords allRecords;
 
-  const Refferedview({super.key, required this.allRecord});
+  const Refferedview({super.key, required this.allRecords});
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      titlePadding: EdgeInsets.zero,
-      title: Container(
-        color: Colors.blue,
-        padding: EdgeInsets.all(16),
-        child: Row(
+    return Dialog(
+      insetPadding: EdgeInsets.zero, // Remove default dialog margins
+      backgroundColor: Colors.white,
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width, // Full screen width
+        height: MediaQuery.of(context).size.height, // Full screen height
+        child: Column(
           children: [
-            Icon(Icons.person_outline, size: 40, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              "Case Details",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            // AppBar-like header
+            Container(
+              color: Colors.blue,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.person_outline, size: 40, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        "Case Details",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
+                  _buildDetailRow("Images", allRecords.studentId),
+                  SizedBox(height: 10),
+                  _buildDetailRow("Student Name", allRecords.studentName),
+                  SizedBox(height: 10),
+                  _buildDetailRow("Student ID", allRecords.studentId),
+                  SizedBox(height: 10),
+                  _buildDetailRow("Violation", allRecords.violation),
+                  SizedBox(height: 10),
+                  _buildDetailRow("Offense Level", allRecords.status),
+                  SizedBox(height: 10),
+                  _buildDetailRow("Reported By", allRecords.reportedBy),
+                  SizedBox(height: 10),
+                  _buildDetailRow("Date & Time", allRecords.dateTime),
+                  SizedBox(height: 10),
+                  if (allRecords.priority != null)
+                    _buildDetailRow("Priority", allRecords.priority!),
+                  SizedBox(height: 10),
+                  if (allRecords.referredDate != null)
+                    _buildDetailRow("Referred Date", allRecords.referredDate!),
+                  SizedBox(height: 10),
+                  if (allRecords.hearingDate != null)
+                    _buildDetailRow("Hearing Date", allRecords.hearingDate!),
+                ],
               ),
             ),
           ],
         ),
       ),
-      content: SizedBox(
-        width: 2000,
-        height: 1000,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 10),
-              _buildField("Images", allRecord.studentId),
-              SizedBox(height: 10),
-              _buildField("Student Name", allRecord.studentName),
-              SizedBox(height: 10),
-              _buildField("Student ID", allRecord.studentId),
-              SizedBox(height: 10),
-              _buildField("Violation", allRecord.violation),
-              SizedBox(height: 10),
-              _buildField("Offense Level", allRecord.status),
-              SizedBox(height: 10),
-              _buildField("Reported By", allRecord.reportedBy),
-              SizedBox(height: 10),
-              _buildField("Date & Time", allRecord.dateTime),
-              SizedBox(height: 10),
-              if (allRecord.priority != null)
-                _buildField("Priority", allRecord.priority!),
-              SizedBox(height: 10),
-              if (allRecord.referredDate != null)
-                _buildField("Referred Date", allRecord.referredDate!),
-              SizedBox(height: 10),
-              if (allRecord.hearingDate != null) SizedBox(height: 10),
-              _buildField("Hearing Date", allRecord.hearingDate!),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            "Close",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-        ),
-      ],
     );
   }
 
-  Widget _buildField(String label, String value) {
+  Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -1011,14 +1022,14 @@ class Refferedview extends StatelessWidget {
             flex: 4,
             child: Text(
               label,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
             ),
           ),
           Expanded(
-            flex: 5,
+            flex: 4,
             child: Text(
               value,
-              style: TextStyle(fontSize: 20),
+              style: const TextStyle(fontSize: 20),
               softWrap: true,
               overflow: TextOverflow.visible,
             ),
