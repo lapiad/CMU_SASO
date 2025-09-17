@@ -52,7 +52,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         lastNameController.text = data['last_name'] ?? '';
         emailController.text =
             data['email'] ?? 'admin@cityofmalabonuniversity.edu.ph';
-
         userInitials = getInitials(data['first_name'], data['last_name']);
       });
     } else {
@@ -154,8 +153,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       body: json.encode({
         "first_name": firstNameController.text.trim(),
         "last_name": lastNameController.text.trim(),
-        "current_password": currentPasswordController.text,
-        "new_password": newPasswordController.text,
+        "current_password": currentPasswordController.text.trim(),
+        "new_password": newPasswordController.text.trim(),
       }),
     );
 
@@ -237,7 +236,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Profile Info
                 Row(
                   children: [
                     CircleAvatar(
@@ -264,61 +262,21 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   ],
                 ),
                 SizedBox(height: 20),
-
-                buildLabeledField("First Name", firstNameController),
-                buildLabeledField("Last Name", lastNameController),
+                buildLabeledField(
+                  "First Name",
+                  firstNameController,
+                  readOnly: true,
+                ),
+                buildLabeledField(
+                  "Last Name",
+                  lastNameController,
+                  readOnly: true,
+                ),
                 buildLabeledField(
                   "Email Address",
                   emailController,
                   readOnly: true,
                   icon: Icons.email,
-                ),
-
-                SizedBox(height: 20),
-                Divider(),
-                Text(
-                  "Security",
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-
-                buildLabeledField(
-                  "Current Password",
-                  currentPasswordController,
-                  obscureText: true,
-                ),
-                buildLabeledField(
-                  "New Password",
-                  newPasswordController,
-                  obscureText: true,
-                ),
-
-                SizedBox(height: 30),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: isSaving ? null : saveProfileChanges,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[900],
-                    ),
-                    child: isSaving
-                        ? SizedBox(
-                            width: 18,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            "Save Profile Changes",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
                 ),
               ],
             ),
@@ -347,7 +305,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           obscureText: obscureText,
           readOnly: readOnly,
           decoration: InputDecoration(
-            hintText: "Enter your $label,".toLowerCase(),
+            hintText: "Enter your $label",
             hintStyle: TextStyle(fontSize: 18),
             prefixIcon: icon != null ? Icon(icon, size: 25) : null,
           ),

@@ -29,12 +29,14 @@ class ViolationDetailsDialogs extends StatelessWidget {
         ),
       ),
       content: SizedBox(
-        height: 370,
-        width: 450,
+        height: 1000,
+        width: 2000,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 10),
+              _buildDetailRow("Images", allRecords.studentId),
               SizedBox(height: 10),
               _buildDetailRow("Student Name:", allRecords.studentName),
               SizedBox(height: 10),
@@ -56,7 +58,7 @@ class ViolationDetailsDialogs extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           child: Text(
             "Close",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
         ),
       ],

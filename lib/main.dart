@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/addNewuser.dart';
 import 'package:flutter_application_1/page/Guard_DSH.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/sample.dart';
+import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 
@@ -34,7 +37,7 @@ class MyApp extends StatelessWidget {
       title: 'VioTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: firstScreen(context),
+      home: Dashboard(), //firstScreen(context),
     );
   }
 }

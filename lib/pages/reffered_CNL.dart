@@ -955,12 +955,15 @@ class Refferedview extends StatelessWidget {
         ),
       ),
       content: SizedBox(
-        width: 500,
-        height: 520,
+        width: 2000,
+        height: 1000,
         child: SingleChildScrollView(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
+              SizedBox(height: 10),
+              _buildField("Images", allRecord.studentId),
               SizedBox(height: 10),
               _buildField("Student Name", allRecord.studentName),
               SizedBox(height: 10),
@@ -991,7 +994,7 @@ class Refferedview extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           child: Text(
             "Close",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
         ),
       ],

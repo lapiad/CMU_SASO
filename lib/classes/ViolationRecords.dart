@@ -1,8 +1,8 @@
 class ViolationRecord {
-  final String studentName;
-  final String studentId;
-  final String violation;
-  final String status;
+  late final String studentName;
+  late final String studentId;
+  late final String violation;
+  late final String status;
   final String reportStatus;
   final String reportedBy;
   final String dateTime;
@@ -16,4 +16,6 @@ class ViolationRecord {
     required this.reportedBy,
     required this.dateTime,
   });
+
+  set actionStatus(String actionStatus) {}
 }
