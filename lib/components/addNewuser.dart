@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,6 +36,8 @@ class DashboardPage extends StatelessWidget {
 }
 
 class AddUserDialog extends StatefulWidget {
+  const AddUserDialog({super.key});
+
   @override
   _AddUserDialogState createState() => _AddUserDialogState();
 }
