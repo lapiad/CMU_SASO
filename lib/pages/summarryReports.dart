@@ -392,6 +392,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           icon: Icons.move_down_outlined,
                           iconColor: const Color.fromARGB(255, 232, 235, 19),
                         ),
+                        const SizedBox(width: 30.0),
                       ],
                     ),
 

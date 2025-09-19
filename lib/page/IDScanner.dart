@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/page/ViolationScreen.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 List<CameraDescription>? cameras;
 
@@ -49,10 +50,17 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
     await Permission.camera.request();
     if (await Permission.camera.isGranted) {
       cameras = await availableCameras();
-      final backCamera = cameras!.firstWhere(
+      CameraDescription cameraTobeUsed;
+      if (kIsWeb) {
+        cameraTobeUsed = cameras!.first;
+      } else {cameraTobeUsed = cameras!.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.back,
+      );}
+      
+      _cameraController = CameraController(
+        cameraTobeUsed,
+        ResolutionPreset.high,
       );
-      _cameraController = CameraController(backCamera, ResolutionPreset.high);
       await _cameraController!.initialize();
       if (mounted) setState(() {});
     }
