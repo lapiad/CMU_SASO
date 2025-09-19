@@ -26,7 +26,6 @@ Future<String> getName() async {
 
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
-    print(data['first_name']);
     return data['first_name'];
   } else {
     // error message
@@ -195,7 +194,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           padding: const EdgeInsets.symmetric(vertical: 20),
           backgroundColor: Colors.blue.shade50,
           foregroundColor: Colors.black,
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
         ),
         icon: Icon(icon, size: 28),
         label: Text(label, style: const TextStyle(fontSize: 18)),
@@ -447,45 +446,88 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      const SizedBox(width: 10.0),
-                      SummaryWidget(
-                        title: "Total Cases",
-                        value: allRecords.length.toString(),
-                        subtitle: "Active Referrals",
-                        icon: Icons.cases_outlined,
-                        iconColor: const Color.fromARGB(255, 33, 31, 196),
-                      ),
-
-                      const SizedBox(width: 30.0),
-                      SummaryWidget(
-                        title: "Under Review",
-                        value: countByStatus("Under Review").toString(),
-                        subtitle: "Being Evaluated",
-                        icon: Icons.reviews,
-                        iconColor: const Color.fromARGB(255, 24, 206, 33),
-                      ),
-
-                      const SizedBox(width: 30.0),
-                      SummaryWidget(
-                        title: "Sceduled",
-                        value: countByStatus("Sceduled").toString(),
-                        subtitle: "Hearings Set",
-                        icon: Icons.schedule,
-                        iconColor: const Color.fromARGB(255, 97, 77, 197),
-                      ),
-
-                      const SizedBox(width: 30.0),
-                      SummaryWidget(
-                        title: "Pending",
-                        value: countByStatus("Pending").toString(),
-                        subtitle: "Awaiting Decision",
-                        icon: Icons.pending,
-                        iconColor: const Color.fromARGB(255, 44, 71, 194),
-                      ),
-                    ],
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    child: MediaQuery.of(context).size.width > 770
+                        ? Row(
+                            children: [
+                              SizedBox(width: 40),
+                              SummaryWidget(
+                                title: "Total Cases",
+                                value: "3",
+                                subtitle: "Active Referrals",
+                                icon: Icons.cases_outlined,
+                                iconColor: Colors.red,
+                              ),
+                              SizedBox(width: 30),
+                              SummaryWidget(
+                                title: "Under Review",
+                                value: "1",
+                                subtitle: "Being Evaluated",
+                                icon: Icons.reviews,
+                                iconColor: Colors.blue,
+                              ),
+                              SizedBox(width: 30),
+                              SummaryWidget(
+                                title: "Scheduled",
+                                value: "1",
+                                subtitle: "Hearings Set",
+                                icon: Icons.schedule,
+                                iconColor: Colors.teal,
+                              ),
+                              SizedBox(width: 30),
+                              SummaryWidget(
+                                title: "Pending",
+                                value: "1",
+                                subtitle: "Awaiting Decision",
+                                icon: Icons.pending,
+                                iconColor: Colors.yellow,
+                              ),
+                              SizedBox(width: 30),
+                            ],
+                          )
+                        : Container(
+                          margin: EdgeInsets.all(10),
+                            width: MediaQuery.of(context).size.width,
+                            height: MediaQuery.of(context).size.height * 0.45,
+                            child: GridView.count(
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              crossAxisCount: 2,
+                              children: [
+                              SummaryWidget(
+                                title: "Total Cases",
+                                value: "3",
+                                subtitle: "Active Referrals",
+                                icon: Icons.cases_outlined,
+                                iconColor: Colors.red,
+                              ),
+                              SummaryWidget(
+                                title: "Under Review",
+                                value: "1",
+                                subtitle: "Being Evaluated",
+                                icon: Icons.reviews,
+                                iconColor: Colors.blue,
+                              ),
+                              SummaryWidget(
+                                title: "Scheduled",
+                                value: "1",
+                                subtitle: "Hearings Set",
+                                icon: Icons.schedule,
+                                iconColor: Colors.teal,
+                              ),
+                              SummaryWidget(
+                                title: "Pending",
+                                value: "1",
+                                subtitle: "Awaiting Decision",
+                                icon: Icons.pending,
+                                iconColor: Colors.yellow,
+                              ),
+                              ],
+                            ),
+                          ),
                   ),
+
                   const SizedBox(height: 24),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
