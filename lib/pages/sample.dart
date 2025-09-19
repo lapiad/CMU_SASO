@@ -1,186 +1,134 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+class EditUserForm extends StatefulWidget {
+  @override
+  _EditUserFormState createState() => _EditUserFormState();
+}
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _EditUserFormState extends State<EditUserForm> {
+  final _formKey = GlobalKey<FormState>();
+
+  String name = 'Mang Tani';
+  String email = 'tani.guard@cityofmalabonuniversity.edu.ph';
+  String role = 'Guard';
+  String department = 'Safety and Security';
+  String initial = 'MT';
+
+  // Text controllers for the form fields
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
+  final TextEditingController _departmentController = TextEditingController();
+  final TextEditingController _initialController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: UserManagementPage(),
-      debugShowCheckedModeBanner: false,
-    );
+  void initState() {
+    super.initState();
+    // Initialize the text controllers with the current values
+    _nameController.text = name;
+    _emailController.text = email;
+    _roleController.text = role;
+    _departmentController.text = department;
+    _initialController.text = initial;
   }
-}
-
-class User {
-  final String name;
-  final String email;
-  final String office;
-  final String role;
-  final String status;
-
-  User({
-    required this.name,
-    required this.email,
-    required this.office,
-    required this.role,
-    required this.status,
-  });
-}
-
-class UserManagementPage extends StatefulWidget {
-  const UserManagementPage({super.key});
-
-  @override
-  _UserManagementPageState createState() => _UserManagementPageState();
-}
-
-class _UserManagementPageState extends State<UserManagementPage> {
-  List<User> users = [
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Management'),
-        backgroundColor: Colors.grey[800],
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.person))],
+        title: const Text('User Management'),
+        backgroundColor: Colors.blue,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            // Summary Cards
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                buildSummaryCard(
-                  "Total Users",
-                  users.length.toString(),
-                  Colors.purple[100]!,
-                ),
-                buildSummaryCard(
-                  "Active Users",
-                  users.where((u) => u.status == "Active").length.toString(),
-                  Colors.green[100]!,
-                ),
-                buildSummaryCard(
-                  "SASO Officers",
-                  users
-                      .where((u) => u.role == "SASO Officer")
-                      .length
-                      .toString(),
-                  Colors.blue[100]!,
-                ),
-                buildSummaryCard(
-                  "Admins",
-                  users.where((u) => u.role == "Admin").length.toString(),
-                  Colors.deepPurple[100]!,
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-
-            // User List
-            Expanded(
-              child: ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  final user = users[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: CircleAvatar(child: Text(user.name[0])),
-                      title: Text(user.name),
-                      subtitle: Text("${user.email}\n${user.office}"),
-                      isThreeLine: true,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Card(
+              elevation: 4.0,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text('Edit User'),
+                    const SizedBox(height: 20),
+                    Form(
+                      key: _formKey,
+                      child: Column(
                         children: [
-                          Chip(
-                            label: Text(user.role),
-                            backgroundColor: Colors.blue[100],
-                          ),
-                          SizedBox(width: 6),
-                          Chip(
-                            label: Text(user.status),
-                            backgroundColor: Colors.green[100],
-                          ),
-                          SizedBox(width: 6),
-                          IconButton(icon: Icon(Icons.edit), onPressed: () {}),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {},
+                          _buildTextField('Name', _nameController),
+                          const SizedBox(height: 16),
+                          _buildTextField('Email', _emailController),
+                          const SizedBox(height: 16),
+                          _buildTextField('Role', _roleController),
+                          const SizedBox(height: 16),
+                          _buildTextField('Department', _departmentController),
+                          const SizedBox(height: 16),
+                          _buildTextField('Initial', _initialController),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Cancel'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey,
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (_formKey.currentState?.validate() ??
+                                      false) {
+                                    // Handle saving changes here
+                                    // You can use the updated values like _nameController.text, etc.
+                                    print('User details saved');
+                                    Navigator.pop(context);
+                                  }
+                                },
+                                child: const Text('Save Changes'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.blue,
-        child: Icon(Icons.add),
       ),
     );
   }
 
-  Widget buildSummaryCard(String title, String count, Color color) {
-    return Expanded(
-      child: Container(
-        margin: EdgeInsets.all(4),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            Text(
-              count,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 4),
-            Text(title, textAlign: TextAlign.center),
-          ],
-        ),
+  // Helper method to build form text fields
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return '$label is required';
+        }
+        return null;
+      },
     );
   }
 }

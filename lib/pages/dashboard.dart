@@ -1,6 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/GenerateReport.dart';
+import 'package:flutter_application_1/components/addNewuser.dart';
+import 'package:flutter_application_1/components/createviolation.dart';
+import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
@@ -67,14 +72,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
         const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
@@ -82,22 +93,38 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.settings, size: 30),
+                SizedBox(width: 16),
+                Text('System Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
-          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
-          onTap: () {
-            final box = GetStorage();
-            box.remove('user_id');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => Login()),
-            );
-          },
+          value: 'signout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
 
     if (result == 'signout') {
       Navigator.pushReplacement(
@@ -106,6 +133,53 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       );
     }
   }
+
+  final List<ViolationRecords> allRecords = [
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      referredDate: '02-15-2025',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      violation: 'Smoking on Campus',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      referredDate: '07-16-2025',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      referredDate: '02-15-2025',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      violation: 'Smoking on Campus',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      referredDate: '07-16-2025',
+      hearingDate: '07-20-2025',
+    ),
+  ];
 
   Widget buildActionButton(
     IconData icon,
@@ -127,6 +201,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         onPressed: onPressed,
       ),
     );
+  }
+
+  int countByStatus(String statusMatch) {
+    return cases
+        .where((c) => (c['status'] as String).contains(statusMatch))
+        .length;
   }
 
   @override
@@ -166,7 +246,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
               const SizedBox(width: 16),
               CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: const Color.fromARGB(255, 253, 250, 250),
                 child: IconButton(
                   icon: const Icon(
                     Icons.person,
@@ -183,15 +263,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         automaticallyImplyLeading: false,
       ),
       floatingActionButton: SizedBox(
-        width: 130,
-        height: 80,
-        child: FloatingActionButton(
+        width: 200,
+        height: 70,
+        child: FloatingActionButton.extended(
           onPressed: () {
-            // Add new user logic here
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AddUserDialog();
+              },
+            );
           },
-          backgroundColor: Colors.blue,
-          tooltip: 'Add New User',
-          child: const Icon(Icons.add, size: 50),
+          icon: Icon(Icons.add, color: Colors.white, size: 35),
+          label: const Text(
+            "Add New-User",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Colors.blue[900],
         ),
       ),
       body: SingleChildScrollView(
@@ -289,7 +381,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => SummaryReportsPage(),
@@ -528,7 +620,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 child: buildActionButton(
                                   Icons.bar_chart,
                                   "Generate Weekly Report",
-                                  () {},
+                                  () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => ReportDialog(),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -547,292 +644,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 }
 
-class CreateViolationDialog extends StatelessWidget {
-  const CreateViolationDialog({super.key});
+class ViolationRecords {
+  final String studentName;
+  final String studentId;
+  final String violation;
+  final String status;
+  final String reportedBy;
+  final String dateTime;
+  final String? priority;
+  final String? referredDate;
+  final String? hearingDate;
 
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      contentPadding: const EdgeInsets.all(16),
-      title: const Text(
-        "Create New Violation Report",
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              buildTextField("Student ID"),
-              buildTextField("Student Name"),
-              buildDropdown("Violation Type"),
-              buildOffenseDropdown("Offense Level"),
-              buildDatePicker(context),
-              buildFilePicker("Photo Evidence (optional)"),
-              buildTextField("Reported by"),
-              buildRoleDropdown("Role"),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            "Cancel",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {},
-          child: const Text(
-            "Submit",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildTextField(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-    );
-  }
-
-  Widget buildDropdown(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        items: [
-          "Bullying",
-          "Cheating",
-          "Vandalism",
-          "Disrespect",
-          "Dress Code Violation",
-          "Substance Abuse",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (value) {},
-      ),
-    );
-  }
-
-  Widget buildOffenseDropdown(String offenseType) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: offenseType,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        items: [
-          "First Offense",
-          "Second Offense",
-          "Third Offense",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (value) {},
-      ),
-    );
-  }
-
-  Widget buildRoleDropdown(String roleLabel) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: roleLabel,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        items: [
-          "SASO Officer",
-          "School Guard",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: (value) {},
-      ),
-    );
-  }
-
-  Widget buildDatePicker(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: "Date of Incident",
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        onTap: () async {
-          await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2100),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget buildFilePicker(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          suffixIcon: const Icon(Icons.attach_file),
-        ),
-        onTap: () {},
-      ),
-    );
-  }
-}
-
-class PendingReportsDialog extends StatelessWidget {
-  const PendingReportsDialog({super.key});
-
-  void _confirmAction(BuildContext context, String action) {
-    Navigator.pop(context); // Close dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Report $action'),
-        backgroundColor: action == 'approved' ? Colors.green : Colors.red,
-      ),
-    );
-  }
-
-  void _showRejectConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Icon(Icons.cancel, color: Colors.red, size: 48),
-        content: Text(
-          'Are you sure you want to reject this violation report? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            child: Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Report rejected'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            child: Text('Confirm Reject'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Pending Violation Reports"),
-      content: SizedBox(
-        width: 900,
-        height: 400,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              pendingReportTile(
-                context,
-                id: "1",
-                student: "Annie Batumbakal",
-                violation: "Improper Uniform",
-                offense: "First Offense",
-              ),
-              pendingReportTile(
-                context,
-                id: "2",
-                student: "Juan Dela Cruz",
-                violation: "Late Attendance",
-                offense: "Second Offense",
-              ),
-              pendingReportTile(
-                context,
-                id: "3",
-                student: "James Reid",
-                violation: "Serious Misconduct",
-                offense: "Third Offense",
-              ),
-              pendingReportTile(
-                context,
-                id: "4",
-                student: "burnok",
-                violation: "Serious Misconduct",
-                offense: "Third Offense",
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            "Close",
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget pendingReportTile(
-    BuildContext context, {
-    required String id,
-    required String student,
-    required String violation,
-    required String offense,
-  }) {
-    Color offenseColor = offense == 'Third Offense'
-        ? Colors.red
-        : offense == 'Second Offense'
-        ? Colors.orange
-        : Colors.amber;
-
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        title: Text('$id - $student'),
-        subtitle: Text(violation),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(offense, style: TextStyle(color: offenseColor)),
-            SizedBox(width: 8),
-            IconButton(
-              icon: Icon(Icons.check_circle, color: Colors.green),
-              onPressed: () => _confirmAction(context, 'approved'),
-            ),
-            IconButton(
-              icon: Icon(Icons.cancel, color: Colors.red),
-              onPressed: () => _showRejectConfirmation(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  ViolationRecords({
+    required this.studentName,
+    required this.studentId,
+    required this.violation,
+    required this.status,
+    required this.reportedBy,
+    required this.dateTime,
+    this.priority,
+    this.referredDate,
+    this.hearingDate,
+  });
 }

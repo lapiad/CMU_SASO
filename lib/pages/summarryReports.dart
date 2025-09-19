@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
@@ -102,14 +103,20 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
         const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
@@ -117,22 +124,38 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.settings, size: 30),
+                SizedBox(width: 16),
+                Text('System Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
-          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
-          onTap: () {
-            final box = GetStorage();
-            box.remove('user_id');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => Login()),
-            );
-          },
+          value: 'signout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
 
     if (result == 'signout') {
       Navigator.pushReplacement(
@@ -291,7 +314,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => SummaryReportsPage(),

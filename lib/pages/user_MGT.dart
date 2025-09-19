@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
@@ -78,42 +79,85 @@ class _UserManagementPageState extends State<UserMgt> {
       role: "Admin",
       status: "Active",
     ),
+    User(
+      name: "Nadine Lustre",
+      email: "nadine.l@cityofmalabonuniversity.edu.ph",
+      office: "Student Affairs Services Office",
+      role: "SASO Officer",
+      status: "Active",
+    ),
+    User(
+      name: "Mang Tani",
+      email: "tani.guard@cityofmalabonuniversity.edu.ph",
+      office: "Safety and Security Office",
+      role: "Guard",
+      status: "Active",
+    ),
   ];
 
   void _showAdminMenu(BuildContext context) async {
-    await showMenu(
+    final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
         const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'system',
           child: SizedBox(
             width: 300,
             height: 70,
-            child: Text('System Settings', style: TextStyle(fontSize: 20)),
+            child: Row(
+              children: [
+                Icon(Icons.settings, size: 30),
+                SizedBox(width: 16),
+                Text('System Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
-          child: const Text("Sign Out", style: TextStyle(fontSize: 20)),
-          onTap: () {
-            final box = GetStorage();
-            box.remove('user_id');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const Login()),
-            );
-          },
+          value: 'signout',
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+      );
+    }
+
+    if (result == 'signout') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
   }
 
   @override
@@ -253,7 +297,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         'Summary of Reports',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.push(
+                      onTap: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => SummaryReportsPage(),
@@ -311,7 +355,7 @@ class _UserManagementPageState extends State<UserMgt> {
               ),
             ),
           Expanded(
-            child: Padding(
+            child: Container(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
@@ -348,97 +392,116 @@ class _UserManagementPageState extends State<UserMgt> {
                       ),
                       const SizedBox(width: 30),
                       SummaryWidget(
-                        title: "Admins",
+                        title: "Guards",
                         value: users
-                            .where((u) => u.role == "Admin")
+                            .where((u) => u.role == "Guard")
                             .length
                             .toString(),
                         subtitle: "System Administrators",
                         icon: Icons.admin_panel_settings,
-                        iconColor: const Color.fromARGB(255, 101, 54, 230),
+                        iconColor: const Color.fromARGB(255, 101, 54, 250),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.search),
-                            hintText:
-                                'Search by student name, student ID, or violation...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search),
+                              hintText:
+                                  'Search by student name, student ID, or violation...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
+                            onChanged: (value) {},
                           ),
-                          onChanged: (value) {},
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
                   SizedBox(
-                    height: 500,
                     width: 1900,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
+                    height: 560,
+                    child: Expanded(
                       child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                        scrollDirection: Axis.vertical,
                         child: DataTable(
                           columns: const [
                             DataColumn(
-                              label: Text(
-                                'Name',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 170,
+                                child: Text(
+                                  'Name',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Email',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 230,
+                                child: Text(
+                                  'Email',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Office',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Office',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Role',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 150,
+                                child: Text(
+                                  'Role',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: Text(
-                                'Actions',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                              label: SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
@@ -520,12 +583,24 @@ class _UserManagementPageState extends State<UserMgt> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Add user logic
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
+      floatingActionButton: SizedBox(
+        width: 150,
+        height: 50,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            // Add new user logic here
+          },
+          icon: Icon(Icons.add, color: Colors.white, size: 30),
+          label: const Text(
+            "Add User",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: Colors.blue[900],
+        ),
       ),
     );
   }

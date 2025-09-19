@@ -15,15 +15,14 @@ void _onItemTapped(BuildContext context) async {
 
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
+    box.write('user_details', data);
     if (data['role'] == 'guard') {
-      box.write('user_role', data['role']);
       // Navigate to the admin dashboard
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => SchoolGuardHome()),
       );
     } else {
-      box.write('user_role', data['role']);
       // Navigate to the user dashboard
       Navigator.push(
         context,
