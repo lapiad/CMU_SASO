@@ -310,7 +310,36 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 58,
+                              child: DropdownButtonFormField<String>(
+                                decoration: _fieldDecoration(
+                                  "Department",
+                                  "Select Department",
+                                ),
+                                items: ["CAS", "CBA", "CSS"]
+                                    .map(
+                                      (e) => DropdownMenuItem(
+                                        value: e,
+                                        child: Text(e),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) =>
+                                    setState(() => offenseLevel = value),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
 
                       // Row 3: Date of Incident + Photo Evidence
                       Row(
