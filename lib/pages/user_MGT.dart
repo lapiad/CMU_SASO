@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
+import 'package:flutter_application_1/components/userEdit.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
@@ -218,12 +219,12 @@ class _UserManagementPageState extends State<UserMgt> {
           if (sideMenuSize != 0.0)
             SizedBox(
               width: sideMenuSize,
-              height: MediaQuery.of(context).size.height,
+              height: 900,
               child: Container(
-                color: Colors.blue[900],
-                child: ListView(
+                decoration: BoxDecoration(color: Colors.blue[900]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
                     SizedBox(
                       width: 100,
                       height: 100,
@@ -253,6 +254,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
                     ListTile(
                       leading: const Icon(
                         Icons.home,
@@ -263,13 +265,16 @@ class _UserManagementPageState extends State<UserMgt> {
                         'Dashboard',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Dashboard(),
-                        ),
-                      ),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Dashboard(),
+                          ),
+                        );
+                      },
                     ),
+                    const SizedBox(height: 10),
                     ListTile(
                       leading: const Icon(
                         Icons.list_alt,
@@ -280,13 +285,16 @@ class _UserManagementPageState extends State<UserMgt> {
                         'Violation Logs',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViolationLogsPage(),
-                        ),
-                      ),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ViolationLogsPage(),
+                          ),
+                        );
+                      },
                     ),
+                    const SizedBox(height: 10),
                     ListTile(
                       leading: const Icon(
                         Icons.pie_chart,
@@ -297,13 +305,16 @@ class _UserManagementPageState extends State<UserMgt> {
                         'Summary of Reports',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SummaryReportsPage(),
-                        ),
-                      ),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SummaryReportsPage(),
+                          ),
+                        );
+                      },
                     ),
+                    const SizedBox(height: 10),
                     ListTile(
                       leading: const Icon(
                         Icons.bookmark,
@@ -314,16 +325,18 @@ class _UserManagementPageState extends State<UserMgt> {
                         'Referred to Council',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => RefferedCnl()),
-                      ),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RefferedCnl(),
+                          ),
+                        );
+                      },
                     ),
+                    const SizedBox(height: 20),
                     const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 10,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
                         'ADMINISTRATION',
                         style: TextStyle(
@@ -333,6 +346,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
                     ListTile(
                       leading: const Icon(
                         Icons.person,
@@ -343,12 +357,12 @@ class _UserManagementPageState extends State<UserMgt> {
                         'User management',
                         style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UserMgt(),
-                        ),
-                      ),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserMgt()),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -553,9 +567,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                           color: Colors.blue,
                                           size: 25,
                                         ),
-                                        onPressed: () {
-                                          // TODO: Edit user logic
-                                        },
+                                        onPressed: () {},
                                       ),
                                       IconButton(
                                         icon: const Icon(

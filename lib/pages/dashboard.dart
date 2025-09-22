@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/GenerateReport.dart';
-import 'package:flutter_application_1/components/addNewuser.dart';
 import 'package:flutter_application_1/components/createviolation.dart';
 import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
@@ -263,30 +262,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ],
         automaticallyImplyLeading: false,
       ),
-      floatingActionButton: SizedBox(
-        width: 200,
-        height: 70,
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AddUserDialog();
-              },
-            );
-          },
-          icon: Icon(Icons.add, color: Colors.white, size: 35),
-          label: const Text(
-            "Add New-User",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: Colors.blue[900],
-        ),
-      ),
+
       body: SingleChildScrollView(
         padding: EdgeInsets.zero,
         child: Row(
@@ -444,6 +420,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
               ),
+            SizedBox(height: 30),
             Expanded(
               child: Column(
                 children: [

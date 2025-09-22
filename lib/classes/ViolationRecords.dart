@@ -6,6 +6,7 @@ class ViolationRecord {
   final String reportStatus;
   final String reportedBy;
   final String dateTime;
+  final String department;
 
   ViolationRecord({
     required this.studentName,
@@ -15,6 +16,7 @@ class ViolationRecord {
     required this.reportStatus,
     required this.reportedBy,
     required this.dateTime,
+    required this.department,
   });
 
   set actionStatus(String actionStatus) {}

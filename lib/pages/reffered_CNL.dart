@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/components/editRefferedcnl.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
@@ -123,45 +122,265 @@ class _RefferedCnlState extends State<RefferedCnl> {
     ViolationRecords(
       studentName: 'Burnok Sual',
       studentId: '202298765',
+      Department: 'CAS',
       violation: 'Improper Uniform',
       status: 'Under Review',
       reportedBy: 'Mang Tani',
       dateTime: '02-14-2025 11:11AM',
       priority: 'High',
-      referredDate: '02-15-2025',
       hearingDate: '02-20-2025',
     ),
     ViolationRecords(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
+      Department: 'CBA',
       violation: 'Dress code',
       status: 'Referred',
       reportedBy: 'Nadine Lustre',
       dateTime: '07-15-2025 5:30PM',
       priority: 'High',
-      referredDate: '07-16-2025',
       hearingDate: '07-20-2025',
     ),
     ViolationRecords(
       studentName: 'Burnok Sual',
       studentId: '202298765',
+      Department: 'COA',
       violation: 'Improper Uniform',
       status: 'Pending',
       reportedBy: 'Mang Tani',
       dateTime: '02-14-2025 11:11AM',
       priority: 'High',
-      referredDate: '02-15-2025',
       hearingDate: '02-20-2025',
     ),
     ViolationRecords(
       studentName: 'Juan Dela Cruz',
       studentId: '202212345',
+      Department: 'CSS',
       violation: 'Dress code',
       status: 'Reviewed',
       reportedBy: 'Nadine Lustre',
       dateTime: '07-15-2025 5:30PM',
       priority: 'High',
-      referredDate: '07-16-2025',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'CAS',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CBA',
+      violation: 'Dress code',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'COA',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CSS',
+      violation: 'Dress code',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'CAS',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CBA',
+      violation: 'Dress code',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'COA',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CSS',
+      violation: 'Dress code',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'CAS',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CBA',
+      violation: 'Dress code',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'COA',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CSS',
+      violation: 'Dress code',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'CAS',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CBA',
+      violation: 'Dress code',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'COA',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CSS',
+      violation: 'Dress code',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'CAS',
+      violation: 'Improper Uniform',
+      status: 'Under Review',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CBA',
+      violation: 'Dress code',
+      status: 'Referred',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
+      hearingDate: '07-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Burnok Sual',
+      studentId: '202298765',
+      Department: 'COA',
+      violation: 'Improper Uniform',
+      status: 'Pending',
+      reportedBy: 'Mang Tani',
+      dateTime: '02-14-2025 11:11AM',
+      priority: 'High',
+      hearingDate: '02-20-2025',
+    ),
+    ViolationRecords(
+      studentName: 'Juan Dela Cruz',
+      studentId: '202212345',
+      Department: 'CSS',
+      violation: 'Dress code',
+      status: 'Reviewed',
+      reportedBy: 'Nadine Lustre',
+      dateTime: '07-15-2025 5:30PM',
+      priority: 'High',
       hearingDate: '07-20-2025',
     ),
   ];
@@ -525,26 +744,26 @@ class _RefferedCnlState extends State<RefferedCnl> {
                         ElevatedButton.icon(
                           onPressed: _showFilterDialog,
                           icon: const Icon(Icons.filter_list),
-                          label: const Text("Filter By"),
+                          label: const Text("Filter"),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 30),
+
                   SizedBox(
                     width: 1900,
-                    height: 552,
+                    height: 650,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: DataTable(
                         columns: const [
                           DataColumn(
                             label: SizedBox(
-                              width: 200,
+                              width: 195,
                               child: Text(
                                 'Student Name',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -552,11 +771,11 @@ class _RefferedCnlState extends State<RefferedCnl> {
                           ),
                           DataColumn(
                             label: SizedBox(
-                              width: 150,
+                              width: 140,
                               child: Text(
                                 'Student ID',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -564,11 +783,23 @@ class _RefferedCnlState extends State<RefferedCnl> {
                           ),
                           DataColumn(
                             label: SizedBox(
-                              width: 170,
+                              width: 159,
+                              child: Text(
+                                'Department',
+                                style: TextStyle(
+                                  fontSize: 27,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: 165,
                               child: Text(
                                 'Violation',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -580,7 +811,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                               child: Text(
                                 'Priority',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -592,7 +823,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                               child: Text(
                                 'Status',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -600,35 +831,24 @@ class _RefferedCnlState extends State<RefferedCnl> {
                           ),
                           DataColumn(
                             label: SizedBox(
-                              width: 173,
+                              width: 150,
                               child: Text(
                                 'Reported By',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ),
+
                           DataColumn(
                             label: SizedBox(
-                              width: 184,
-                              child: Text(
-                                'Referred Date',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 175,
+                              width: 160,
                               child: Text(
                                 'Hearing Date',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -636,11 +856,11 @@ class _RefferedCnlState extends State<RefferedCnl> {
                           ),
                           DataColumn(
                             label: SizedBox(
-                              width: 120,
+                              width: 100,
                               child: Text(
                                 'Actions',
                                 style: TextStyle(
-                                  fontSize: 30,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -659,6 +879,12 @@ class _RefferedCnlState extends State<RefferedCnl> {
                               DataCell(
                                 Text(
                                   record.studentId,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  record.Department,
                                   style: const TextStyle(fontSize: 20),
                                 ),
                               ),
@@ -712,12 +938,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                   style: const TextStyle(fontSize: 20),
                                 ),
                               ),
-                              DataCell(
-                                Text(
-                                  record.referredDate ?? '-',
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
+
                               DataCell(
                                 Text(
                                   record.hearingDate ?? '-',
@@ -733,28 +954,12 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                         size: 25,
                                       ),
                                       tooltip: 'View',
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return Refferedview(
-                                              allRecords: record,
-                                            );
-                                          },
-                                        );
-                                      },
+                                      onPressed: () {},
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 25),
                                       tooltip: 'Edit',
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return EditCaseDialog();
-                                          },
-                                        );
-                                      },
+                                      onPressed: () {},
                                     ),
                                   ],
                                 ),
@@ -998,9 +1203,6 @@ class Refferedview extends StatelessWidget {
                   if (allRecords.priority != null)
                     _buildDetailRow("Priority", allRecords.priority!),
                   SizedBox(height: 10),
-                  if (allRecords.referredDate != null)
-                    _buildDetailRow("Referred Date", allRecords.referredDate!),
-                  SizedBox(height: 10),
                   if (allRecords.hearingDate != null)
                     _buildDetailRow("Hearing Date", allRecords.hearingDate!),
                 ],
@@ -1043,23 +1245,25 @@ class Refferedview extends StatelessWidget {
 class ViolationRecords {
   final String studentName;
   final String studentId;
+  final String Department;
   final String violation;
   final String status;
   final String reportedBy;
   final String dateTime;
   final String? priority;
-  final String? referredDate;
+
   final String? hearingDate;
 
   ViolationRecords({
     required this.studentName,
     required this.studentId,
+    required this.Department,
     required this.violation,
     required this.status,
     required this.reportedBy,
     required this.dateTime,
     this.priority,
-    this.referredDate,
+
     this.hearingDate,
   });
 }
