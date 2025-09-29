@@ -624,10 +624,10 @@ class _UserManagementPageState extends State<UserMgt> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+
                   SizedBox(
                     width: 1900,
-                    height: 560,
+                    height: 650,
                     child: Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.vertical,
