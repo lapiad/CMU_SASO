@@ -77,12 +77,16 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                       "Pending Reports",
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 20,
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 22),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 30,
+                      color: Colors.black,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -259,12 +263,12 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                 icon: const Icon(
                   Icons.check,
                   color: Color.fromARGB(255, 255, 255, 255),
-                  size: 18,
+                  size: 20,
                 ),
                 label: const Text(
                   "Approve",
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 20,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),

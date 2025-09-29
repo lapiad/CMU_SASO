@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/addNewuser.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
@@ -44,12 +45,12 @@ class User {
 
 class UserMgt extends StatefulWidget {
   const UserMgt({super.key});
-
   @override
   _UserManagementPageState createState() => _UserManagementPageState();
 }
 
 class _UserManagementPageState extends State<UserMgt> {
+  double sideMenuSize = 0.0;
   List<User> users = [
     User(
       name: "Nadine Lustre",
@@ -79,21 +80,207 @@ class _UserManagementPageState extends State<UserMgt> {
       role: "Admin",
       status: "Active",
     ),
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
   ];
+
+  void _editUser(int index) {
+    final user = users[index];
+    final nameController = TextEditingController(text: user.name);
+    final emailController = TextEditingController(text: user.email);
+    final officeController = TextEditingController(text: user.office);
+
+    // Role choices
+    String roleValue = user.role;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.edit, color: Colors.blue, size: 30),
+            SizedBox(width: 8),
+            Text(
+              "Edit User",
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// Left column
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildTextField("Name", nameController),
+                    _buildTextField("Email", emailController),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              /// Right column
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildTextField("Office", officeController),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: roleValue,
+                      decoration: _inputDecoration("Role"),
+                      items: ["SASO Officer", "School Guard"]
+                          .map(
+                            (r) => DropdownMenuItem(value: r, child: Text(r)),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) roleValue = value;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.blue[900],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                users[index] = User(
+                  name: nameController.text,
+                  email: emailController.text,
+                  office: officeController.text,
+                  role: roleValue,
+                  status: user.status, // keep old status silently
+                );
+              });
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.save, size: 20),
+            label: const Text(
+              "Save",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Delete confirmation dialog
+  void _deleteUser(int index) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.warning, color: Colors.red, size: 30),
+            SizedBox(width: 8),
+            Text(
+              "Delete User",
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Row(
+          children: [
+            const Icon(Icons.person, size: 35, color: Colors.black),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                "Are you sure you want to delete '${users[index].name}'?",
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF0033A0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                users.removeAt(index);
+              });
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.delete, size: 20, color: Colors.white),
+            label: const Text(
+              "Delete",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Reusable input decoration
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      filled: true,
+      fillColor: Colors.grey[100],
+    );
+  }
+
+  /// Reusable textfield builder
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: TextField(
+        controller: controller,
+        decoration: _inputDecoration(label),
+      ),
+    );
+  }
 
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
@@ -447,79 +634,63 @@ class _UserManagementPageState extends State<UserMgt> {
                         child: DataTable(
                           columns: const [
                             DataColumn(
-                              label: SizedBox(
-                                width: 170,
-                                child: Text(
-                                  'Name',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
+                              label: Text(
+                                'Name',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: SizedBox(
-                                width: 230,
-                                child: Text(
-                                  'Email',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
+                              label: Text(
+                                'Email',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Office',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
+                              label: Text(
+                                'Office',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: SizedBox(
-                                width: 150,
-                                child: Text(
-                                  'Role',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
+                              label: Text(
+                                'Role',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  'Status',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
+                              label: Text(
+                                'Status',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
                                 ),
                               ),
                             ),
                             DataColumn(
-                              label: SizedBox(
-                                width: 100,
-                                child: Text(
-                                  'Actions',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
+                              label: Text(
+                                'Actions',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
                                 ),
                               ),
                             ),
                           ],
-                          rows: users.map((user) {
+                          rows: users.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final user = entry.value;
                             return DataRow(
                               cells: [
                                 DataCell(
@@ -566,7 +737,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                           color: Colors.blue,
                                           size: 25,
                                         ),
-                                        onPressed: () {},
+                                        onPressed: () => _editUser(index),
                                       ),
                                       IconButton(
                                         icon: const Icon(
@@ -574,9 +745,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                           color: Colors.red,
                                           size: 25,
                                         ),
-                                        onPressed: () {
-                                          // TODO: Delete user logic
-                                        },
+                                        onPressed: () => _deleteUser(index),
                                       ),
                                     ],
                                   ),
@@ -599,9 +768,12 @@ class _UserManagementPageState extends State<UserMgt> {
         height: 50,
         child: FloatingActionButton.extended(
           onPressed: () {
-            // Add new user logic here
+            showDialog(
+              context: context,
+              builder: (context) => const AddNewUserDialog(),
+            );
           },
-          icon: Icon(Icons.add, color: Colors.white, size: 30),
+          icon: const Icon(Icons.add, color: Colors.white, size: 30),
           label: const Text(
             "Add User",
             style: TextStyle(

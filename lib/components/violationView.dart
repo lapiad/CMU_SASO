@@ -44,7 +44,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Adjust breakpoint for better responsiveness
     final isWide = screenWidth > 900;
 
     return Scaffold(
@@ -52,9 +51,9 @@ class _ViolationDetailsState extends State<ViolationDetails> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0033A0),
         // MODIFICATION: Added leading person icon as seen in the image
-        leading: const Icon(Icons.person, color: Colors.white, size: 35),
+        leading: const Icon(Icons.person, color: Colors.white),
         title: Text(
-          "Violation Details",
+          "Case Details",
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -62,7 +61,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 30),
+            icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -74,17 +73,16 @@ class _ViolationDetailsState extends State<ViolationDetails> {
           children: [
             // MODIFICATION: Adjusted styling for the image container
             Container(
-              width: isWide ? 300 : 200,
-              height: isWide ? 300 : 200,
+              width: isWide ? 500 : 300,
+              height: isWide ? 500 : 300,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black, width: 2),
                 // Added rounded corners to match the image
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                // Used a more fitting icon for the placeholder
                 Icons.image_outlined,
-                size: isWide ? 150 : 100,
+                size: isWide ? 250 : 200,
                 color: Colors.grey[700],
               ),
             ),
@@ -103,39 +101,10 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                       "Department",
                       TextEditingController(text: widget.record.department),
                     ),
-                    const SizedBox(height: 18),
-                    // Bottom four fields are now in a two-column Row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              buildDetailField(
-                                "Reported by",
-                                reportedByController,
-                              ),
-                              buildDetailField(
-                                "Date and Time",
-                                dateTimeController,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              buildDetailField("Status", statusController),
-                              buildDetailField(
-                                "Status Action",
-                                statusActionController,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    buildDetailField("Reported by", reportedByController),
+                    buildDetailField("Date and Time", dateTimeController),
+                    buildDetailField("Status", statusController),
+                    buildDetailField("Status Action", statusActionController),
                   ],
                 ),
               ),
@@ -143,7 +112,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
           ],
         ),
       ),
-      // No changes needed for the bottom navigation bar
+
       bottomNavigationBar: widget.isEditable
           ? Padding(
               padding: const EdgeInsets.all(16),
@@ -152,7 +121,14 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text("Cancel"),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
@@ -175,7 +151,14 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                         vertical: 14,
                       ),
                     ),
-                    child: const Text("Save Changes"),
+                    child: const Text(
+                      "Save Changes",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -192,9 +175,9 @@ class _ViolationDetailsState extends State<ViolationDetails> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
-          const SizedBox(height: 8), // Slightly increased spacing
+          const SizedBox(height: 6), // Slightly increased spacing
           widget.isEditable
               ? TextField(
                   controller: controller,

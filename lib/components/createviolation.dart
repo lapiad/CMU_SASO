@@ -210,7 +210,11 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(
+                        Icons.close,
+                        size: 30,
+                        color: Colors.black,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -453,7 +457,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      child: const Text("Cancel"),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 14),
@@ -470,7 +481,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         ),
                         elevation: 3,
                       ),
-                      child: const Text("Submit Report"),
+                      child: const Text(
+                        "Submit Report",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           Navigator.pop(context);

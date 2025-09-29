@@ -29,13 +29,16 @@ Future<String> getName() async {
 }
 
 class RefferedCnl extends StatefulWidget {
-  const RefferedCnl({super.key});
+  final bool isEditable;
+
+  const RefferedCnl({super.key, this.isEditable = false});
 
   @override
   State<RefferedCnl> createState() => _RefferedCnlState();
 }
 
 class _RefferedCnlState extends State<RefferedCnl> {
+  double sideMenuSize = 0.0;
   Future<String> getName() async {
     final box = GetStorage();
     final url = Uri.parse(
@@ -575,9 +578,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const Dashboard(),
-                          ),
+                          MaterialPageRoute(builder: (context) => Dashboard()),
                         );
                       },
                     ),
@@ -954,12 +955,31 @@ class _RefferedCnlState extends State<RefferedCnl> {
                                         size: 25,
                                       ),
                                       tooltip: 'View',
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => Refferedview(
+                                              record: record,
+                                              isEditable: false,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
+
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 25),
                                       tooltip: 'Edit',
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => Refferedview(
+                                              record: record,
+                                              isEditable: true,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -1132,110 +1152,238 @@ class _RefferedCnlState extends State<RefferedCnl> {
   }
 }
 
-class Refferedview extends StatelessWidget {
-  final ViolationRecords allRecords;
+class Refferedview extends StatefulWidget {
+  final ViolationRecords record;
+  final bool isEditable;
 
-  const Refferedview({super.key, required this.allRecords});
+  const Refferedview({
+    super.key,
+    required this.record,
+    this.isEditable = false,
+  });
+
+  @override
+  State<Refferedview> createState() => _RefferedviewState();
+}
+
+class _RefferedviewState extends State<Refferedview> {
+  late TextEditingController nameController;
+  late TextEditingController studentIdController;
+  late TextEditingController violationController;
+  late TextEditingController departmentController;
+  late TextEditingController reportedByController;
+  late TextEditingController statusController;
+  late TextEditingController priorityController;
+  late TextEditingController hearingDateController;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.record.studentName);
+    studentIdController = TextEditingController(text: widget.record.studentId);
+    violationController = TextEditingController(text: widget.record.violation);
+    departmentController = TextEditingController(
+      text: widget.record.Department,
+    );
+    reportedByController = TextEditingController(
+      text: widget.record.reportedBy,
+    );
+    statusController = TextEditingController(text: widget.record.status);
+    priorityController = TextEditingController(
+      text: widget.record.priority ?? "",
+    );
+    hearingDateController = TextEditingController(
+      text: widget.record.hearingDate ?? "",
+    );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    studentIdController.dispose();
+    violationController.dispose();
+    departmentController.dispose();
+    reportedByController.dispose();
+    statusController.dispose();
+    priorityController.dispose();
+    hearingDateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: EdgeInsets.zero, // Remove default dialog margins
+    final isWide = MediaQuery.of(context).size.width > 900;
+
+    return Scaffold(
       backgroundColor: Colors.white,
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width, // Full screen width
-        height: MediaQuery.of(context).size.height, // Full screen height
-        child: Column(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0033A0),
+        leading: const Icon(Icons.person, color: Colors.white),
+        title: Text(
+          widget.isEditable ? "Edit Case Details" : "Case Details",
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // AppBar-like header
+            // Left: Image placeholder
             Container(
-              color: Colors.blue,
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(Icons.person_outline, size: 40, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        "Case Details",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+              width: isWide ? 500 : 300,
+              height: isWide ? 500 : 300,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.image_outlined,
+                size: isWide ? 250 : 200,
+                color: Colors.grey[700],
               ),
             ),
-            // Content
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10),
-                  _buildDetailRow("Images", allRecords.studentId),
-                  SizedBox(height: 10),
-                  _buildDetailRow("Student Name", allRecords.studentName),
-                  SizedBox(height: 10),
-                  _buildDetailRow("Student ID", allRecords.studentId),
-                  SizedBox(height: 10),
-                  _buildDetailRow("Violation", allRecords.violation),
-                  SizedBox(height: 10),
-                  _buildDetailRow("Offense Level", allRecords.status),
-                  SizedBox(height: 10),
-                  _buildDetailRow("Reported By", allRecords.reportedBy),
-                  SizedBox(height: 10),
-                  _buildDetailRow("Date & Time", allRecords.dateTime),
-                  SizedBox(height: 10),
-                  if (allRecords.priority != null)
-                    _buildDetailRow("Priority", allRecords.priority!),
-                  SizedBox(height: 10),
-                  if (allRecords.hearingDate != null)
-                    _buildDetailRow("Hearing Date", allRecords.hearingDate!),
-                ],
+            const SizedBox(width: 32),
+
+            // Right: Two-column details
+            Expanded(
+              child: SingleChildScrollView(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          buildDetailField("Student Name", nameController),
+                          buildDetailField(
+                            "Student Number",
+                            studentIdController,
+                          ),
+                          buildDetailField("Violation", violationController),
+                          buildDetailField("Department", departmentController),
+                          buildDetailField("Reported By", reportedByController),
+                          buildDetailField("Status", statusController),
+                          buildDetailField("Priority", priorityController),
+                          buildDetailField(
+                            "Hearing Date",
+                            hearingDateController,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
+
+      // Save/Cancel buttons (only when editable)
+      bottomNavigationBar: widget.isEditable
+          ? Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context, {
+                        "studentName": nameController.text,
+                        "studentId": studentIdController.text,
+                        "violation": violationController.text,
+                        "department": departmentController.text,
+                        "reportedBy": reportedByController.text,
+                        "status": statusController.text,
+                        "priority": priorityController.text,
+                        "hearingDate": hearingDateController.text,
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0033A0),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                    ),
+                    child: const Text(
+                      "Save Changes",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : null,
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget buildDetailField(String label, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 4,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
-            ),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 20),
-              softWrap: true,
-              overflow: TextOverflow.visible,
-            ),
-          ),
+          const SizedBox(height: 6),
+          widget.isEditable
+              ? TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
+                  ),
+                )
+              : Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black54),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    controller.text,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
         ],
       ),
     );
@@ -1251,7 +1399,6 @@ class ViolationRecords {
   final String reportedBy;
   final String dateTime;
   final String? priority;
-
   final String? hearingDate;
 
   ViolationRecords({
@@ -1263,7 +1410,6 @@ class ViolationRecords {
     required this.reportedBy,
     required this.dateTime,
     this.priority,
-
     this.hearingDate,
   });
 }

@@ -650,7 +650,14 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                               filterCCJE = false;
                             });
                           },
-                          child: const Text("Clear"),
+                          child: const Text(
+                            "Clear",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
                         ),
                         const Spacer(),
                         ElevatedButton(
@@ -659,7 +666,15 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                               showFilters = false;
                             });
                           },
-                          child: const Text("Apply"),
+
+                          child: const Text(
+                            "Apply",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0033A0),
+                            ),
+                          ),
                         ),
                       ],
                     ),

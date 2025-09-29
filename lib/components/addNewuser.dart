@@ -4,7 +4,7 @@ class AddNewUserDialog extends StatefulWidget {
   const AddNewUserDialog({super.key});
 
   @override
-  _AddNewUserDialogState createState() => _AddNewUserDialogState();
+  State<AddNewUserDialog> createState() => _AddNewUserDialogState();
 }
 
 class _AddNewUserDialogState extends State<AddNewUserDialog> {
@@ -15,248 +15,210 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
   String? _selectedRole;
   String? _selectedDepartment;
 
-  final List<String> _roles = ['Admin', 'Faculty', 'Student', 'Staff'];
-  final List<String> _departments = ['CCS', 'CBA', 'CTE', 'CAS', 'CCJE'];
+  final List<String> _roles = ['Admin', 'SASO Officer', 'Guard'];
+  final List<String> _departments = [
+    'Student Affairs Services Office',
+    'Safety and Security Office',
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      elevation: 0,
-      child: Container(
-        width: 600,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+      insetPadding: const EdgeInsets.all(
+        16,
+      ), // prevents dialog from touching screen edges
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: screenWidth < 700 ? screenWidth * 0.95 : 600, // responsive
+          maxHeight:
+              MediaQuery.of(context).size.height * 0.9, // prevent overflow
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 50,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-              ),
-              child: Row(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 16.0),
-                    child: Icon(
-                      Icons.person_add,
-                      color: Colors.black87,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    "Add New User",
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.black54),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, color: Colors.grey),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
+        child: SingleChildScrollView(
+          // makes dialog scrollable on small screens
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
                   children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF3F51B5),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          "NU",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    const Icon(Icons.person_add, color: Colors.black, size: 30),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Add New User",
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            labelText: "First Name",
-                            hintText: "Enter first name",
-                            onSaved: (value) => _firstName = value,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter first name';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            labelText: "Last Name",
-                            hintText: "Enter last name",
-                            onSaved: (value) => _lastName = value,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter last name';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      labelText: "Email Address",
-                      hintText: "user@cityofmalabonuniversity.edu.ph",
-                      keyboardType: TextInputType.emailAddress,
-                      onSaved: (value) => _emailAddress = value,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter email address';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDropdownField(
-                            labelText: "Role",
-                            hintText: "Select user role",
-                            value: _selectedRole,
-                            items: _roles,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRole = value;
-                              });
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please select a role';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDropdownField(
-                            labelText: "Department",
-                            hintText: "Select department",
-                            value: _selectedDepartment,
-                            items: _departments,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedDepartment = value;
-                              });
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please select a department';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              side: BorderSide(color: Colors.grey.shade400),
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3F51B5),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 3,
-                          ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              _formKey.currentState!.save();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Adding user: $_firstName $_lastName, Role: $_selectedRole',
-                                  ),
-                                ),
-                              );
-                              Navigator.of(context).pop();
-                            }
-                          },
-                          child: const Text(
-                            "Add User",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.black,
+                        size: 25,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
-              ),
+                const Divider(),
+
+                // Avatar initials
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 20),
+                  width: 100,
+                  height: 100,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF3F51B5),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _firstName != null && _lastName != null
+                          ? "${_firstName![0]}${_lastName![0]}".toUpperCase()
+                          : "NU",
+                      style: const TextStyle(
+                        fontSize: 32,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // First + Last Name
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        labelText: "First Name",
+                        hintText: "Enter first name",
+                        onSaved: (val) => _firstName = val,
+                        validator: (val) => (val == null || val.isEmpty)
+                            ? 'Enter first name'
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
+                        labelText: "Last Name",
+                        hintText: "Enter last name",
+                        onSaved: (val) => _lastName = val,
+                        validator: (val) => (val == null || val.isEmpty)
+                            ? 'Enter last name'
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Email
+                _buildTextField(
+                  labelText: "Email Address",
+                  hintText: "user@cityofmalabonuniversity.edu.ph",
+                  keyboardType: TextInputType.emailAddress,
+                  onSaved: (val) => _emailAddress = val,
+                  validator: (val) {
+                    if (val == null || val.isEmpty) return 'Enter email';
+                    if (!val.contains('@')) return 'Enter valid email';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Role + Department
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDropdownField(
+                        labelText: "Role",
+                        hintText: "Select user role",
+                        value: _selectedRole,
+                        items: _roles,
+                        onChanged: (val) => setState(() => _selectedRole = val),
+                        validator: (val) =>
+                            (val == null || val.isEmpty) ? 'Select role' : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildDropdownField(
+                        labelText: "Department",
+                        hintText: "Select department",
+                        value: _selectedDepartment,
+                        items: _departments,
+                        onChanged: (val) =>
+                            setState(() => _selectedDepartment = val),
+                        validator: (val) => (val == null || val.isEmpty)
+                            ? 'Select department'
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0033A0),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _formKey.currentState!.save();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Adding user: $_firstName $_lastName ($_emailAddress), Role: $_selectedRole',
+                              ),
+                            ),
+                          );
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      child: const Text(
+                        "Add User",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  // Helpers
   Widget _buildTextField({
     required String labelText,
     required String hintText,
@@ -264,45 +226,11 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     required FormFieldSetter<String> onSaved,
     required FormFieldValidator<String> validator,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          labelText,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey.shade500),
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Color(0xFF3F51B5),
-                width: 1.5,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-          onSaved: onSaved,
-          validator: validator,
-        ),
-      ],
+    return TextFormField(
+      decoration: InputDecoration(labelText: labelText, hintText: hintText),
+      keyboardType: keyboardType,
+      onSaved: onSaved,
+      validator: validator,
     );
   }
 
@@ -314,49 +242,13 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     required ValueChanged<String?> onChanged,
     required FormFieldValidator<String?> validator,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          labelText,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: value,
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(color: Colors.grey.shade500),
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Color(0xFF3F51B5),
-                width: 1.5,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
-          onChanged: onChanged,
-          items: items.map<DropdownMenuItem<String>>((String item) {
-            return DropdownMenuItem<String>(value: item, child: Text(item));
-          }).toList(),
-          validator: validator,
-        ),
-      ],
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(labelText: labelText, hintText: hintText),
+      onChanged: onChanged,
+      validator: validator,
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
     );
   }
 }
