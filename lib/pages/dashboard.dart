@@ -133,53 +133,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
-  final List<ViolationRecords> allRecords = [
-    ViolationRecords(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Under Review',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecords(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Smoking on Campus',
-      status: 'Referred',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-    ViolationRecords(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Pending',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      referredDate: '02-15-2025',
-      hearingDate: '02-20-2025',
-    ),
-    ViolationRecords(
-      studentName: 'Juan Dela Cruz',
-      studentId: '202212345',
-      violation: 'Smoking on Campus',
-      status: 'Reviewed',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '07-15-2025 5:30PM',
-      priority: 'High',
-      referredDate: '07-16-2025',
-      hearingDate: '07-20-2025',
-    ),
-  ];
-
   Widget buildActionButton(
     IconData icon,
     String label,
@@ -422,7 +375,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Expanded(
               child: Column(
                 children: [
-                  Container(
+                  SizedBox(
                     width: MediaQuery.of(context).size.width,
                     child: MediaQuery.of(context).size.width > 770
                         ? Row(

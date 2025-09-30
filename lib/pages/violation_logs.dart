@@ -20,6 +20,7 @@ class ViolationLogsPage extends StatefulWidget {
 }
 
 class _ViolationLogsPageState extends State<ViolationLogsPage> {
+  List<ViolationRecord> allRecords = [];
   double sideMenuSize = 0.0;
   bool showFilters = false;
 
@@ -98,38 +99,37 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
 
   String searchQuery = "";
 
-  final List<ViolationRecord> allRecords = [
-    ViolationRecord(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      violation: 'Improper Uniform',
-      status: 'Third Offense',
-      reportStatus: 'Referred',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      department: 'CAS',
-    ),
-    ViolationRecord(
-      studentName: 'Bebot Tibay',
-      studentId: '202245673',
-      violation: 'Late Attendance',
-      status: 'First Offense',
-      reportStatus: 'Pending',
-      reportedBy: 'Nadine Lustre',
-      dateTime: '11-29-2025 12:45AM',
-      department: 'CBA',
-    ),
-    ViolationRecord(
-      studentName: 'Rebron James',
-      studentId: '202223985',
-      violation: 'Noise Disturbance',
-      status: 'Second Offense',
-      reportStatus: 'Reviewed',
-      reportedBy: 'Leonard Pascal',
-      dateTime: '04-15-2025 3:05PM',
-      department: 'CCS',
-    ),
-  ];
+  Future<void> fetchViolations() async {
+    final url = Uri.parse(
+      'http://192.168.1.100:8000/violations',
+    ); // Replace with your IP
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          allRecords = data
+              .map(
+                (item) => ViolationRecord(
+                  studentName: item['student_name'],
+                  studentId: item['student_id'],
+                  violation: item['violation'],
+                  status: item['status'],
+                  reportStatus: item['report_status'],
+                  reportedBy: item['reported_by'],
+                  dateTime: item['date_time'],
+                  department: item['department'],
+                ),
+              )
+              .toList();
+        });
+      } else {
+        print('Failed to load violations');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
 
   List<ViolationRecord> get filteredRecords {
     return allRecords.where((record) {

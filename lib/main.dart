@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       title: 'VioTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Dashboard(), //firstScreen(context),
+      home: firstScreen(context),
     );
   }
 }

@@ -59,27 +59,6 @@ class _UserManagementPageState extends State<UserMgt> {
       role: "SASO Officer",
       status: "Active",
     ),
-    User(
-      name: "Mang Tani",
-      email: "tani.guard@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Sarah Geronimo",
-      email: "sarahg@cityofmalabonuniversity.edu.ph",
-      office: "Safety and Security Office",
-      role: "Guard",
-      status: "Active",
-    ),
-    User(
-      name: "Admin User",
-      email: "admin@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "Admin",
-      status: "Active",
-    ),
   ];
 
   void _editUser(int index) {
