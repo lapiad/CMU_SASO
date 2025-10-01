@@ -38,6 +38,7 @@ class RefferedCnl extends StatefulWidget {
 }
 
 class _RefferedCnlState extends State<RefferedCnl> {
+  List<ViolationRecords> allRecords = [];
   double sideMenuSize = 0.0;
   Future<String> getName() async {
     final box = GetStorage();
@@ -76,20 +77,6 @@ class _RefferedCnlState extends State<RefferedCnl> {
           ),
         ),
         PopupMenuItem(
-          value: 'system',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.settings, size: 30),
-                SizedBox(width: 16),
-                Text('System Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
-        PopupMenuItem(
           value: 'signout',
           child: SizedBox(
             width: 300,
@@ -121,22 +108,40 @@ class _RefferedCnlState extends State<RefferedCnl> {
     }
   }
 
-  final List<ViolationRecords> allRecord = [
-    ViolationRecords(
-      studentName: 'Burnok Sual',
-      studentId: '202298765',
-      Department: 'CAS',
-      violation: 'Improper Uniform',
-      status: 'Under Review',
-      reportedBy: 'Mang Tani',
-      dateTime: '02-14-2025 11:11AM',
-      priority: 'High',
-      hearingDate: '02-20-2025',
-    ),
-  ];
+  Future<void> fetchViolations() async {
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/violations',
+    ); // Replace with your IP
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          allRecords = data
+              .map(
+                (item) => ViolationRecords(
+                  studentName: item['student_name'],
+                  studentId: item['student_id'],
+                  department: item['department'],
+                  violation: item['violation'],
+                  priority: item['priority'],
+                  status: item['status'],
+                  reportedBy: item['reported_by'],
+                  hearingDate: item['hearing_date'],
+                ),
+              )
+              .toList();
+        });
+      } else {
+        print('Failed Refered Violations');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
 
   List<ViolationRecords> get filteredRecords {
-    return allRecord.where((record) {
+    return allRecords.where((record) {
       final query = searchQuery.toLowerCase();
       final matchesSearch =
           query.isEmpty ||
@@ -433,7 +438,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                       const SizedBox(width: 10.0),
                       SummaryWidget(
                         title: "Total Cases",
-                        value: allRecord.length.toString(),
+                        value: allRecords.length.toString(),
                         subtitle: "Active Referrals",
                         icon: Icons.cases_outlined,
                         iconColor: const Color.fromARGB(255, 33, 31, 196),
@@ -632,7 +637,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
                               ),
                               DataCell(
                                 Text(
-                                  record.Department,
+                                  record.department,
                                   style: const TextStyle(fontSize: 20),
                                 ),
                               ),
@@ -930,7 +935,7 @@ class _RefferedviewState extends State<Refferedview> {
     studentIdController = TextEditingController(text: widget.record.studentId);
     violationController = TextEditingController(text: widget.record.violation);
     departmentController = TextEditingController(
-      text: widget.record.Department,
+      text: widget.record.department,
     );
     reportedByController = TextEditingController(
       text: widget.record.reportedBy,
@@ -1140,22 +1145,20 @@ class _RefferedviewState extends State<Refferedview> {
 class ViolationRecords {
   final String studentName;
   final String studentId;
-  final String Department;
+  final String department;
   final String violation;
   final String status;
   final String reportedBy;
-  final String dateTime;
   final String? priority;
   final String? hearingDate;
 
   ViolationRecords({
     required this.studentName,
     required this.studentId,
-    required this.Department,
+    required this.department,
     required this.violation,
     required this.status,
     required this.reportedBy,
-    required this.dateTime,
     this.priority,
     this.hearingDate,
   });

@@ -39,29 +39,37 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   }
 
   void _showAdminMenu(BuildContext context) async {
-    final result = await showMenu<String>(
+    final result = await showMenu(
       context: context,
-      position: const RelativeRect.fromLTRB(1000, 80, 10, 0),
-      items: const [
-        PopupMenuItem(
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
+      items: [
+        const PopupMenuItem(
           value: 'profile',
           child: SizedBox(
-            width: 250,
-            height: 50,
-            child: Text('Profile Settings', style: TextStyle(fontSize: 18)),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'system',
-          child: SizedBox(
-            width: 250,
-            height: 50,
-            child: Text('System Settings', style: TextStyle(fontSize: 18)),
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         PopupMenuItem(
           value: 'signout',
-          child: Text("Sign Out", style: TextStyle(fontSize: 18)),
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -101,7 +109,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
 
   Future<void> fetchViolations() async {
     final url = Uri.parse(
-      'http://192.168.1.100:8000/violations',
+      '${GlobalConfiguration().getValue("server_url")}/violations',
     ); // Replace with your IP
     try {
       final response = await http.get(url);
@@ -279,7 +287,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                               columns: const [
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 170,
+                                    width: 180,
                                     child: Text(
                                       'Student Name',
                                       style: TextStyle(

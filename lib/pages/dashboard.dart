@@ -88,20 +88,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ),
         PopupMenuItem(
-          value: 'system',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.settings, size: 30),
-                SizedBox(width: 16),
-                Text('System Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
-        PopupMenuItem(
           value: 'signout',
           child: SizedBox(
             width: 300,
@@ -571,28 +557,4 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
     );
   }
-}
-
-class ViolationRecords {
-  final String studentName;
-  final String studentId;
-  final String violation;
-  final String status;
-  final String reportedBy;
-  final String dateTime;
-  final String? priority;
-  final String? referredDate;
-  final String? hearingDate;
-
-  ViolationRecords({
-    required this.studentName,
-    required this.studentId,
-    required this.violation,
-    required this.status,
-    required this.reportedBy,
-    required this.dateTime,
-    this.priority,
-    this.referredDate,
-    this.hearingDate,
-  });
 }

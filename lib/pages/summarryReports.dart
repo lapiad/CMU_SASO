@@ -120,20 +120,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           ),
         ),
         PopupMenuItem(
-          value: 'system',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.settings, size: 30),
-                SizedBox(width: 16),
-                Text('System Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
-        PopupMenuItem(
           value: 'signout',
           child: SizedBox(
             width: 300,
