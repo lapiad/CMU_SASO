@@ -229,7 +229,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           icon: const Icon(Icons.menu, size: 32, color: Colors.white),
           onPressed: () {
             setState(() {
-              sideMenuSize = sideMenuSize == 0.0 ? 300.0 : 0.0;
+              sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
             });
           },
         ),

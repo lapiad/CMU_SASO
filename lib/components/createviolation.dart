@@ -184,6 +184,50 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     offenseLevel = "First Offense"; // Example default
   }
 
+  Future<void> createViolation() async {
+    final box = GetStorage();
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/violations',
+    );
+
+    final Map<String, dynamic> payload = {
+      "student_id": studentIdController.text,
+      "student_name": studentNameController.text,
+      "violation": violationType,
+      "offense_level": offenseLevel,
+      "department": box.read('user_details')?['department'] ?? '',
+      "reported_by": reportedByController.text,
+      "role": roleController.text,
+      "incident_date": incidentDate?.toIso8601String(),
+      "photo_evidence": null, // You can handle image upload separately
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(payload),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Violation report submitted successfully."),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Submission failed: ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
