@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:global_configuration/global_configuration.dart';
 
 class AddNewUserDialog extends StatefulWidget {
   const AddNewUserDialog({super.key});
@@ -9,35 +13,70 @@ class AddNewUserDialog extends StatefulWidget {
 
 class _AddNewUserDialogState extends State<AddNewUserDialog> {
   final _formKey = GlobalKey<FormState>();
+
   String? _firstName;
   String? _lastName;
   String? _emailAddress;
   String? _selectedRole;
   String? _selectedDepartment;
 
-  final List<String> _roles = ['Admin', 'SASO Officer', 'Guard'];
+  final List<String> _roles = ['Admin', 'User', 'Manager', 'Guest'];
   final List<String> _departments = [
-    'Student Affairs Services Office',
-    'Safety and Security Office',
+    'Security Department',
+    'Guard Department',
+    'SASO Department',
   ];
+
+  Future<void> createUser() async {
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users',
+    );
+
+    final Map<String, dynamic> payload = {
+      "first_name": _firstName,
+      "last_name": _lastName,
+      "email": _emailAddress,
+      "role": _selectedRole,
+      "department": _selectedDepartment,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(payload),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User added successfully.")),
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add user: ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Dialog(
-      insetPadding: const EdgeInsets.all(
-        16,
-      ), // prevents dialog from touching screen edges
+      insetPadding: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: screenWidth < 700 ? screenWidth * 0.95 : 600, // responsive
-          maxHeight:
-              MediaQuery.of(context).size.height * 0.9, // prevent overflow
+          maxWidth: screenWidth < 700 ? screenWidth * 0.95 : 600,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
         ),
         child: SingleChildScrollView(
-          // makes dialog scrollable on small screens
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
@@ -80,7 +119,8 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                   ),
                   child: Center(
                     child: Text(
-                      _firstName != null && _lastName != null
+                      (_firstName != null && _firstName!.isNotEmpty) &&
+                              (_lastName != null && _lastName!.isNotEmpty)
                           ? "${_firstName![0]}${_lastName![0]}".toUpperCase()
                           : "NU",
                       style: const TextStyle(
@@ -189,16 +229,10 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           _formKey.currentState!.save();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Adding user: $_firstName $_lastName ($_emailAddress), Role: $_selectedRole',
-                              ),
-                            ),
-                          );
-                          Navigator.of(context).pop();
+                          createUser();
                         }
                       },
+
                       child: const Text(
                         "Add User",
                         style: TextStyle(
@@ -244,6 +278,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
   }) {
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(labelText: labelText, hintText: hintText),
+      value: value,
       onChanged: onChanged,
       validator: validator,
       items: items

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
+import 'package:global_configuration/global_configuration.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -18,57 +18,56 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final TextEditingController emailController = TextEditingController();
 
   String userFirstName = "Loading...";
+  String userLastName = "Loading...";
+  String userEmail = "Loading...";
   String userInitials = "AD";
-  String userRole = "ADMIN"; // default role
+  String userRole = "ADMIN"; // Default role
 
   @override
   void initState() {
     super.initState();
-    fetchUserData();
+    fetchUserData(); // Fetch user data when the page loads
   }
 
-  Future<void> fetchUserData() async {
+  void fetchUserData() async {
     final box = GetStorage();
     final userId = box.read('user_id');
-    final serverUrl = GlobalConfiguration().getValue("server_url");
 
-    if (userId == null || serverUrl == null) {
-      loadSampleData();
+    if (userId == null) {
+      print("No user ID found in storage.");
       return;
     }
 
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users/$userId',
+    );
+
     try {
-      final url = Uri.parse('$serverUrl/users/$userId');
+      // Example: Using http package to fetch data from API
+      // You need to add `http` package in pubspec.yaml: http: ^0.13.5
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final userData = jsonDecode(response.body);
+
         setState(() {
-          userFirstName = data['first_name'] ?? "Unknown";
-          firstNameController.text = data['first_name'] ?? '';
-          lastNameController.text = data['last_name'] ?? '';
-          emailController.text =
-              data['email'] ?? 'admin@cityofmalabonuniversity.edu.ph';
-          userInitials = getInitials(data['first_name'], data['last_name']);
-          userRole = data['role'] ?? "ADMIN";
+          userFirstName = userData["first_name"] ?? "Loading...";
+          userLastName = userData["last_name"] ?? "Loading...";
+          userEmail = userData["email"] ?? "Loading...";
+          userRole = userData["role"] ?? "ADMIN";
+          userInitials = getInitials(userFirstName, userLastName);
+
+          // Populate the controllers with fetched data
+          firstNameController.text = userFirstName;
+          lastNameController.text = userLastName;
+          emailController.text = userEmail;
         });
       } else {
-        loadSampleData();
+        print("Failed to load user data. Status code: ${response.statusCode}");
       }
     } catch (e) {
-      loadSampleData();
+      print("Error fetching user data: $e");
     }
-  }
-
-  void loadSampleData() {
-    setState(() {
-      userFirstName = "Anthony";
-      firstNameController.text = "Morales";
-      lastNameController.text = "Santos";
-      emailController.text = "anthony.morales@example.com";
-      userInitials = getInitials("Anthony", "Morales");
-      userRole = "ADMIN";
-    });
   }
 
   String getInitials(String? first, String? last) {
@@ -142,7 +141,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "$userFirstName ${lastNameController.text}",
+                    "$userFirstName $userLastName",
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -203,7 +202,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           label,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 20,
             color: Colors.black87,
           ),
         ),
@@ -224,7 +223,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             controller: controller,
             readOnly: readOnly,
             obscureText: obscureText,
-            style: const TextStyle(fontSize: 15),
+            style: const TextStyle(fontSize: 20),
             decoration: InputDecoration(
               prefixIcon: icon != null
                   ? Icon(icon, color: Colors.blue[700])

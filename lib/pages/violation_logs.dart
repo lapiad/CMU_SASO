@@ -278,7 +278,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                       const SizedBox(height: 16),
                       SizedBox(
                         width: 1900,
-                        height: 809,
+                        height: 799,
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: SingleChildScrollView(
