@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/page/IDScanner.dart';
+import 'package:flutter_application_1/pages/login.dart';
 
 class SchoolGuardHome extends StatefulWidget {
   const SchoolGuardHome({super.key});
@@ -15,28 +16,40 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
       "id": "202205249",
       "offense": "1st",
       "violation": "Academic Dishonesty",
-      "time": "2 mins",
+      "department": "College of Arts & Sciences",
+      "time": "2025-09-09 10:00",
     },
     {
       "name": "Juan Dela Cruz",
       "id": "202205232",
       "offense": "2nd",
       "violation": "Improper Uniform",
-      "time": "5 mins",
+      "department": "College of Computer Studies",
+      "time": "2025-09-09 11:30",
     },
     {
       "name": "James Reid",
       "id": "202205211",
       "offense": "3rd",
       "violation": "Serious Misconduct",
-      "time": "10 mins",
+      "department": "College of Education",
+      "time": "2025-09-08 09:00",
     },
     {
       "name": "Sponge Cola",
       "id": "202209211",
       "offense": "1st",
       "violation": "Late Attendance",
-      "time": "15 mins",
+      "department": "College of Criminology",
+      "time": "2025-09-07 14:15",
+    },
+    {
+      "name": "Maria Santos",
+      "id": "202205299",
+      "offense": "2nd",
+      "violation": "Improper Conduct",
+      "department": "College of Business Administration",
+      "time": "2025-09-06 16:45",
     },
   ];
 
@@ -64,8 +77,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
               const SizedBox(height: 20),
               _buildScannerCard(),
               const SizedBox(height: 20),
-
-              // ✅ Search box
               TextField(
                 decoration: InputDecoration(
                   hintText: "Search student ID or name...",
@@ -82,7 +93,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                   setState(() => searchQuery = value);
                 },
               ),
-
               const SizedBox(height: 20),
               _buildRecentScans(filteredData),
               const SizedBox(height: 16),
@@ -94,7 +104,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  // 🔹 Header with stats
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -117,7 +126,12 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
         children: [
           Row(
             children: [
-              const Icon(Icons.shield, color: Colors.white, size: 28),
+              const Image(
+                image: AssetImage('assets/logo.png'),
+                color: Colors.white,
+                width: 40,
+                height: 40,
+              ),
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
@@ -125,6 +139,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -132,7 +147,12 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                 backgroundColor: Colors.white24,
                 child: IconButton(
                   icon: const Icon(Icons.person, color: Colors.white),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfileScreen()),
+                    );
+                  },
                 ),
               ),
             ],
@@ -167,7 +187,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  // 🔹 Scanner card
   Widget _buildScannerCard() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -224,7 +243,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  // 🔹 Recent scans
   Widget _buildRecentScans(List<Map<String, String>> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,10 +276,14 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          "${scan["id"]} • ${scan["violation"]}",
-          style: const TextStyle(fontSize: 13, color: Colors.black54),
+          "${scan["id"] ?? ""}\n• ${scan["violation"] ?? ""}\n${scan["department"] ?? ""}",
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.black54,
+            height: 1.4,
+          ),
         ),
-        trailing: _offenseBadge(scan["offense"] ?? "", scan["time"]),
+        trailing: _offenseBadge(scan["offense"] ?? "", scan["time"] ?? ""),
       ),
     );
   }
@@ -298,7 +320,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  // 🔹 View all button
   Widget _buildViewAllButton(BuildContext context) {
     return Center(
       child: TextButton(
@@ -326,7 +347,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   }
 }
 
-// 🔹 Full scan history modal
+/// ------------------- Scan History Modal -------------------
 class _ScanHistoryModal extends StatefulWidget {
   final List<Map<String, String>> scanData;
   const _ScanHistoryModal({required this.scanData});
@@ -339,6 +360,9 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
   String searchQuery = "";
   List<String> selectedStatuses = [];
   List<String> selectedViolations = [];
+  List<String> selectedDepartments = [];
+  DateTime? startDate;
+  DateTime? endDate;
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +376,26 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
       final matchesViolation =
           selectedViolations.isEmpty ||
           selectedViolations.contains(scan["violation"]);
-      return matchesSearch && matchesStatus && matchesViolation;
+      final matchesDepartment =
+          selectedDepartments.isEmpty ||
+          selectedDepartments.contains(scan["department"]);
+
+      final scanTime = DateTime.tryParse(scan["time"] ?? "");
+      final matchesDate =
+          (startDate == null ||
+              (scanTime != null &&
+                  scanTime.isAfter(
+                    startDate!.subtract(const Duration(days: 1)),
+                  ))) &&
+          (endDate == null ||
+              (scanTime != null &&
+                  scanTime.isBefore(endDate!.add(const Duration(days: 1)))));
+
+      return matchesSearch &&
+          matchesStatus &&
+          matchesViolation &&
+          matchesDepartment &&
+          matchesDate;
     }).toList();
 
     return Column(
@@ -382,18 +425,30 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
             onChanged: (value) => setState(() => searchQuery = value),
           ),
         ),
-
-        if (selectedStatuses.isNotEmpty || selectedViolations.isNotEmpty)
+        if (selectedStatuses.isNotEmpty ||
+            selectedViolations.isNotEmpty ||
+            selectedDepartments.isNotEmpty ||
+            startDate != null ||
+            endDate != null)
           Wrap(
             spacing: 6,
             children: [
               ...selectedStatuses.map((s) => _buildChip(s, Colors.orange)),
               ...selectedViolations.map((v) => _buildChip(v, Colors.blue)),
+              ...selectedDepartments.map((d) => _buildChip(d, Colors.green)),
+              if (startDate != null)
+                _buildChip(
+                  "From: ${startDate!.toLocal().toIso8601String().split('T')[0]}",
+                  Colors.purple,
+                ),
+              if (endDate != null)
+                _buildChip(
+                  "To: ${endDate!.toLocal().toIso8601String().split('T')[0]}",
+                  Colors.purple,
+                ),
             ],
           ),
-
         const SizedBox(height: 8),
-
         Expanded(
           child: filteredData.isEmpty
               ? const Center(
@@ -421,7 +476,7 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        "${filteredData[index]["id"]} • ${filteredData[index]["violation"]}",
+                        "${filteredData[index]["id"]} • ${filteredData[index]["violation"]}\n${filteredData[index]["department"]}",
                         style: const TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
@@ -472,7 +527,6 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
     );
   }
 
-  // 🔹 Filter Bottom Sheet
   void _showFilterOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -484,7 +538,7 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: const EdgeInsets.all(50),
+              padding: const EdgeInsets.all(20),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,12 +551,10 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                       ),
                     ),
                     const SizedBox(height: 16),
+
                     const Text(
                       "Status",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     Wrap(
                       spacing: 8,
@@ -522,71 +574,130 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                         );
                       }).toList(),
                     ),
+
                     const SizedBox(height: 16),
                     const Text(
                       "Violation",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 10),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 3, // ✅ keeps all boxes same ratio
+                    Wrap(
+                      spacing: 8,
                       children:
                           [
                             "Academic Dishonesty",
                             "Improper Uniform",
                             "Late Attendance",
                             "Serious Misconduct",
+                            "Improper Conduct",
                           ].map((violation) {
                             final isSelected = selectedViolations.contains(
                               violation,
                             );
-                            return GestureDetector(
-                              onTap: () {
+                            return ChoiceChip(
+                              label: Text(violation),
+                              selected: isSelected,
+                              selectedColor: Colors.blue.shade300,
+                              onSelected: (val) {
                                 setModalState(() {
-                                  if (isSelected) {
-                                    selectedViolations.remove(violation);
-                                  } else {
-                                    selectedViolations.add(violation);
-                                  }
+                                  val
+                                      ? selectedViolations.add(violation)
+                                      : selectedViolations.remove(violation);
                                 });
                               },
-                              child: Container(
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.blue.shade300
-                                      : Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.blue
-                                        : Colors.grey,
-                                  ),
-                                ),
-                                child: Text(
-                                  violation,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
                             );
                           }).toList(),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Department",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children:
+                          [
+                            "College of Arts & Sciences",
+                            "College of Computer Studies",
+                            "College of Education",
+                            "College of Criminology",
+                            "College of Business Administration",
+                          ].map((dept) {
+                            final isSelected = selectedDepartments.contains(
+                              dept,
+                            );
+                            return ChoiceChip(
+                              label: Text(dept),
+                              selected: isSelected,
+                              selectedColor: Colors.green.shade300,
+                              onSelected: (val) {
+                                setModalState(() {
+                                  val
+                                      ? selectedDepartments.add(dept)
+                                      : selectedDepartments.remove(dept);
+                                });
+                              },
+                            );
+                          }).toList(),
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Date Range",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: startDate ?? DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                              );
+                              if (picked != null) {
+                                setModalState(() => startDate = picked);
+                              }
+                            },
+                            child: Text(
+                              startDate == null
+                                  ? "Start Date"
+                                  : startDate!
+                                        .toLocal()
+                                        .toIso8601String()
+                                        .split('T')[0],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: endDate ?? DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                              );
+                              if (picked != null) {
+                                setModalState(() => endDate = picked);
+                              }
+                            },
+                            child: Text(
+                              endDate == null
+                                  ? "End Date"
+                                  : endDate!.toLocal().toIso8601String().split(
+                                      'T',
+                                    )[0],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -595,6 +706,9 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                             setState(() {
                               selectedStatuses.clear();
                               selectedViolations.clear();
+                              selectedDepartments.clear();
+                              startDate = null;
+                              endDate = null;
                             });
                             Navigator.pop(context);
                           },
@@ -635,8 +749,186 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
         setState(() {
           selectedStatuses.remove(label);
           selectedViolations.remove(label);
+          selectedDepartments.remove(label);
+          if (label.startsWith("From:")) startDate = null;
+          if (label.startsWith("To:")) endDate = null;
         });
       },
+    );
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.redAccent,
+                child: Icon(Icons.logout, color: Colors.white, size: 34),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Confirm Logout",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Are you sure you want to log out?\nAny unsaved scan data will be lost.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const Login()),
+                          (route) => false,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text("Logout"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.blue.shade900,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.white24,
+                child: Text(
+                  "JM",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                "Jose Martinez",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildInfoField(
+                label: "Your Email",
+                value: "jose.martinez@cityofmalabon...",
+                icon: Icons.email_outlined,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Password",
+                value: "********",
+                icon: Icons.visibility_off,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Department",
+                value: "Safety and Security Office",
+                icon: Icons.business_outlined,
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: () => _showLogoutDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 40,
+                  ),
+                ),
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: const Text(
+                  "Logout",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoField({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(icon, color: Colors.grey.shade600),
+        ],
+      ),
     );
   }
 }

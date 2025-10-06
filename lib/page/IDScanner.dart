@@ -1,18 +1,11 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/ViolationScreen.dart';
+import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 List<CameraDescription>? cameras;
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  cameras = await availableCameras();
-  runApp(const StudentIDScannerApp());
-}
 
 class StudentIDScannerApp extends StatelessWidget {
   const StudentIDScannerApp({super.key});
@@ -30,14 +23,14 @@ class IDScannerScreen extends StatefulWidget {
   const IDScannerScreen({super.key});
 
   @override
-  _IDScannerScreenState createState() => _IDScannerScreenState();
+  State<IDScannerScreen> createState() => _IDScannerScreenState();
 }
 
 class _IDScannerScreenState extends State<IDScannerScreen> {
   CameraController? _cameraController;
   bool _flashOn = false;
   bool _isProcessing = false;
-  File? _capturedImage; // frozen preview
+  File? _capturedImage;
 
   @override
   void initState() {
@@ -48,8 +41,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   Future<void> _initCamera() async {
     await Permission.camera.request();
     if (await Permission.camera.isGranted) {
-      cameras = await availableCameras();
-      final backCamera = cameras!.firstWhere(
+      final backCamera = (await availableCameras()).firstWhere(
         (c) => c.lensDirection == CameraLensDirection.back,
       );
       _cameraController = CameraController(backCamera, ResolutionPreset.high);
@@ -61,164 +53,117 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   Future<void> _toggleFlash() async {
     if (_cameraController == null) return;
     setState(() => _flashOn = !_flashOn);
-
-    if (!_isProcessing) {
-      await _cameraController!.setFlashMode(
-        _flashOn ? FlashMode.torch : FlashMode.off,
-      );
-    }
-  }
-
-  Future<void> _setFocus(
-    TapDownDetails details,
-    BoxConstraints constraints,
-  ) async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
-
-    final offset = Offset(
-      details.localPosition.dx / constraints.maxWidth,
-      details.localPosition.dy / constraints.maxHeight,
+    await _cameraController!.setFlashMode(
+      _flashOn ? FlashMode.torch : FlashMode.off,
     );
-
-    try {
-      await _cameraController!.setFocusPoint(offset);
-      await _cameraController!.setExposurePoint(offset);
-    } catch (e) {
-      debugPrint("Focus not supported: $e");
-    }
   }
 
-  Future<void> _scanID() async {
+  Future<void> _scanID({int attempt = 1}) async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return;
     }
 
     try {
-      // 1. Capture image
+      setState(() => _isProcessing = true);
+
+      // Take picture
       XFile picture = await _cameraController!.takePicture();
-      setState(() {
-        _capturedImage = File(picture.path); // freeze
-        _isProcessing = true;
-      });
+      _capturedImage = File(picture.path);
+      setState(() {});
 
-      // 2. Crop ID area
-      File croppedFile = await _cropToIDRect(File(picture.path));
-
-      // 3. Run OCR
-      final inputImage = InputImage.fromFile(croppedFile);
-      final textRecognizer = TextRecognizer(
-        script: TextRecognitionScript.latin,
+      // OCR
+      String scannedText = await _extractTextFromFile(_capturedImage!);
+      // Extract info
+      final nameReg = RegExp(
+        r'([A-Z][a-zA-Z]+,\s+(?:[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)(?:\s+[A-Z]\.?)?)',
       );
-      final RecognizedText recognizedText = await textRecognizer.processImage(
-        inputImage,
-      );
-
-      String scannedText = recognizedText.text;
-
-      // Improved regex (handles variations better)
-      RegExp nameReg = RegExp(
-        r'([A-Z][a-zA-Z]+,\s+[A-Z][a-zA-Z]+(?:\s+[A-Z]\.?)?)',
-        multiLine: true,
-      );
-      RegExp courseReg = RegExp(r'\b[A-Z]{2,5}\b');
-      RegExp studNoReg = RegExp(r'\b\d{9,12}\b'); // allow up to 12 digits
+      // Allow any uppercase course-like word (e.g., BSIT, BSCPE, BSTM, etc.)
+      final courseReg = RegExp(r'\b[A-Z]{2,6}\b');
+      final studNoReg = RegExp(r'\b(20\d{6,8})\b');
 
       String name = nameReg.firstMatch(scannedText)?.group(0) ?? '';
       String course = courseReg.firstMatch(scannedText)?.group(0) ?? '';
       String studentNo = studNoReg.firstMatch(scannedText)?.group(0) ?? '';
+
       name = name.replaceAll(',', '').trim();
 
-      await textRecognizer.close();
-
-      // Turn off flash after scan
-      await _cameraController!.setFlashMode(FlashMode.off);
-      setState(() => _flashOn = false);
+      // Retry if failed
+      if ((name.isEmpty || studentNo.isEmpty) && attempt < 2) {
+        debugPrint("⚠️ OCR incomplete. Retrying...");
+        return _scanID(attempt: attempt + 1);
+      }
 
       if (name.isEmpty || studentNo.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("ID not recognized or too blurry. Please try again."),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showOverlayMessage("No valid ID details detected");
         setState(() {
           _isProcessing = false;
-          _capturedImage = null; // return live preview
+          _capturedImage = null;
         });
         return;
       }
 
-      // ✅ Navigate if success
+      // Turn off flash
+      await _cameraController!.setFlashMode(FlashMode.off);
+      setState(() => _flashOn = false);
+
+      // Navigate to next screen with extracted info
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ViolationScreen(
-            name: name,
-            course: course,
-            studentNo: studentNo,
-            violationsCount: 0,
-          ),
+          builder: (_) =>
+              ViolationScreen(name: name, course: course, studentNo: studentNo),
         ),
       ).then((_) {
-        // return to live preview
         setState(() {
           _capturedImage = null;
           _isProcessing = false;
         });
       });
     } catch (e) {
-      debugPrint('Error scanning ID: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to scan ID. Please try again.')),
-      );
+      debugPrint("❌ Scan error: $e");
+      _showOverlayMessage("Failed to scan ID. Try again in good lighting.");
       setState(() {
         _isProcessing = false;
-        _capturedImage = null; // back to live preview
+        _capturedImage = null;
       });
     }
   }
 
-  Future<File> _cropToIDRect(File file) async {
-    final bytes = await file.readAsBytes();
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
+  Future<String> _extractTextFromFile(File file) async {
+    final inputImage = InputImage.fromFile(file);
+    final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    final recognizedText = await textRecognizer.processImage(inputImage);
+    await textRecognizer.close();
+    return recognizedText.text;
+  }
 
-    double padding = 40;
-    double rectWidth = (image.width - (padding * 2))
-        .clamp(0, image.width)
-        .toDouble();
-    double rectHeight = rectWidth / 1.6; // 1.6 ratio closer to ID cards
-    double left = (image.width - rectWidth) / 2;
-    double top = (image.height - rectHeight) / 2;
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final paint = Paint();
-
-    canvas.drawImageRect(
-      image,
-      Rect.fromLTWH(left, top, rectWidth, rectHeight),
-      Rect.fromLTWH(0, 0, rectWidth, rectHeight),
-      paint,
+  void _showOverlayMessage(String message) {
+    final overlay = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 80,
+        left: 24,
+        right: 24,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ),
+      ),
     );
 
-    final picture = recorder.endRecording();
-    final croppedImage = await picture.toImage(
-      rectWidth.toInt(),
-      rectHeight.toInt(),
-    );
-    final byteData = await croppedImage.toByteData(
-      format: ui.ImageByteFormat.png,
-    );
-
-    final croppedFile = File(
-      "${file.parent.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png",
-    );
-    await croppedFile.writeAsBytes(byteData!.buffer.asUint8List());
-    return croppedFile;
+    Overlay.of(context).insert(overlay);
+    Future.delayed(const Duration(seconds: 2), () => overlay.remove());
   }
 
   @override
@@ -229,13 +174,12 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double buttonSize = MediaQuery.of(context).size.width * 0.22;
+    final buttonSize = MediaQuery.of(context).size.width * 0.22;
 
     return Scaffold(
       body: Stack(
         alignment: Alignment.center,
         children: [
-          // Camera preview OR frozen captured image
           _capturedImage != null
               ? Image.file(
                   _capturedImage!,
@@ -243,31 +187,28 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
                   width: double.infinity,
                   height: double.infinity,
                 )
-              : _cameraController == null ||
-                    !_cameraController!.value.isInitialized
+              : (_cameraController == null ||
+                    !_cameraController!.value.isInitialized)
               ? const Center(child: CircularProgressIndicator())
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    return GestureDetector(
-                      onTapDown: (details) => _setFocus(details, constraints),
-                      child: SizedBox.expand(
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _cameraController!.value.previewSize!.height,
-                            height: _cameraController!.value.previewSize!.width,
-                            child: CameraPreview(_cameraController!),
-                          ),
+                    return SizedBox.expand(
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: _cameraController!.value.previewSize!.height,
+                          height: _cameraController!.value.previewSize!.width,
+                          child: CameraPreview(_cameraController!),
                         ),
                       ),
                     );
                   },
                 ),
 
-          // Scanner overlay (corners)
+          // Overlay frame
           Positioned.fill(child: CustomPaint(painter: ScannerOverlay())),
 
-          // Flash toggle
+          // Flash button
           Positioned(
             top: 40,
             left: 20,
@@ -284,30 +225,32 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
           // Capture button
           if (!_isProcessing)
             Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: GestureDetector(
-                  onTap: _scanID,
-                  child: Container(
-                    width: buttonSize,
-                    height: buttonSize,
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 36,
-                    ),
+              bottom: MediaQuery.of(context).padding.bottom + 30,
+              child: GestureDetector(
+                onTap: _scanID,
+                child: Container(
+                  width: buttonSize,
+                  height: buttonSize,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black38,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 36,
                   ),
                 ),
               ),
             ),
 
-          // Loader overlay
           if (_isProcessing)
             Container(
               color: Colors.black45,
@@ -321,7 +264,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Processing ID...',
+                      "Processing ID...",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],
@@ -342,17 +285,16 @@ class ScannerOverlay extends CustomPainter {
       ..strokeWidth = 6
       ..style = PaintingStyle.stroke;
 
-    double padding = 15;
-    double rectWidth = size.width - (padding * 5);
-    double rectHeight = rectWidth / 0.625;
-    double left = (size.width - rectWidth) / 2;
-    double top = (size.height - rectHeight) / 2;
-    double right = left + rectWidth;
-    double bottom = top + rectHeight;
+    const padding = 10.0;
+    final rectWidth = size.width - (padding * 5);
+    final rectHeight = rectWidth / 0.625;
+    final left = (size.width - rectWidth) / 2;
+    final top = (size.height - rectHeight) / 2;
+    final right = left + rectWidth;
+    final bottom = top + rectHeight;
+    const cornerSize = 40.0;
 
-    double cornerSize = 40;
-
-    // Draw corners
+    // Corner lines
     canvas.drawLine(Offset(left, top), Offset(left + cornerSize, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerSize), paint);
     canvas.drawLine(Offset(right, top), Offset(right - cornerSize, top), paint);
