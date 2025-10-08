@@ -41,10 +41,16 @@ class _RefferedCnlState extends State<RefferedCnl> {
   bool filterCTE = false;
   bool filterCCJE = false;
 
+  @override
+  void initState() {
+    super.initState();
+    fetchViolations();
+  }
+
   Future<void> fetchViolations() async {
     final url = Uri.parse(
       '${GlobalConfiguration().getValue("server_url")}/violations',
-    ); // Replace with your IP
+    );
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -528,7 +534,7 @@ class _RefferedCnlState extends State<RefferedCnl> {
               context,
               icon: Icons.person,
               label: 'User Management',
-              page: const UserMgt(),
+              page: UserMgt(),
             ),
           ],
         ),
@@ -749,11 +755,11 @@ class _RefferedCnlState extends State<RefferedCnl> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: getActionStatusColor(record.status ?? ''),
+                      color: getActionStatusColor(record.status),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
-                      record.status ?? '',
+                      record.status,
                       style: const TextStyle(fontSize: 20),
                     ),
                   ),

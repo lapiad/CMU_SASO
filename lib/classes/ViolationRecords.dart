@@ -4,7 +4,6 @@ class ViolationRecord {
   final String department;
   late final String violation;
   late final String status;
-  final String reportStatus;
   final String reportedBy;
   final String dateTime;
 
@@ -14,7 +13,6 @@ class ViolationRecord {
     required this.department,
     required this.violation,
     required this.status,
-    required this.reportStatus,
     required this.reportedBy,
     required this.dateTime,
   });

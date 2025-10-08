@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/Schoolgyard.dart';
+import 'package:flutter_application_1/page/Schoolguard.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
@@ -192,14 +192,6 @@ class _LoginPage extends State<LoginPage> {
                           ),
                         )
                       : Center(child: CircularProgressIndicator()),
-                ),
-              ),
-              const SizedBox(height: 50),
-              GestureDetector(
-                onTap: () {},
-                child: const Text(
-                  'Admin Access Portal',
-                  style: TextStyle(color: Colors.black),
                 ),
               ),
             ],

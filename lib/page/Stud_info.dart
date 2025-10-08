@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/Schoolgyard.dart';
+import 'package:flutter_application_1/page/Schoolguard.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:get_storage/get_storage.dart';
+import 'dart:convert';
 
 class ViolationScreen extends StatefulWidget {
   final String name;
@@ -21,8 +23,8 @@ class ViolationScreen extends StatefulWidget {
 }
 
 class _ViolationScreenState extends State<ViolationScreen> {
-  late final TextEditingController fullNameController;
-  late final TextEditingController studentNumberController;
+  late final TextEditingController studentnameController;
+  late final TextEditingController studentidController;
   late final TextEditingController courseController;
 
   File? _evidenceImage;
@@ -40,18 +42,44 @@ class _ViolationScreenState extends State<ViolationScreen> {
     "Others",
   ];
 
+  // Example: Connect to backend (replace with your API endpoint)
+
+  Future<void> recordViolationToBackend() async {
+    final box = GetStorage();
+
+    // Encode image to base64 if exists
+    String? evidenceBase64;
+    if (_evidenceImage != null) {
+      final bytes = await _evidenceImage!.readAsBytes();
+      evidenceBase64 = base64Encode(bytes);
+    }
+
+    final Map<String, dynamic> data = {
+      "student_name": studentnameController.text,
+      "student_id": studentidController.text,
+      "course": courseController.text,
+      "violations": selectedViolations.toList(),
+      "evidence": evidenceBase64, // base64 string or null
+    };
+
+    // Save to GetStorage (local backend)
+    await box.write('violation_${studentidController.text}', data);
+
+    print("Saved violation: $data");
+  }
+
   @override
   void initState() {
     super.initState();
-    fullNameController = TextEditingController(text: widget.name);
-    studentNumberController = TextEditingController(text: widget.studentNo);
+    studentnameController = TextEditingController(text: widget.name);
+    studentidController = TextEditingController(text: widget.studentNo);
     courseController = TextEditingController(text: widget.course);
   }
 
   @override
   void dispose() {
-    fullNameController.dispose();
-    studentNumberController.dispose();
+    studentnameController.dispose();
+    studentidController.dispose();
     courseController.dispose();
     super.dispose();
   }
@@ -115,8 +143,8 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
   // Confirmation dialog with date & time
   void _showConfirmationDialog() {
-    if (fullNameController.text.trim().isEmpty ||
-        studentNumberController.text.trim().isEmpty ||
+    if (studentnameController.text.trim().isEmpty ||
+        studentidController.text.trim().isEmpty ||
         courseController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -189,12 +217,12 @@ class _ViolationScreenState extends State<ViolationScreen> {
                 const SizedBox(height: 16),
 
                 _infoCard("👨‍🎓 Student Information", [
-                  _infoRow(Icons.person, "Name", fullNameController.text),
+                  _infoRow(Icons.person, "Name", studentnameController.text),
                   _infoRow(Icons.school, "Course", courseController.text),
                   _infoRow(
                     Icons.badge,
                     "Student No.",
-                    studentNumberController.text,
+                    studentidController.text,
                   ),
                 ]),
                 const SizedBox(height: 16),
@@ -375,8 +403,8 @@ class _ViolationScreenState extends State<ViolationScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            _textField(fullNameController, "Full Name"),
-            _textField(studentNumberController, "Student Number"),
+            _textField(studentnameController, "Full Name"),
+            _textField(studentidController, "Student Number"),
             _textField(courseController, "Course"),
             const SizedBox(height: 10),
             Text(

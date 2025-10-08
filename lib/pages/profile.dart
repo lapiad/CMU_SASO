@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -13,23 +13,15 @@ class ProfileSettingsPage extends StatefulWidget {
 }
 
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
-  final _formKey = GlobalKey<FormState>();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
 
-  // New password controllers
-  final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  bool isEditable = false; // Add this line to define isEditable
 
   String userFirstName = "Loading...";
-  String userLastName = "Loading...";
-  String userEmail = "Loading...";
   String userInitials = "AD";
-  String userRole = "ADMIN";
-  bool isEditable = false;
-  bool isLoading = false;
+  String userRole = "ADMIN"; // default role
 
   @override
   void initState() {
@@ -37,46 +29,48 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     fetchUserData();
   }
 
-  void fetchUserData() async {
+  Future<void> fetchUserData() async {
     final box = GetStorage();
     final userId = box.read('user_id');
+    final serverUrl = GlobalConfiguration().getValue("server_url");
 
-    if (userId == null) {
-      print("No user ID found in storage.");
+    if (userId == null || serverUrl == null) {
+      loadSampleData();
       return;
     }
 
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/users/$userId',
-    );
-
     try {
+      final url = Uri.parse('$serverUrl/users/$userId');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        final userData = jsonDecode(response.body);
-
+        final data = json.decode(response.body);
         setState(() {
-          userFirstName = userData["first_name"] ?? "Loading...";
-          userLastName = userData["last_name"] ?? "Loading...";
-          userEmail = userData["email"] ?? "Loading...";
-          userRole = userData["role"] ?? "ADMIN";
-          userInitials = getInitials(userFirstName, userLastName);
-
-          firstNameController.text = userFirstName;
-          lastNameController.text = userLastName;
-          emailController.text = userEmail;
-
-          // Clear password fields on fetch
-          newPasswordController.clear();
-          confirmPasswordController.clear();
+          userFirstName = data['first_name'] ?? "Unknown";
+          firstNameController.text = data['first_name'] ?? '';
+          lastNameController.text = data['last_name'] ?? '';
+          emailController.text =
+              data['email'] ?? 'admin@cityofmalabonuniversity.edu.ph';
+          userInitials = getInitials(data['first_name'], data['last_name']);
+          userRole = data['role'] ?? "ADMIN";
         });
       } else {
-        print("Failed to load user data. Status code: ${response.statusCode}");
+        loadSampleData();
       }
     } catch (e) {
-      print("Error fetching user data: $e");
+      loadSampleData();
     }
+  }
+
+  void loadSampleData() {
+    setState(() {
+      userFirstName = "Anthony";
+      firstNameController.text = "Morales";
+      lastNameController.text = "Santos";
+      emailController.text = "anthony.morales@example.com";
+      userInitials = getInitials("Anthony", "Morales");
+      userRole = "ADMIN";
+    });
   }
 
   String getInitials(String? first, String? last) {
@@ -85,83 +79,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     return '$f$l'.toUpperCase();
   }
 
-  Future<void> updateUserData() async {
-    final box = GetStorage();
-    final userId = box.read('user_id');
-
-    if (userId == null) {
-      print("No user ID found in storage.");
-      return;
-    }
-
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/users/$userId',
-    );
-
-    final Map<String, String> updatedData = {
-      "first_name": firstNameController.text.trim(),
-      "last_name": lastNameController.text.trim(),
-      "email": emailController.text.trim(),
-    };
-
-    // Include password only if provided and matching
-    if (newPasswordController.text.isNotEmpty) {
-      if (newPasswordController.text == confirmPasswordController.text) {
-        updatedData["password"] = newPasswordController.text;
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
-        return;
-      }
-    }
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final response = await http.put(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(updatedData),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully")),
-        );
-
-        // Clear password fields after successful update
-        newPasswordController.clear();
-        confirmPasswordController.clear();
-
-        fetchUserData();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to update profile: ${response.statusCode}"),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
   @override
   void dispose() {
     firstNameController.dispose();
     lastNameController.dispose();
     emailController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -170,7 +92,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontSize: 30)),
+        title: const Text('My Profile', style: TextStyle(fontSize: 22)),
         backgroundColor: Colors.blue[900],
         foregroundColor: Colors.white,
         elevation: 0,
@@ -182,18 +104,16 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildProfileHeader(),
-                  const SizedBox(height: 30),
-                  Form(key: _formKey, child: _buildProfileDetails()),
-                ],
-              ),
-            ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            _buildProfileHeader(),
+            const SizedBox(height: 30),
+            _buildProfileDetails(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -207,12 +127,12 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         child: Row(
           children: [
             CircleAvatar(
-              radius: 100,
+              radius: 130,
               backgroundColor: Colors.blue[700],
               child: Text(
                 userInitials,
                 style: const TextStyle(
-                  fontSize: 60,
+                  fontSize: 80,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -224,7 +144,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "$userFirstName $userLastName",
+                    "$userFirstName ${lastNameController.text}",
                     style: const TextStyle(
                       fontSize: 35,
                       fontWeight: FontWeight.bold,
@@ -248,7 +168,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  /// Profile Details
+  /// Profile Details (TextFields with shadow)
   Widget _buildProfileDetails() {
     return Card(
       elevation: 4,
@@ -264,9 +184,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     "First Name",
                     firstNameController,
                     readOnly: !isEditable,
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'First name required'
-                        : null,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -275,9 +192,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     "Last Name",
                     lastNameController,
                     readOnly: !isEditable,
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Last name required'
-                        : null,
                   ),
                 ),
               ],
@@ -288,13 +202,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               emailController,
               readOnly: !isEditable,
               icon: Icons.email,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty)
-                  return 'Email required';
-                if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value))
-                  return 'Enter a valid email';
-                return null;
-              },
             ),
           ],
         ),
@@ -302,13 +209,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  /// Custom TextField Builder
+  /// Custom TextField with shadow
   Widget buildLabeledField(
     String label,
     TextEditingController controller, {
-    required bool readOnly,
+    bool readOnly = true,
+    bool obscureText = false,
     IconData? icon,
-    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,9 +244,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           child: TextFormField(
             controller: controller,
             readOnly: readOnly,
-            validator: validator,
-            style: const TextStyle(fontSize: 25),
-            obscureText: label.toLowerCase().contains("password"),
+            obscureText: obscureText,
+            style: const TextStyle(fontSize: 23),
             decoration: InputDecoration(
               prefixIcon: icon != null
                   ? Icon(icon, color: Colors.blue[700])
@@ -361,4 +267,4 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       ],
     );
   }
-}
+} // <-- Add this closing bracket for _ProfileSettingsPageState

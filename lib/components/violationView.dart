@@ -36,9 +36,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     dateTimeController = TextEditingController(text: widget.record.dateTime);
     statusController = TextEditingController(text: widget.record.status);
     // Renamed the controller to match its purpose
-    statusActionController = TextEditingController(
-      text: widget.record.reportStatus,
-    );
+    statusActionController = TextEditingController();
   }
 
   @override

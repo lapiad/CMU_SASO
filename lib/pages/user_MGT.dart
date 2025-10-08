@@ -51,15 +51,42 @@ class UserMgt extends StatefulWidget {
 
 class _UserManagementPageState extends State<UserMgt> {
   double sideMenuSize = 0.0;
-  List<User> users = [
-    User(
-      name: "Nadine Lustre",
-      email: "nadine.l@cityofmalabonuniversity.edu.ph",
-      office: "Student Affairs Services Office",
-      role: "SASO Officer",
-      status: "Active",
-    ),
-  ];
+  List<User> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUsers();
+  }
+
+  Future<void> fetchUsers() async {
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users',
+    );
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        users = data
+            .map(
+              (u) => User(
+                name: u['first_name'] ?? '',
+                email: u['email'] ?? '',
+                office: u['office'] ?? '',
+                role: u['role'] ?? '',
+                status: u['status'] ?? '',
+              ),
+            )
+            .toList();
+      });
+    } else {
+      // Optionally handle error
+      setState(() {
+        users = [];
+      });
+    }
+  }
 
   void _editUser(int index) {
     final user = users[index];

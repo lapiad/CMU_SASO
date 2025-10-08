@@ -13,14 +13,16 @@ class AddNewUserDialog extends StatefulWidget {
 
 class _AddNewUserDialogState extends State<AddNewUserDialog> {
   final _formKey = GlobalKey<FormState>();
-
+  String? _username;
+  String? _middleName;
+  String? _password;
   String? _firstName;
   String? _lastName;
   String? _emailAddress;
   String? _selectedRole;
   String? _selectedDepartment;
 
-  final List<String> _roles = ['Admin', 'User', 'Manager', 'Guest'];
+  final List<String> _roles = ['Admin', 'Guard', 'Officer'];
   final List<String> _departments = [
     'Security Department',
     'Guard Department',
@@ -33,7 +35,10 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     );
 
     final Map<String, dynamic> payload = {
+      "username": _username,
+      "password": _password,
       "first_name": _firstName,
+      "middle_name": _middleName,
       "last_name": _lastName,
       "email": _emailAddress,
       "role": _selectedRole,
@@ -111,8 +116,8 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                 // Avatar initials
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 20),
-                  width: 100,
-                  height: 100,
+                  width: 150,
+                  height: 150,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFF3F51B5),
@@ -122,15 +127,41 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                       (_firstName != null && _firstName!.isNotEmpty) &&
                               (_lastName != null && _lastName!.isNotEmpty)
                           ? "${_firstName![0]}${_lastName![0]}".toUpperCase()
-                          : "NU",
+                          : "NEW",
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 35,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        labelText: "Username",
+                        hintText: "Enter username",
+                        onSaved: (val) => _username = val,
+                        validator: (val) => (val == null || val.isEmpty)
+                            ? 'Enter username'
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
+                        labelText: "Password",
+                        hintText: "Enter password",
+                        onSaved: (val) => _password = val,
+                        validator: (val) => (val == null || val.isEmpty)
+                            ? 'Enter password'
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
                 // First + Last Name
                 Row(
@@ -148,6 +179,20 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTextField(
+                        labelText: "Middle Name",
+                        hintText: "Enter middle name",
+                        onSaved: (val) => _middleName = val,
+                        validator: (val) => null, // No validation, optional
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Email
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
                         labelText: "Last Name",
                         hintText: "Enter last name",
                         onSaved: (val) => _lastName = val,
@@ -156,21 +201,28 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                             : null,
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
+                        labelText: "Email Address",
+                        hintText: "Enter email address",
+                        keyboardType: TextInputType.emailAddress,
+                        onSaved: (val) => _emailAddress = val,
+                        validator: (val) {
+                          if (val == null || val.isEmpty) {
+                            return 'Enter email address';
+                          }
+                          final emailRegex = RegExp(
+                            r'^[^@]+@[^@]+\.[^@]+',
+                          ); // Simple email validation
+                          if (!emailRegex.hasMatch(val)) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
                   ],
-                ),
-                const SizedBox(height: 16),
-
-                // Email
-                _buildTextField(
-                  labelText: "Email Address",
-                  hintText: "user@cityofmalabonuniversity.edu.ph",
-                  keyboardType: TextInputType.emailAddress,
-                  onSaved: (val) => _emailAddress = val,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Enter email';
-                    if (!val.contains('@')) return 'Enter valid email';
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 16),
 

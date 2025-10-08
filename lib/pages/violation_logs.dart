@@ -123,7 +123,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                   studentId: item['student_id'],
                   violation: item['violation'],
                   status: item['status'],
-                  reportStatus: item['report_status'],
+
                   reportedBy: item['reported_by'],
                   dateTime: item['date_time'],
                   department: item['department'],
@@ -156,12 +156,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           (filterSecondOffense && record.status == 'Second Offense') ||
           (filterThirdOffense && record.status == 'Third Offense');
 
-      final matchesReportStatus =
-          (!filterPending && !filterUnderReview && !filterReviewed) ||
-          (filterPending && record.reportStatus == 'Pending') ||
-          (filterUnderReview && record.reportStatus == 'Under Review') ||
-          (filterReviewed && record.reportStatus == 'Reviewed');
-
       final matchesViolationType =
           (!filterImproperUniform &&
               !filterLateAttendance &&
@@ -184,7 +178,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
 
       return matchesSearch &&
           matchesStatus &&
-          matchesReportStatus &&
           matchesViolationType &&
           matchesDepartment;
     }).toList();
@@ -192,21 +185,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
 
   @override
   Widget build(BuildContext context) {
-    Color getActionStatusColor(String status) {
-      switch (status) {
-        case 'Pending':
-          return Colors.yellow;
-        case 'Reviewed':
-          return Colors.green;
-        case 'Referred':
-          return Colors.red;
-        case 'Under Review':
-          return Colors.orange;
-        default:
-          return Colors.grey;
-      }
-    }
-
     Color getStatusColor(String status) {
       switch (status.toLowerCase()) {
         case 'first offense':
@@ -222,11 +200,11 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Violation Logs', style: TextStyle(fontSize: 26)),
+        title: const Text('Violation Logs', style: TextStyle(fontSize: 30)),
         foregroundColor: Colors.white,
         backgroundColor: Colors.blue[900],
         leading: IconButton(
-          icon: const Icon(Icons.menu, size: 32, color: Colors.white),
+          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
             setState(() {
               sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
@@ -243,7 +221,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                   snapshot.hasData ? snapshot.data! : "Loading...",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
@@ -255,13 +233,13 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
             child: IconButton(
               icon: const Icon(
                 Icons.person,
-                size: 22,
+                size: 25,
                 color: Color.fromARGB(255, 10, 44, 158),
               ),
               onPressed: () => _showAdminMenu(context),
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 40),
         ],
       ),
       body: Stack(
@@ -347,18 +325,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                 ),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 170,
-                                    child: Text(
-                                      'Report Status',
-                                      style: TextStyle(
-                                        fontSize: 27,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
                                     width: 150,
                                     child: Text(
                                       'Reported By',
@@ -435,23 +401,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                         ),
                                         child: Text(
                                           record.status,
-                                          style: const TextStyle(fontSize: 20),
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: getActionStatusColor(
-                                            record.reportStatus,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            5,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          record.reportStatus,
                                           style: const TextStyle(fontSize: 20),
                                         ),
                                       ),
@@ -755,7 +704,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
             _menuItem(Icons.person, 'User Management', () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const UserMgt()),
+                MaterialPageRoute(builder: (context) => UserMgt()),
               );
             }),
           ],

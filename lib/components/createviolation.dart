@@ -37,7 +37,13 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   final TextEditingController studentIdController = TextEditingController();
   final TextEditingController studentNameController = TextEditingController();
   final TextEditingController reportedByController = TextEditingController();
+  final TextEditingController status = TextEditingController();
   final TextEditingController roleController = TextEditingController();
+  final TextEditingController imageController = TextEditingController();
+  String get formattedDate {
+    if (incidentDate == null) return "";
+    return "${incidentDate!.year.toString().padLeft(4, '0')}-${incidentDate!.month.toString().padLeft(2, '0')}-${incidentDate!.day.toString().padLeft(2, '0')}";
+  }
 
   String? violationType;
   String? offenseLevel;
@@ -178,35 +184,50 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     studentNameController.text = userDetails?['first_name'] ?? '';
     reportedByController.text = userDetails?['first_name'] ?? '';
     roleController.text = userDetails?['role'] ?? '';
+    imageController.text = userDetails?['image'] ?? '';
 
     // Initialize default values for violationType and offenseLevel
-    violationType = "Improper Uniform"; // Example default
-    offenseLevel = "First Offense"; // Example default
+    violationType = "Improper Uniform";
+    offenseLevel = "First Offense";
   }
 
   Future<void> createViolation() async {
     final box = GetStorage();
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/violations',
-    );
 
-    final Map<String, dynamic> payload = {
-      "student_id": studentIdController.text,
-      "student_name": studentNameController.text,
-      "violation": violationType,
-      "offense_level": offenseLevel,
-      "department": box.read('user_details')?['department'] ?? '',
-      "reported_by": reportedByController.text,
-      "role": roleController.text,
-      "incident_date": incidentDate?.toIso8601String(),
-      "photo_evidence": null, // You can handle image upload separately
+    Map<String, dynamic> violationData = {
+      'student_id': studentIdController.text,
+      'student_name': studentNameController.text,
+      'violation_type': violationType ?? '',
+      'offense_level': offenseLevel ?? '',
+      'department': box.read('user_details')?['department'] ?? '',
+      'reported_by': reportedByController.text,
+      'status': status.text, // Use status controller's text
+      'role': roleController.text,
+      'date_of_incident': incidentDate?.toIso8601String() ?? '',
     };
 
+    // Encode photo evidence as base64 and store in GetStorage
+    String? base64Photo;
+    if (_photoEvidenceFile != null) {
+      final bytes = await _photoEvidenceFile!.readAsBytes();
+      base64Photo = base64Encode(bytes);
+      violationData['photo_evidence'] = base64Photo;
+    } else if (_photoEvidenceBytes != null) {
+      base64Photo = base64Encode(_photoEvidenceBytes!);
+      violationData['photo_evidence'] = base64Photo;
+    }
+
+    // Save base64 photo evidence to GetStorage for backend access
+    if (base64Photo != null) {
+      box.write('photo_evidence_base64', base64Photo);
+    }
+
     try {
+      final url = '${GlobalConfiguration().getValue("server_url")}/violations';
       final response = await http.post(
-        url,
+        Uri.parse(url),
         headers: {"Content-Type": "application/json"},
-        body: json.encode(payload),
+        body: jsonEncode(violationData),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -218,7 +239,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Submission failed: ${response.statusCode}")),
+          SnackBar(content: Text("Submission failed: ${response.body}")),
         );
       }
     } catch (e) {
@@ -371,7 +392,30 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                   "Department",
                                   "Select Department",
                                 ),
-                                items: ["CAS", "CBA", "CSS"]
+                                items:
+                                    ["CAS", "CBA", "CCS", "COA", "CTE", "CCJE"]
+                                        .map(
+                                          (e) => DropdownMenuItem(
+                                            value: e,
+                                            child: Text(e),
+                                          ),
+                                        )
+                                        .toList(),
+                                onChanged: (value) =>
+                                    setState(() => offenseLevel = value),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: SizedBox(
+                              height: 58,
+                              child: DropdownButtonFormField<String>(
+                                decoration: _fieldDecoration(
+                                  "Status",
+                                  "Select Status",
+                                ),
+                                items: ["Pending", "Reviewed", "Referred"]
                                     .map(
                                       (e) => DropdownMenuItem(
                                         value: e,
@@ -410,9 +454,9 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                 onTap: () async {
                                   final picked = await showDatePicker(
                                     context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime(2030),
+                                    initialDate: incidentDate ?? DateTime.now(),
+                                    firstDate: DateTime(2020, 1, 1),
+                                    lastDate: DateTime(2030, 12, 31),
                                   );
                                   if (picked != null) {
                                     setState(() => incidentDate = picked);
@@ -420,7 +464,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                 },
                                 controller: TextEditingController(
                                   text: incidentDate != null
-                                      ? "${incidentDate!.month}/${incidentDate!.day}/${incidentDate!.year}"
+                                      ? "${incidentDate!.year.toString().padLeft(4, '0')}-${incidentDate!.month.toString().padLeft(2, '0')}-${incidentDate!.day.toString().padLeft(2, '0')}"
                                       : "",
                                 ),
                               ),
@@ -535,7 +579,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          Navigator.pop(context);
+                          createViolation();
                         }
                       },
                     ),
