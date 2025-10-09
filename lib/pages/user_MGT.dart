@@ -4,7 +4,6 @@ import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
-import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:get_storage/get_storage.dart';
@@ -60,28 +59,43 @@ class _UserManagementPageState extends State<UserMgt> {
   }
 
   Future<void> fetchUsers() async {
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/users',
-    );
-    final response = await http.get(url);
+    try {
+      final serverUrl = GlobalConfiguration().getValue("server_url");
+      if (serverUrl == null || serverUrl.isEmpty) {
+        throw Exception("Server URL is not configured.");
+      }
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      setState(() {
-        users = data
-            .map(
-              (u) => User(
-                name: u['first_name'] ?? '',
-                email: u['email'] ?? '',
-                office: u['office'] ?? '',
-                role: u['role'] ?? '',
-                status: u['status'] ?? '',
-              ),
-            )
-            .toList();
-      });
-    } else {
-      // Optionally handle error
+      final url = Uri.parse('$serverUrl/users');
+
+      // Optional: Add headers if your backend requires authentication
+      final headers = {
+        'Content-Type': 'application/json',
+        // 'Authorization': 'Bearer YOUR_TOKEN_HERE', // Uncomment if needed
+      };
+
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          users = data.map((u) {
+            return User(
+              name: u['first_name']?.toString() ?? '',
+              email: u['email']?.toString() ?? '',
+              office: u['office']?.toString() ?? '',
+              role: u['role']?.toString() ?? '',
+              status: u['status']?.toString() ?? '',
+            );
+          }).toList();
+        });
+      } else {
+        debugPrint("Failed to fetch users: ${response.statusCode}");
+        setState(() {
+          users = [];
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching users: $e");
       setState(() {
         users = [];
       });
@@ -492,26 +506,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         );
                       },
                     ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.bookmark,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Referred to Council',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RefferedCnl(),
-                          ),
-                        );
-                      },
-                    ),
+
                     const SizedBox(height: 20),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),

@@ -6,6 +6,7 @@ class ViolationRecord {
   late final String status;
   final String reportedBy;
   final String dateTime;
+  final String base64Imagestring;
 
   ViolationRecord({
     required this.studentName,
@@ -15,6 +16,7 @@ class ViolationRecord {
     required this.status,
     required this.reportedBy,
     required this.dateTime,
+    required this.base64Imagestring,
   });
 
   set actionStatus(String actionStatus) {}

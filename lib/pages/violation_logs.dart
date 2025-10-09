@@ -5,7 +5,6 @@ import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
-import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:get_storage/get_storage.dart';
@@ -23,6 +22,10 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   List<ViolationRecord> allRecords = [];
   double sideMenuSize = 0.0;
   bool showFilters = false;
+
+  // 🔹 Added for date filtering
+  DateTime? startDate;
+  DateTime? endDate;
 
   Future<String> getName() async {
     final box = GetStorage();
@@ -45,30 +48,22 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       items: [
         const PopupMenuItem(
           value: 'profile',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.person, size: 30),
-                SizedBox(width: 16),
-                Text('Profile Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.person, size: 30),
+              SizedBox(width: 16),
+              Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            ],
           ),
         ),
         PopupMenuItem(
           value: 'signout',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 30),
-                SizedBox(width: 16),
-                Text("Sign Out", style: TextStyle(fontSize: 20)),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.logout, size: 30),
+              SizedBox(width: 16),
+              Text("Sign Out", style: TextStyle(fontSize: 20)),
+            ],
           ),
         ),
       ],
@@ -90,6 +85,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     }
   }
 
+  // 🔹 Filter booleans
   bool filterFirstOffense = false;
   bool filterSecondOffense = false;
   bool filterThirdOffense = false;
@@ -110,29 +106,37 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   Future<void> fetchViolations() async {
     final url = Uri.parse(
       '${GlobalConfiguration().getValue("server_url")}/violations',
-    ); // Replace with your IP
+    );
+
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          allRecords = data
-              .map(
-                (item) => ViolationRecord(
-                  studentName: item['student_name'],
-                  studentId: item['student_id'],
-                  violation: item['violation'],
-                  status: item['status'],
+        final decoded = json.decode(response.body);
 
-                  reportedBy: item['reported_by'],
-                  dateTime: item['date_time'],
-                  department: item['department'],
-                ),
-              )
-              .toList();
-        });
+        // Check if decoded is a Map and contains the expected key
+        if (decoded is Map<String, dynamic> && decoded['violations'] is List) {
+          final List<dynamic> data = decoded['violations'];
+          setState(() {
+            allRecords = data
+                .map(
+                  (item) => ViolationRecord(
+                    studentName: item['student_name']?.toString() ?? '',
+                    studentId: item['student_id']?.toString() ?? '',
+                    violation: item['violation_type']?.toString() ?? '',
+                    status: item['status']?.toString() ?? '',
+                    reportedBy: item['reported_by']?.toString() ?? '',
+                    dateTime: item['date_of_incident']?.toString() ?? '',
+                    department: item['student_department']?.toString() ?? '',
+                    base64Imagestring: item['photo_evidence']?.toString() ?? '',
+                  ),
+                )
+                .toList();
+          });
+        } else {
+          print('Unexpected JSON structure: missing "violations" list');
+        }
       } else {
-        print('Failed to load violations');
+        print('Failed to load violations: ${response.statusCode}');
       }
     } catch (e) {
       print('Error: $e');
@@ -176,25 +180,44 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           (filterCTE && record.department == 'CTE') ||
           (filterCCJE && record.department == 'CCJE');
 
+      // 🔹 Date Filter Logic
+      final recordDate = DateTime.tryParse(record.dateTime);
+      final matchesDate =
+          (startDate == null && endDate == null) ||
+          (recordDate != null &&
+              (startDate == null ||
+                  recordDate.isAfter(
+                    startDate!.subtract(const Duration(days: 1)),
+                  )) &&
+              (endDate == null ||
+                  recordDate.isBefore(endDate!.add(const Duration(days: 1)))));
+
       return matchesSearch &&
           matchesStatus &&
           matchesViolationType &&
-          matchesDepartment;
+          matchesDepartment &&
+          matchesDate;
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchViolations();
   }
 
   @override
   Widget build(BuildContext context) {
     Color getStatusColor(String status) {
       switch (status.toLowerCase()) {
-        case 'first offense':
+        case 'pending':
           return Colors.yellowAccent;
-        case 'second offense':
+        case 'reviewed':
           return Colors.orange;
-        case 'third offense':
+        case 'referred':
           return Colors.red;
         default:
-          return Colors.grey;
+          return Colors.grey; // fallback color for unknown statuses
       }
     }
 
@@ -254,18 +277,15 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                     children: [
                       _buildSearchAndFilterRow(),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: 1900,
-                        height: 799,
+                      Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
                             child: DataTable(
                               columns: const [
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 180,
+                                    width: 200,
                                     child: Text(
                                       'Student Name',
                                       style: TextStyle(
@@ -277,7 +297,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                 ),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 150,
+                                    width: 200,
                                     child: Text(
                                       'Student ID',
                                       style: TextStyle(
@@ -301,7 +321,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                 ),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 150,
+                                    width: 200,
                                     child: Text(
                                       'Violation',
                                       style: TextStyle(
@@ -325,7 +345,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                 ),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 150,
+                                    width: 200,
                                     child: Text(
                                       'Reported By',
                                       style: TextStyle(
@@ -337,7 +357,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                 ),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 150,
+                                    width: 170,
                                     child: Text(
                                       'Date & Time',
                                       style: TextStyle(
@@ -349,7 +369,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                 ),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 150,
+                                    width: 200,
                                     child: Text(
                                       'Actions',
                                       style: TextStyle(
@@ -366,19 +386,31 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                     DataCell(
                                       Text(
                                         record.studentName,
-                                        style: const TextStyle(fontSize: 20),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     DataCell(
                                       Text(
                                         record.studentId,
-                                        style: const TextStyle(fontSize: 20),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     DataCell(
                                       Text(
                                         record.department,
-                                        style: const TextStyle(fontSize: 20),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     DataCell(
@@ -386,7 +418,8 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                         record.violation,
                                         style: const TextStyle(
                                           color: Colors.red,
-                                          fontSize: 20,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
@@ -401,20 +434,28 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                         ),
                                         child: Text(
                                           record.status,
-                                          style: const TextStyle(fontSize: 20),
+                                          style: const TextStyle(fontSize: 24),
                                         ),
                                       ),
                                     ),
                                     DataCell(
                                       Text(
                                         record.reportedBy,
-                                        style: const TextStyle(fontSize: 20),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     DataCell(
                                       Text(
                                         record.dateTime,
-                                        style: const TextStyle(fontSize: 20),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     DataCell(
@@ -423,6 +464,8 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                           IconButton(
                                             icon: const Icon(
                                               Icons.remove_red_eye,
+                                              color: Colors.blue,
+                                              size: 30,
                                             ),
                                             onPressed: () {
                                               Navigator.of(context).push(
@@ -436,7 +479,11 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                             },
                                           ),
                                           IconButton(
-                                            icon: const Icon(Icons.edit),
+                                            icon: const Icon(
+                                              Icons.edit,
+                                              color: Colors.green,
+                                              size: 30,
+                                            ),
                                             onPressed: () {
                                               Navigator.of(context).push(
                                                 MaterialPageRoute(
@@ -465,6 +512,8 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ),
             ],
           ),
+
+          // 🔹 Filter Drawer (same original style)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             right: showFilters ? 0 : -300,
@@ -490,11 +539,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close),
-                          onPressed: () {
-                            setState(() {
-                              showFilters = false;
-                            });
-                          },
+                          onPressed: () => setState(() => showFilters = false),
                         ),
                       ],
                     ),
@@ -505,82 +550,108 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                             _buildCheckbox(
                               "First Offense",
                               filterFirstOffense,
-                              (val) => setState(() => filterFirstOffense = val),
+                              (v) => setState(() => filterFirstOffense = v),
                             ),
                             _buildCheckbox(
                               "Second Offense",
                               filterSecondOffense,
-                              (val) =>
-                                  setState(() => filterSecondOffense = val),
+                              (v) => setState(() => filterSecondOffense = v),
                             ),
                             _buildCheckbox(
                               "Third Offense",
                               filterThirdOffense,
-                              (val) => setState(() => filterThirdOffense = val),
-                            ),
-                          ]),
-                          _filterSection("Report Status", [
-                            _buildCheckbox(
-                              "Pending",
-                              filterPending,
-                              (val) => setState(() => filterPending = val),
-                            ),
-                            _buildCheckbox(
-                              "Under Review",
-                              filterUnderReview,
-                              (val) => setState(() => filterUnderReview = val),
-                            ),
-                            _buildCheckbox(
-                              "Reviewed",
-                              filterReviewed,
-                              (val) => setState(() => filterReviewed = val),
+                              (v) => setState(() => filterThirdOffense = v),
                             ),
                           ]),
                           _filterSection("Violation Type", [
                             _buildCheckbox(
                               "Improper Uniform",
                               filterImproperUniform,
-                              (val) =>
-                                  setState(() => filterImproperUniform = val),
+                              (v) => setState(() => filterImproperUniform = v),
                             ),
                             _buildCheckbox(
                               "Late Attendance",
                               filterLateAttendance,
-                              (val) =>
-                                  setState(() => filterLateAttendance = val),
+                              (v) => setState(() => filterLateAttendance = v),
                             ),
                             _buildCheckbox(
                               "Serious Misconduct",
                               filterSeriousMisconduct,
-                              (val) =>
-                                  setState(() => filterSeriousMisconduct = val),
+                              (v) =>
+                                  setState(() => filterSeriousMisconduct = v),
                             ),
                           ]),
                           _filterSection("Department", [
                             _buildCheckbox(
                               "CAS",
                               filterCAS,
-                              (val) => setState(() => filterCAS = val),
+                              (v) => setState(() => filterCAS = v),
                             ),
                             _buildCheckbox(
                               "CBA",
                               filterCBA,
-                              (val) => setState(() => filterCBA = val),
+                              (v) => setState(() => filterCBA = v),
                             ),
                             _buildCheckbox(
                               "CCS",
                               filterCCS,
-                              (val) => setState(() => filterCCS = val),
+                              (v) => setState(() => filterCCS = v),
                             ),
                             _buildCheckbox(
                               "CTE",
                               filterCTE,
-                              (val) => setState(() => filterCTE = val),
+                              (v) => setState(() => filterCTE = v),
                             ),
                             _buildCheckbox(
                               "CCJE",
                               filterCCJE,
-                              (val) => setState(() => filterCCJE = val),
+                              (v) => setState(() => filterCCJE = v),
+                            ),
+                          ]),
+
+                          // 🔹 Date Range Section (new)
+                          _filterSection("Date Range", [
+                            ListTile(
+                              title: Text(
+                                startDate == null
+                                    ? "Start Date"
+                                    : "Start: ${startDate!.toLocal()}".split(
+                                        ' ',
+                                      )[0],
+                              ),
+                              trailing: const Icon(Icons.calendar_today),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: startDate ?? DateTime.now(),
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setState(() => startDate = picked);
+                                }
+                              },
+                            ),
+                            ListTile(
+                              title: Text(
+                                endDate == null
+                                    ? "End Date"
+                                    : "End: ${endDate!.toLocal()}".split(
+                                        ' ',
+                                      )[0],
+                              ),
+                              trailing: const Icon(Icons.calendar_today),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: endDate ?? DateTime.now(),
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setState(() => endDate = picked);
+                                }
+                              },
                             ),
                           ]),
                         ],
@@ -594,9 +665,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                               filterFirstOffense = false;
                               filterSecondOffense = false;
                               filterThirdOffense = false;
-                              filterPending = false;
-                              filterUnderReview = false;
-                              filterReviewed = false;
                               filterImproperUniform = false;
                               filterLateAttendance = false;
                               filterSeriousMisconduct = false;
@@ -605,31 +673,26 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                               filterCCS = false;
                               filterCTE = false;
                               filterCCJE = false;
+                              startDate = null;
+                              endDate = null;
                             });
                           },
                           child: const Text(
                             "Clear",
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
                             ),
                           ),
                         ),
                         const Spacer(),
                         ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              showFilters = false;
-                            });
-                          },
-
+                          onPressed: () => setState(() => showFilters = false),
                           child: const Text(
                             "Apply",
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0033A0),
                             ),
                           ),
                         ),
@@ -645,153 +708,119 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
-  Widget _buildSideMenu(BuildContext context) {
-    return SizedBox(
-      width: sideMenuSize,
-      height: MediaQuery.of(context).size.height,
-      child: Container(
-        color: Colors.blue[900],
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Image.asset(
-                'images/logos.png',
-                height: 80,
-                color: Colors.white,
-              ),
+  Widget _menuTitle(String title) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+    child: Text(
+      title,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        fontSize: 14,
+      ),
+    ),
+  );
+
+  Widget _menuItem(IconData icon, String title, VoidCallback onTap) => ListTile(
+    leading: Icon(icon, color: Colors.white),
+    title: Text(title, style: const TextStyle(color: Colors.white)),
+    onTap: onTap,
+  );
+
+  Widget _buildSideMenu(BuildContext context) => SizedBox(
+    width: sideMenuSize,
+    child: Container(
+      color: Colors.blue[900],
+      child: ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Image.asset(
+              'images/logos.png',
+              height: 80,
+              color: Colors.white,
             ),
-            const Text(
-              "  CMU_SASO DRMS",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          ),
+          const Text(
+            "  CMU_SASO DRMS",
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            const SizedBox(height: 20),
-            _menuTitle('GENERAL'),
-            _menuItem(Icons.home, 'Dashboard', () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const Dashboard()),
-              );
-            }),
-            _menuItem(Icons.list_alt, 'Violation Logs', () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ViolationLogsPage(),
-                ),
-              );
-            }),
-            _menuItem(Icons.pie_chart, 'Summary of Reports', () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SummaryReportsPage(),
-                ),
-              );
-            }),
-            _menuItem(Icons.bookmark, 'Referred to Council', () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const RefferedCnl()),
-              );
-            }),
-            const SizedBox(height: 20),
-            _menuTitle('ADMINISTRATION'),
-            _menuItem(Icons.person, 'User Management', () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => UserMgt()),
-              );
-            }),
-          ],
+          ),
+          const SizedBox(height: 30),
+          _menuTitle('GENERAL'),
+          _menuItem(Icons.home, 'Dashboard', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const Dashboard()),
+            );
+          }),
+          _menuItem(Icons.list_alt, 'Violation Logs', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ViolationLogsPage()),
+            );
+          }),
+          _menuItem(Icons.pie_chart, 'Summary of Reports', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SummaryReportsPage()),
+            );
+          }),
+          const SizedBox(height: 20),
+          _menuTitle('ADMINISTRATION'),
+          _menuItem(Icons.person, 'User Management', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => UserMgt()),
+            );
+          }),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildSearchAndFilterRow() => Row(
+    children: [
+      Expanded(
+        child: TextField(
+          onChanged: (val) => setState(() => searchQuery = val),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: 'Search student name, ID, or violation...',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         ),
       ),
-    );
-  }
+      const SizedBox(width: 12),
+      ElevatedButton.icon(
+        onPressed: () => setState(() => showFilters = true),
+        icon: const Icon(Icons.filter_list),
+        label: const Text("Filters"),
+      ),
+    ],
+  );
 
-  Widget _menuTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-      child: Text(
+  Widget _filterSection(String title, List<Widget> options) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
         title,
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.white,
-          fontSize: 14,
+          color: Colors.black,
         ),
       ),
-    );
-  }
+      ...options,
+      const Divider(),
+    ],
+  );
 
-  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white, size: 26),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 18),
-      ),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildSearchAndFilterRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            onChanged: (val) {
-              setState(() => searchQuery = val);
-            },
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: 'Search student name, ID, or violation...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        ElevatedButton.icon(
-          onPressed: () {
-            setState(() {
-              showFilters = true;
-            });
-          },
-          icon: const Icon(Icons.filter_list),
-          label: const Text("Filters"),
-        ),
-      ],
-    );
-  }
-
-  Widget _filterSection(String title, List<Widget> options) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        ...options,
-        const Divider(),
-      ],
-    );
-  }
-
-  Widget _buildCheckbox(String label, bool value, Function(bool) onChanged) {
-    return CheckboxListTile(
-      title: Text(label),
-      value: value,
-      onChanged: (val) => onChanged(val ?? false),
-      controlAffinity: ListTileControlAffinity.leading,
-    );
-  }
+  Widget _buildCheckbox(String label, bool value, Function(bool) onChanged) =>
+      CheckboxListTile(
+        title: Text(label),
+        value: value,
+        onChanged: (val) => onChanged(val ?? false),
+      );
 }

@@ -102,7 +102,12 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                     buildDetailField("Reported by", reportedByController),
                     buildDetailField("Date and Time", dateTimeController),
                     buildDetailField("Status", statusController),
-                    buildDetailField("Status Action", statusActionController),
+                    buildDetailField(
+                      "Photo Evidence (Base64)",
+                      TextEditingController(
+                        text: widget.record.base64Imagestring,
+                      ),
+                    ),
                   ],
                 ),
               ),

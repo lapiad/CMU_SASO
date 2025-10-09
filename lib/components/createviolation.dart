@@ -40,28 +40,37 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   final TextEditingController status = TextEditingController();
   final TextEditingController roleController = TextEditingController();
   final TextEditingController imageController = TextEditingController();
-  String get formattedDate {
-    if (incidentDate == null) return "";
-    return "${incidentDate!.year.toString().padLeft(4, '0')}-${incidentDate!.month.toString().padLeft(2, '0')}-${incidentDate!.day.toString().padLeft(2, '0')}";
-  }
+  final TextEditingController incidentDateController = TextEditingController();
 
   String? violationType;
   String? offenseLevel;
+  String? department;
+  String? statusValue;
   DateTime? incidentDate;
 
   File? _photoEvidenceFile;
   Uint8List? _photoEvidenceBytes;
   final ImagePicker _picker = ImagePicker();
 
-  InputDecoration _fieldDecoration(String label, String hint) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-      filled: true,
-      fillColor: Colors.grey[50],
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-    );
+  @override
+  void initState() {
+    super.initState();
+    final userDetails = GetStorage().read('user_details');
+    reportedByController.text = userDetails?['first_name'] ?? '';
+    roleController.text = userDetails?['role'] ?? '';
+    imageController.text = userDetails?['image'] ?? '';
+  }
+
+  @override
+  void dispose() {
+    studentIdController.dispose();
+    studentNameController.dispose();
+    reportedByController.dispose();
+    status.dispose();
+    roleController.dispose();
+    imageController.dispose();
+    incidentDateController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickImage() async {
@@ -101,7 +110,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
             PhotoView(
               imageProvider: kIsWeb
                   ? MemoryImage(_photoEvidenceBytes!)
-                  : FileImage(_photoEvidenceFile!),
+                  : FileImage(_photoEvidenceFile!) as ImageProvider,
               backgroundDecoration: const BoxDecoration(color: Colors.black),
             ),
             Positioned(
@@ -115,6 +124,17 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  InputDecoration _fieldDecoration(String label, String hint) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      filled: true,
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
 
@@ -175,38 +195,28 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-
-    // Initialize controllers with values from GetStorage
-    final userDetails = GetStorage().read('user_details');
-    studentNameController.text = userDetails?['first_name'] ?? '';
-    reportedByController.text = userDetails?['first_name'] ?? '';
-    roleController.text = userDetails?['role'] ?? '';
-    imageController.text = userDetails?['image'] ?? '';
-
-    // Initialize default values for violationType and offenseLevel
-    violationType = "Improper Uniform";
-    offenseLevel = "First Offense";
-  }
-
   Future<void> createViolation() async {
     final box = GetStorage();
 
+    if (incidentDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select the date of incident.")),
+      );
+      return;
+    }
+
     Map<String, dynamic> violationData = {
-      'student_id': studentIdController.text,
-      'student_name': studentNameController.text,
+      'student_id': studentIdController.text.trim(),
+      'student_name': studentNameController.text.trim(),
       'violation_type': violationType ?? '',
       'offense_level': offenseLevel ?? '',
-      'department': box.read('user_details')?['department'] ?? '',
-      'reported_by': reportedByController.text,
-      'status': status.text, // Use status controller's text
-      'role': roleController.text,
-      'date_of_incident': incidentDate?.toIso8601String() ?? '',
+      'student_department': department ?? '',
+      'reported_by': reportedByController.text.trim(),
+      'status': statusValue ?? '',
+      'role': roleController.text.trim(),
+      'date_of_incident': incidentDate!.toIso8601String(),
     };
 
-    // Encode photo evidence as base64 and store in GetStorage
     String? base64Photo;
     if (_photoEvidenceFile != null) {
       final bytes = await _photoEvidenceFile!.readAsBytes();
@@ -217,7 +227,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       violationData['photo_evidence'] = base64Photo;
     }
 
-    // Save base64 photo evidence to GetStorage for backend access
     if (base64Photo != null) {
       box.write('photo_evidence_base64', base64Photo);
     }
@@ -263,7 +272,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -285,22 +293,27 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ],
                 ),
                 const SizedBox(height: 20),
-
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Row 1: Student ID + Name
                       Row(
                         children: [
                           Expanded(
                             child: SizedBox(
                               height: 58,
                               child: TextFormField(
+                                controller: studentIdController,
                                 decoration: _fieldDecoration(
                                   "Student ID",
                                   "Enter student ID",
                                 ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Please enter Student ID';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                           ),
@@ -309,24 +322,30 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                             child: SizedBox(
                               height: 58,
                               child: TextFormField(
+                                controller: studentNameController,
                                 decoration: _fieldDecoration(
                                   "Student Name",
                                   "Enter student name",
                                 ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Please enter Student Name';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-
-                      // Row 2: Violation Type + Offense Level
                       Row(
                         children: [
                           Expanded(
                             child: SizedBox(
                               height: 58,
                               child: DropdownButtonFormField<String>(
+                                value: violationType,
                                 decoration: _fieldDecoration(
                                   "Violation Type",
                                   "Select violation type",
@@ -347,6 +366,10 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                         .toList(),
                                 onChanged: (value) =>
                                     setState(() => violationType = value),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Please select Violation Type'
+                                    : null,
                               ),
                             ),
                           ),
@@ -355,6 +378,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                             child: SizedBox(
                               height: 58,
                               child: DropdownButtonFormField<String>(
+                                value: offenseLevel,
                                 decoration: _fieldDecoration(
                                   "Offense Level",
                                   "Select offense level",
@@ -374,20 +398,23 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                         .toList(),
                                 onChanged: (value) =>
                                     setState(() => offenseLevel = value),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Please select Offense Level'
+                                    : null,
                               ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 14),
-
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: SizedBox(
                               height: 58,
                               child: DropdownButtonFormField<String>(
+                                value: department,
                                 decoration: _fieldDecoration(
                                   "Department",
                                   "Select Department",
@@ -402,7 +429,11 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                         )
                                         .toList(),
                                 onChanged: (value) =>
-                                    setState(() => offenseLevel = value),
+                                    setState(() => department = value),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Please select Department'
+                                    : null,
                               ),
                             ),
                           ),
@@ -411,6 +442,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                             child: SizedBox(
                               height: 58,
                               child: DropdownButtonFormField<String>(
+                                value: statusValue,
                                 decoration: _fieldDecoration(
                                   "Status",
                                   "Select Status",
@@ -424,16 +456,17 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                     )
                                     .toList(),
                                 onChanged: (value) =>
-                                    setState(() => offenseLevel = value),
+                                    setState(() => statusValue = value),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Please select Status'
+                                    : null,
                               ),
                             ),
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 14),
-
-                      // Row 3: Date of Incident + Photo Evidence
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -459,14 +492,20 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                     lastDate: DateTime(2030, 12, 31),
                                   );
                                   if (picked != null) {
-                                    setState(() => incidentDate = picked);
+                                    setState(() {
+                                      incidentDate = picked;
+                                      incidentDateController.text =
+                                          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                                    });
                                   }
                                 },
-                                controller: TextEditingController(
-                                  text: incidentDate != null
-                                      ? "${incidentDate!.year.toString().padLeft(4, '0')}-${incidentDate!.month.toString().padLeft(2, '0')}-${incidentDate!.day.toString().padLeft(2, '0')}"
-                                      : "",
-                                ),
+                                controller: incidentDateController,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please select the date of incident';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                           ),
@@ -483,13 +522,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                   border: Border.all(color: Colors.grey),
                                   borderRadius: BorderRadius.circular(10),
                                   color: Colors.grey[50],
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black12,
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
                                 child: _buildPhotoPreview(),
                               ),
@@ -497,9 +529,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Row 4: Reported by + Role
+                      const SizedBox(height: 14),
                       Row(
                         children: [
                           Expanded(
@@ -507,13 +537,8 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                               height: 58,
                               child: TextFormField(
                                 controller: reportedByController,
-                                decoration: InputDecoration(
-                                  labelText: "Reported By",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
                                 readOnly: true,
+                                decoration: _fieldDecoration("Reported By", ""),
                               ),
                             ),
                           ),
@@ -523,13 +548,8 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                               height: 58,
                               child: TextFormField(
                                 controller: roleController,
-                                decoration: InputDecoration(
-                                  labelText: "Role",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
                                 readOnly: true,
+                                decoration: _fieldDecoration("Role", ""),
                               ),
                             ),
                           ),
@@ -539,8 +559,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
                 ),
                 const SizedBox(height: 26),
-
-                // Footer Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -558,7 +576,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                     const SizedBox(width: 14),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
                         backgroundColor: Colors.blue[800],
                         padding: const EdgeInsets.symmetric(
                           horizontal: 26,

@@ -5,14 +5,12 @@ import 'package:flutter_application_1/components/createviolation.dart';
 import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
-import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/components/violationEntryWidget.dart';
 
@@ -300,26 +298,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => SummaryReportsPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.bookmark,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'Referred to Council',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RefferedCnl(),
                             ),
                           );
                         },

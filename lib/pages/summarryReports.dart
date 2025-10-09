@@ -6,7 +6,6 @@ import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
-import 'package:flutter_application_1/pages/reffered_CNL.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
@@ -304,26 +303,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => SummaryReportsPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.bookmark,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'Referred to Council',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RefferedCnl(),
                             ),
                           );
                         },
