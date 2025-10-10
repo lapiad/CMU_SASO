@@ -81,19 +81,21 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
       final courseReg = RegExp(r'\b[A-Z]{2,6}\b');
       final studNoReg = RegExp(r'\b(20\d{6,8})\b');
 
-      String name = nameReg.firstMatch(scannedText)?.group(0) ?? '';
-      String course = courseReg.firstMatch(scannedText)?.group(0) ?? '';
+      // String name = nameReg.firstMatch(scannedText)?.group(0) ?? '';
+      // String course = courseReg.firstMatch(scannedText)?.group(0) ?? '';
       String studentNo = studNoReg.firstMatch(scannedText)?.group(0) ?? '';
 
-      name = name.replaceAll(',', '').trim();
+      // name = name.replaceAll(',', '').trim();
 
       // Retry if failed
-      if ((name.isEmpty || studentNo.isEmpty) && attempt < 2) {
+      // if ((name.isEmpty || studentNo.isEmpty) && attempt < 2) {
+      if ((studentNo.isEmpty) && attempt < 2) {
         debugPrint("⚠️ OCR incomplete. Retrying...");
         return _scanID(attempt: attempt + 1);
       }
 
-      if (name.isEmpty || studentNo.isEmpty) {
+      // if (name.isEmpty || studentNo.isEmpty) {
+      if (studentNo.isEmpty) {
         _showOverlayMessage("No valid ID details detected");
         setState(() {
           _isProcessing = false;
@@ -112,7 +114,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
         context,
         MaterialPageRoute(
           builder: (_) =>
-              ViolationScreen(name: name, course: course, studentNo: studentNo),
+              ViolationScreen(studentNo: studentNo),
         ),
       ).then((_) {
         setState(() {

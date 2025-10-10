@@ -77,7 +77,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     }
     if (result == 'signout') {
       final box = GetStorage();
-      box.remove('user_id');
+      box.erase();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const Login()),
@@ -128,6 +128,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                     dateTime: item['date_of_incident']?.toString() ?? '',
                     department: item['student_department']?.toString() ?? '',
                     base64Imagestring: item['photo_evidence']?.toString() ?? '',
+                    offenseLevel: item['offense_level']?.toString() ?? '',
                   ),
                 )
                 .toList();

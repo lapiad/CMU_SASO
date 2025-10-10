@@ -1,6 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/page/IDScanner.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
 
 class SchoolGuardHome extends StatefulWidget {
   const SchoolGuardHome({super.key});
@@ -9,49 +15,64 @@ class SchoolGuardHome extends StatefulWidget {
   State<SchoolGuardHome> createState() => _SchoolGuardHomeState();
 }
 
+
 class _SchoolGuardHomeState extends State<SchoolGuardHome> {
-  final List<Map<String, String>> scanData = [
-    {
-      "name": "Annie Batumbakal",
-      "id": "202205249",
-      "offense": "1st",
-      "violation": "Academic Dishonesty",
-      "department": "College of Arts & Sciences",
-      "time": "2025-09-09 10:00",
-    },
-    {
-      "name": "Juan Dela Cruz",
-      "id": "202205232",
-      "offense": "2nd",
-      "violation": "Improper Uniform",
-      "department": "College of Computer Studies",
-      "time": "2025-09-09 11:30",
-    },
-    {
-      "name": "James Reid",
-      "id": "202205211",
-      "offense": "3rd",
-      "violation": "Serious Misconduct",
-      "department": "College of Education",
-      "time": "2025-09-08 09:00",
-    },
-    {
-      "name": "Sponge Cola",
-      "id": "202209211",
-      "offense": "1st",
-      "violation": "Late Attendance",
-      "department": "College of Criminology",
-      "time": "2025-09-07 14:15",
-    },
-    {
-      "name": "Maria Santos",
-      "id": "202205299",
-      "offense": "2nd",
-      "violation": "Improper Conduct",
-      "department": "College of Business Administration",
-      "time": "2025-09-06 16:45",
-    },
-  ];
+  List<ViolationRecord> scanData = [];
+  // {
+  //     "name": "Annie Batumbakal",
+  //     "id": "202205249",
+  //     "offense": "1st",
+  //     "violation": "Academic Dishonesty",
+  //     "department": "College of Arts & Sciences",
+  //     "time": "2025-09-09 10:00",
+  //   },
+  @override
+  void initState() {
+    super.initState();
+    fetchViolations();
+  }
+  Future<void> fetchViolations() async {
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/violations',
+    );
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+
+        // Check if decoded is a Map and contains the expected key
+        if (decoded is Map<String, dynamic> && decoded['violations'] is List) {
+          final List<dynamic> data = decoded['violations'];
+          setState(() {
+            scanData = data
+                .map(
+                  (item) => ViolationRecord(
+                    studentName: item['student_name']?.toString() ?? '',
+                    studentId: item['student_id']?.toString() ?? '',
+                    violation: item['violation_type']?.toString() ?? '',
+                    status: item['status']?.toString() ?? '',
+                    reportedBy: item['reported_by']?.toString() ?? '',
+                    dateTime: item['date_of_incident']?.toString() ?? '',
+                    department: item['student_department']?.toString() ?? '',
+                    base64Imagestring: item['photo_evidence']?.toString() ?? '',
+                    offenseLevel: item['offense_level']?.toString() ?? '',
+                  ),
+                )
+                .toList();
+          });
+        
+        } else {
+          print('Unexpected JSON structure: missing "violations" list');
+        }
+      } else {
+        print('Failed to load violations: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+  
 
   String searchQuery = "";
 
@@ -60,8 +81,8 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     final filteredData = scanData
         .where(
           (scan) =>
-              scan["id"]!.contains(searchQuery) ||
-              scan["name"]!.toLowerCase().contains(searchQuery.toLowerCase()),
+              scan.studentId!.contains(searchQuery) ||
+              scan.studentName!.toLowerCase().contains(searchQuery.toLowerCase()),
         )
         .toList();
 
@@ -223,7 +244,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                   builder: (context) => const StudentIDScannerApp(),
                 ),
               );
-              if (result != null && result is Map<String, String>) {
+              if (result != null && result is ViolationRecord) {
                 setState(() => scanData.insert(0, result));
               }
             },
@@ -243,7 +264,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  Widget _buildRecentScans(List<Map<String, String>> data) {
+  Widget _buildRecentScans(List<ViolationRecord> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,7 +278,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  Widget _scanTile(Map<String, String> scan) {
+  Widget _scanTile(ViolationRecord scan) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -272,18 +293,18 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
           child: const Icon(Icons.person, color: Colors.indigo),
         ),
         title: Text(
-          scan["name"] ?? "",
+          scan.studentName ?? "",
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          "${scan["id"] ?? ""}\n• ${scan["violation"] ?? ""}\n${scan["department"] ?? ""}",
+          "${scan.studentId ?? ""}\n• ${scan.violation ?? ""}\n${scan.department ?? ""}",
           style: const TextStyle(
             fontSize: 13,
             color: Colors.black54,
             height: 1.4,
           ),
         ),
-        trailing: _offenseBadge(scan["offense"] ?? "", scan["time"] ?? ""),
+        trailing: _offenseBadge(scan.offenseLevel ?? "", scan.dateTime ?? ""),
       ),
     );
   }
@@ -349,7 +370,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
 
 /// ------------------- Scan History Modal -------------------
 class _ScanHistoryModal extends StatefulWidget {
-  final List<Map<String, String>> scanData;
+  final List<ViolationRecord> scanData;
   const _ScanHistoryModal({required this.scanData});
 
   @override
@@ -368,19 +389,19 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
   Widget build(BuildContext context) {
     final filteredData = widget.scanData.where((scan) {
       final matchesSearch =
-          scan["name"]!.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          scan["id"]!.contains(searchQuery);
+          scan.studentName!.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          scan.studentId!.contains(searchQuery);
       final matchesStatus =
           selectedStatuses.isEmpty ||
-          selectedStatuses.contains(scan["offense"]);
+          selectedStatuses.contains(scan.offenseLevel);
       final matchesViolation =
           selectedViolations.isEmpty ||
-          selectedViolations.contains(scan["violation"]);
+          selectedViolations.contains(scan.violation);
       final matchesDepartment =
           selectedDepartments.isEmpty ||
-          selectedDepartments.contains(scan["department"]);
+          selectedDepartments.contains(scan.department);
 
-      final scanTime = DateTime.tryParse(scan["time"] ?? "");
+      final scanTime = DateTime.tryParse(scan.dateTime ?? "");
       final matchesDate =
           (startDate == null ||
               (scanTime != null &&
@@ -472,11 +493,11 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                         child: const Icon(Icons.person, color: Colors.indigo),
                       ),
                       title: Text(
-                        filteredData[index]["name"] ?? "",
+                        filteredData[index].studentName ?? "",
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        "${filteredData[index]["id"]} • ${filteredData[index]["violation"]}\n${filteredData[index]["department"]}",
+                        "${filteredData[index].studentId} • ${filteredData[index].violation}\n${filteredData[index].department}",
                         style: const TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
@@ -491,15 +512,15 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: filteredData[index]["offense"] == "1st"
+                              color: filteredData[index].offenseLevel == "1st"
                                   ? Colors.yellow.shade700
-                                  : filteredData[index]["offense"] == "2nd"
+                                  : filteredData[index].offenseLevel == "2nd"
                                   ? Colors.orange
                                   : Colors.red,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "${filteredData[index]["offense"]} Offense",
+                              "${filteredData[index].offenseLevel} Offense",
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white,
@@ -509,7 +530,7 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            filteredData[index]["time"] ?? "",
+                            filteredData[index].dateTime?? "",
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
@@ -824,6 +845,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final box = GetStorage();
     return Scaffold(
       backgroundColor: Colors.blue.shade900,
       body: SafeArea(
@@ -844,8 +866,10 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
-                "Jose Martinez",
+              Text(
+                box.read('user_details')["first_name"] +
+                    " " +
+                    box.read('user_details')["last_name"],
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -855,7 +879,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildInfoField(
                 label: "Your Email",
-                value: "jose.martinez@cityofmalabon...",
+                value: box.read('user_details')["email"] ?? "N/A",
                 icon: Icons.email_outlined,
               ),
               const SizedBox(height: 16),

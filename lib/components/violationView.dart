@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
@@ -78,11 +80,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                 // Added rounded corners to match the image
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.image_outlined,
-                size: isWide ? 250 : 200,
-                color: Colors.grey[700],
-              ),
+              child: Image.memory(base64Decode(widget.record.base64Imagestring),fit: BoxFit.cover),
             ),
             const SizedBox(width: 32),
 
@@ -102,12 +100,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                     buildDetailField("Reported by", reportedByController),
                     buildDetailField("Date and Time", dateTimeController),
                     buildDetailField("Status", statusController),
-                    buildDetailField(
-                      "Photo Evidence (Base64)",
-                      TextEditingController(
-                        text: widget.record.base64Imagestring,
-                      ),
-                    ),
+                    
                   ],
                 ),
               ),

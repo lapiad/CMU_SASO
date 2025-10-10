@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_application_1/page/Schoolguard.dart';
+import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:get_storage/get_storage.dart';

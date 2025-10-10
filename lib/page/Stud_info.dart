@@ -1,21 +1,23 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/page/Schoolguard.dart';
+import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:get_storage/get_storage.dart';
 import 'dart:convert';
 
 class ViolationScreen extends StatefulWidget {
-  final String name;
-  final String course;
   final String studentNo;
+  String name;
+  String course;
 
-  const ViolationScreen({
+  ViolationScreen({
     super.key,
-    required this.name,
-    required this.course,
     required this.studentNo,
+    this.name = "",
+    this.course = "",
   });
 
   @override
@@ -42,8 +44,25 @@ class _ViolationScreenState extends State<ViolationScreen> {
     "Others",
   ];
 
-  // Example: Connect to backend (replace with your API endpoint)
+  Future<void> fetchStudentInfo() async {
+  final url = Uri.parse(
+    '${GlobalConfiguration().getValue("server_url")}/violations/student-info/${widget.studentNo}',
+  ); // Replace with your FastAPI URL
+  final response = await http.get(url);
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    widget.name = data['first_name'];
+    widget.course = data['course'];
+    setState(() {
+      studentnameController.text = widget.name;
+      courseController.text = widget.course;
+    });
+  } else {
+    // error message
+    throw Exception('Failed to load student info');}
+}
 
+  // Example: Connect to backend (replace with your API endpoint)
   Future<void> recordViolationToBackend() async {
     final box = GetStorage();
 
@@ -71,6 +90,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
   @override
   void initState() {
     super.initState();
+    fetchStudentInfo();
     studentnameController = TextEditingController(text: widget.name);
     studentidController = TextEditingController(text: widget.studentNo);
     courseController = TextEditingController(text: widget.course);
