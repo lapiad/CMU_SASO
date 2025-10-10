@@ -16,7 +16,8 @@ void main() async {
 Widget firstScreen(BuildContext context) {
   final box = GetStorage();
   if (box.read('user_id') != null) {
-    if (box.read('user_role') == 'Guard') {
+    final userDetails = box.read('user_details');
+    if (userDetails["role"] == 'guard') {
       return SchoolGuardHome();
     } else {
       return Dashboard();

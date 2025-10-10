@@ -110,6 +110,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
 
     if (result == 'signout') {
+      final box = GetStorage();
+      box.erase();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Login()),
