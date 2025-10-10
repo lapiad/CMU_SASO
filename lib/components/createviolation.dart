@@ -210,7 +210,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       'student_name': studentNameController.text.trim(),
       'violation_type': violationType ?? '',
       'offense_level': offenseLevel ?? '',
-      'student_department': department ?? '',
+      'department': department ?? '',
       'reported_by': reportedByController.text.trim(),
       'status': statusValue ?? '',
       'role': roleController.text.trim(),
