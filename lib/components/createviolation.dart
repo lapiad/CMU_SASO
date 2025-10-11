@@ -383,19 +383,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                   "Offense Level",
                                   "Select offense level",
                                 ),
-                                items:
-                                    [
-                                          "First Offense",
-                                          "Second Offense",
-                                          "Third Offense",
-                                        ]
-                                        .map(
-                                          (e) => DropdownMenuItem(
-                                            value: e,
-                                            child: Text(e),
-                                          ),
-                                        )
-                                        .toList(),
+                                items: ["First Offense"]
+                                    .map(
+                                      (e) => DropdownMenuItem(
+                                        value: e,
+                                        child: Text(e),
+                                      ),
+                                    )
+                                    .toList(),
                                 onChanged: (value) =>
                                     setState(() => offenseLevel = value),
                                 validator: (value) =>

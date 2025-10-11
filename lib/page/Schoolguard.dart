@@ -15,7 +15,6 @@ class SchoolGuardHome extends StatefulWidget {
   State<SchoolGuardHome> createState() => _SchoolGuardHomeState();
 }
 
-
 class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   List<ViolationRecord> scanData = [];
   // {
@@ -31,6 +30,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     super.initState();
     fetchViolations();
   }
+
   Future<void> fetchViolations() async {
     final url = Uri.parse(
       '${GlobalConfiguration().getValue("server_url")}/violations',
@@ -57,11 +57,11 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                     department: item['student_department']?.toString() ?? '',
                     base64Imagestring: item['photo_evidence']?.toString() ?? '',
                     offenseLevel: item['offense_level']?.toString() ?? '',
+                    violationId: item['violation_id'] ?? 0,
                   ),
                 )
                 .toList();
           });
-        
         } else {
           print('Unexpected JSON structure: missing "violations" list');
         }
@@ -72,7 +72,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
       print('Error: $e');
     }
   }
-  
 
   String searchQuery = "";
 
@@ -81,8 +80,10 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     final filteredData = scanData
         .where(
           (scan) =>
-              scan.studentId!.contains(searchQuery) ||
-              scan.studentName!.toLowerCase().contains(searchQuery.toLowerCase()),
+              scan.studentId.contains(searchQuery) ||
+              scan.studentName.toLowerCase().contains(
+                searchQuery.toLowerCase(),
+              ),
         )
         .toList();
 
@@ -148,10 +149,10 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
           Row(
             children: [
               const Image(
-                image: AssetImage('assets/logo.png'),
+                image: AssetImage('images/logos.png'),
                 color: Colors.white,
-                width: 40,
-                height: 40,
+                width: 60,
+                height: 60,
               ),
               const SizedBox(width: 10),
               const Expanded(
@@ -389,8 +390,8 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
   Widget build(BuildContext context) {
     final filteredData = widget.scanData.where((scan) {
       final matchesSearch =
-          scan.studentName!.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          scan.studentId!.contains(searchQuery);
+          scan.studentName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          scan.studentId.contains(searchQuery);
       final matchesStatus =
           selectedStatuses.isEmpty ||
           selectedStatuses.contains(scan.offenseLevel);
@@ -530,7 +531,7 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            filteredData[index].dateTime?? "",
+                            filteredData[index].dateTime ?? "",
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class PendingReportsDialog extends StatefulWidget {
   const PendingReportsDialog({super.key});
@@ -8,44 +10,77 @@ class PendingReportsDialog extends StatefulWidget {
 }
 
 class _PendingReportsDialogState extends State<PendingReportsDialog> {
-  final List<Report> reports = [
-    Report(
-      id: 'VR-2025-003',
-      date: '02-16-2025',
-      studentName: 'Manny Jacinto',
-      studentId: '202202815',
-      violation: 'Smoking on Campus',
-      reporter: 'Mang Tani (Guard)',
-      offenseLevel: 'Second Offense',
-    ),
-    Report(
-      id: 'VR-2025-004',
-      date: '02-16-2025',
-      studentName: 'Superman Lopez',
-      studentId: '202202453',
-      violation: 'Dress Code',
-      reporter: 'Ms. Nadine Lustre',
-      offenseLevel: 'First Offense',
-    ),
-    Report(
-      id: 'VR-2025-005',
-      date: '02-17-2025',
-      studentName: 'Jane Doe',
-      studentId: '202203001',
-      violation: 'Late Submission',
-      reporter: 'Prof. Smith',
-      offenseLevel: 'First Offense',
-    ),
-    Report(
-      id: 'VR-2025-006',
-      date: '02-18-2025',
-      studentName: 'John Smith',
-      studentId: '202203002',
-      violation: 'Cheating',
-      reporter: 'Ms. Annabelle',
-      offenseLevel: 'Third Offense',
-    ),
-  ];
+  List<Report> reports = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPendingReports();
+  }
+
+  // ✅ Fetch pending reports from backend
+  Future<void> fetchPendingReports() async {
+    const apiUrl =
+        'http://192.168.1.8:8000/violations/pending'; // your FastAPI URL
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        setState(() {
+          reports = data.map((e) => Report.fromJson(e)).toList();
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load reports: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint("Error fetching reports: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
+  // ✅ Approve selected reports
+  Future<void> approveSelectedReports() async {
+    final selectedIds = reports
+        .where((r) => r.isSelected)
+        .map((r) => r.id)
+        .toList();
+    if (selectedIds.isEmpty) return;
+
+    const apiUrl = 'http://192.168.1.8:8000/violations/approve';
+    try {
+      final response = await http.put(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(selectedIds),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              "Approved ${selectedIds.length} report(s).",
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          ),
+        );
+        fetchPendingReports(); // refresh list
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: Text("Failed to approve reports: ${response.body}"),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error approving reports: $e")));
+    }
+  }
 
   Color getOffenseColor(String offenseLevel) {
     switch (offenseLevel) {
@@ -63,49 +98,44 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: SizedBox(
-        width: 800, // medium width
-        height: 700, // medium height
+        width: 800,
+        height: 700,
         child: Column(
           children: [
-            // Header with title + close button
+            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      "Pending Reports",
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
+                  const Text(
+                    "Pending Reports",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                   ),
+                  const Spacer(),
                   IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 30,
-                      color: Colors.black,
-                    ),
+                    icon: const Icon(Icons.close, size: 28),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
-              child: Text(
-                'Unapproved reports are automatically deleted after 15 days.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[700], fontSize: 13),
-              ),
-            ),
             const Divider(height: 1),
 
-            // Reports list
-            Expanded(
-              child: Scrollbar(
-                thumbVisibility: true,
+            // Loading
+            if (isLoading)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (reports.isEmpty)
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    "No pending reports found.",
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              // ✅ List of reports
+              Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: reports.length,
@@ -129,60 +159,26 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Checkbox
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Checkbox(
-                              value: report.isSelected,
-                              onChanged: (value) {
-                                setState(() {
-                                  report.isSelected = value!;
-                                });
-                              },
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
+                          Checkbox(
+                            value: report.isSelected,
+                            onChanged: (value) =>
+                                setState(() => report.isSelected = value!),
                           ),
-                          const SizedBox(width: 12),
-
-                          // Placeholder image
-                          Container(
-                            width: 90,
-                            height: 90,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              border: Border.all(color: Colors.black26),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: CustomPaint(painter: CrossPainter()),
-                          ),
-                          const SizedBox(width: 14),
-
-                          // Report details
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  report.id,
+                                  "ID: ${report.id}",
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 15,
                                   ),
                                 ),
-                                Text(
-                                  "Reported on ${report.date}",
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                const SizedBox(height: 6),
-                                _detailRow(
-                                  "Student",
-                                  "${report.studentName} (${report.studentId})",
-                                ),
-                                _detailRow("Violation", report.violation),
-                                _detailRow("Reported by", report.reporter),
-                                const SizedBox(height: 6),
+                                Text("Student: ${report.studentName}"),
+                                Text("Violation: ${report.violation}"),
+                                Text("Reported by: ${report.reporter}"),
+                                Text("Date: ${report.date}"),
                                 Row(
                                   children: [
                                     Chip(
@@ -195,16 +191,15 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                       backgroundColor: getOffenseColor(
                                         report.offenseLevel,
                                       ),
-                                      shape: const StadiumBorder(),
                                     ),
                                     const SizedBox(width: 6),
-                                    Chip(
-                                      label: const Text(
-                                        "Under Review",
+                                    const Chip(
+                                      label: Text(
+                                        "Pending",
                                         style: TextStyle(color: Colors.blue),
                                       ),
                                       backgroundColor: Colors.transparent,
-                                      shape: const StadiumBorder(
+                                      shape: StadiumBorder(
                                         side: BorderSide(color: Colors.blue),
                                       ),
                                     ),
@@ -219,59 +214,25 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                   },
                 ),
               ),
-            ),
 
-            // Approve button
-            Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            // ✅ Approve button
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: ElevatedButton.icon(
+                onPressed: reports.any((r) => r.isSelected)
+                    ? approveSelectedReports
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[900],
                   padding: const EdgeInsets.symmetric(
                     horizontal: 22,
                     vertical: 12,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
                 ),
-                onPressed: reports.any((r) => r.isSelected)
-                    ? () {
-                        final selectedReports = reports
-                            .where((r) => r.isSelected)
-                            .toList();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: const Color.fromARGB(
-                              255,
-                              119,
-                              211,
-                              122,
-                            ),
-                            content: Text(
-                              "Approved ${selectedReports.length} report(s).",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                    : null,
-                icon: const Icon(
-                  Icons.check,
-                  color: Color.fromARGB(255, 255, 255, 255),
-                  size: 20,
-                ),
+                icon: const Icon(Icons.check, color: Colors.white),
                 label: const Text(
-                  "Approve",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  "Approve Selected",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ),
@@ -280,46 +241,10 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
       ),
     );
   }
-
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Row(
-        children: [
-          Text(
-            "$label: ",
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 13),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Draws "X" placeholder for image
-class CrossPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black54
-      ..strokeWidth = 2;
-    canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), paint);
-    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 class Report {
-  final String id;
+  final int id;
   final String date;
   final String studentName;
   final String studentId;
@@ -338,4 +263,16 @@ class Report {
     required this.offenseLevel,
     this.isSelected = false,
   });
+
+  factory Report.fromJson(Map<String, dynamic> json) {
+    return Report(
+      id: json['id'] ?? 0,
+      date: json['date'] ?? '',
+      studentName: json['student_name'] ?? '',
+      studentId: json['student_id'] ?? '',
+      violation: json['violation_type'] ?? '',
+      reporter: json['reported_by'] ?? '',
+      offenseLevel: json['offense_level'] ?? '',
+    );
+  }
 }

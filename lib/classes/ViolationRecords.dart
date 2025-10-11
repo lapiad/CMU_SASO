@@ -1,15 +1,17 @@
 class ViolationRecord {
-  late final String studentName;
-  late final String studentId;
+  final int violationId;
+  final String studentName;
+  final String studentId;
   final String department;
-  late final String violation;
-  late final String status;
+  final String violation;
+  final String status;
   final String reportedBy;
   final String dateTime;
   final String base64Imagestring;
   final String offenseLevel;
 
   ViolationRecord({
+    required this.violationId,
     required this.studentName,
     required this.studentId,
     required this.department,
@@ -21,5 +23,18 @@ class ViolationRecord {
     required this.offenseLevel,
   });
 
-  set actionStatus(String actionStatus) {}
+  factory ViolationRecord.fromJson(Map<String, dynamic> json) {
+    return ViolationRecord(
+      violationId: json['violation_id'] ?? json['id'] ?? 0, // ✅ Correct field
+      studentName: json['student_name'] ?? '',
+      studentId: json['student_id'] ?? '',
+      department: json['department'] ?? '',
+      violation: json['violation'] ?? '',
+      status: json['status'] ?? '',
+      reportedBy: json['reported_by'] ?? '',
+      dateTime: json['date_time'] ?? '',
+      base64Imagestring: json['photo_evidence'] ?? '',
+      offenseLevel: json['offense_level'] ?? '',
+    );
+  }
 }

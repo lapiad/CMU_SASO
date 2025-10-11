@@ -1,7 +1,9 @@
 import 'dart:convert';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
+import 'package:http/http.dart' as http;
+import 'package:global_configuration/global_configuration.dart';
 
 class ViolationDetails extends StatefulWidget {
   final ViolationRecord record;
@@ -24,7 +26,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   late TextEditingController reportedByController;
   late TextEditingController dateTimeController;
   late TextEditingController statusController;
-  late TextEditingController statusActionController; // Renamed for clarity
+  late TextEditingController statusActionController;
 
   @override
   void initState() {
@@ -37,27 +39,96 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     );
     dateTimeController = TextEditingController(text: widget.record.dateTime);
     statusController = TextEditingController(text: widget.record.status);
-    // Renamed the controller to match its purpose
     statusActionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    idController.dispose();
+    violationController.dispose();
+    reportedByController.dispose();
+    dateTimeController.dispose();
+    statusController.dispose();
+    statusActionController.dispose();
+    super.dispose();
+  }
+
+  Uint8List? _safeDecodeBase64(String base64String) {
+    try {
+      final cleaned = base64String.split(',').last.trim();
+      final padding = cleaned.length % 4;
+      final normalized = padding > 0
+          ? cleaned.padRight(cleaned.length + (4 - padding), '=')
+          : cleaned;
+      return base64Decode(normalized);
+    } catch (e) {
+      debugPrint("Invalid Base64 image: $e");
+      return null;
+    }
+  }
+
+  Future<void> saveChanges() async {
+    final violationId = widget.record.violationId; // ✅ correct field name
+    print("Updating violation with ID: $violationId");
+
+    final url =
+        '${GlobalConfiguration().getValue("server_url")}/violations/update/$violationId';
+
+    final updatedData = {
+      "student_name": nameController.text.trim(),
+      "student_id": idController.text.trim(),
+      "violation": violationController.text.trim(),
+      "violation_type": widget.record.violation,
+      "department": widget.record.department,
+      "reported_by": reportedByController.text.trim(),
+      "date_time": dateTimeController.text.trim(),
+      "status": statusController.text.trim(),
+      "report_status": statusActionController.text.trim(),
+      "offense_level": widget.record.offenseLevel,
+      "image": widget.record.base64Imagestring,
+      "violation_id": violationId,
+    };
+
+    try {
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(updatedData),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Changes saved successfully!")),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to update: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Connection error: $e")));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
+    final imageBytes = _safeDecodeBase64(widget.record.base64Imagestring);
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF0033A0),
-        // MODIFICATION: Added leading person icon as seen in the image
         leading: const Icon(Icons.person, color: Colors.white),
-        title: Text(
+        title: const Text(
           "Case Details",
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -71,25 +142,39 @@ class _ViolationDetailsState extends State<ViolationDetails> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // MODIFICATION: Adjusted styling for the image container
             Container(
-              width: isWide ? 500 : 300,
-              height: isWide ? 500 : 300,
+              width: isWide ? 700 : 500,
+              height: isWide ? 700 : 500,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black, width: 2),
-                // Added rounded corners to match the image
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Image.memory(base64Decode(widget.record.base64Imagestring),fit: BoxFit.cover),
+              child: imageBytes != null
+                  ? Image.memory(imageBytes, fit: BoxFit.cover)
+                  : const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image,
+                            size: 100,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "No valid image",
+                            style: TextStyle(color: Colors.grey, fontSize: 20),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
             const SizedBox(width: 32),
-
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top three fields remain in a single column
                     buildDetailField("Student Name", nameController),
                     buildDetailField("Student Number", idController),
                     buildDetailField("Violation", violationController),
@@ -100,7 +185,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                     buildDetailField("Reported by", reportedByController),
                     buildDetailField("Date and Time", dateTimeController),
                     buildDetailField("Status", statusController),
-                    
                   ],
                 ),
               ),
@@ -108,7 +192,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
           ],
         ),
       ),
-
       bottomNavigationBar: widget.isEditable
           ? Padding(
               padding: const EdgeInsets.all(16),
@@ -128,17 +211,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context, {
-                        "studentName": nameController.text,
-                        "studentId": idController.text,
-                        "violation": violationController.text,
-                        "reportedBy": reportedByController.text,
-                        "dateTime": dateTimeController.text,
-                        "status": statusController.text,
-                        "reportStatus": statusActionController.text,
-                      });
-                    },
+                    onPressed: saveChanges,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0033A0),
                       foregroundColor: Colors.white,
@@ -171,9 +244,9 @@ class _ViolationDetailsState extends State<ViolationDetails> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
           ),
-          const SizedBox(height: 6), // Slightly increased spacing
+          const SizedBox(height: 6),
           widget.isEditable
               ? TextField(
                   controller: controller,
@@ -200,7 +273,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                   ),
                   child: Text(
                     controller.text,
-                    style: const TextStyle(fontSize: 15),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
         ],
