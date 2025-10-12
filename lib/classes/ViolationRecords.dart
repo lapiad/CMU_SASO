@@ -25,7 +25,7 @@ class ViolationRecord {
 
   factory ViolationRecord.fromJson(Map<String, dynamic> json) {
     return ViolationRecord(
-      violationId: json['violation_id'] ?? json['id'] ?? 0, // ✅ Correct field
+      violationId: json['violation_id'] ?? json['id'] ?? 0,
       studentName: json['student_name'] ?? '',
       studentId: json['student_id'] ?? '',
       department: json['department'] ?? '',

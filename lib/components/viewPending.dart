@@ -19,10 +19,8 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     fetchPendingReports();
   }
 
-  // ✅ Fetch pending reports from backend
   Future<void> fetchPendingReports() async {
-    const apiUrl =
-        'http://192.168.1.8:8000/violations/pending'; // your FastAPI URL
+    const apiUrl = 'http://192.168.1.8:8000/violations/pending';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
@@ -40,7 +38,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     }
   }
 
-  // ✅ Approve selected reports
   Future<void> approveSelectedReports() async {
     final selectedIds = reports
         .where((r) => r.isSelected)

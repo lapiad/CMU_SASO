@@ -287,7 +287,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                               columns: const [
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 200,
+                                    width: 250,
                                     child: Text(
                                       'Student Name',
                                       style: TextStyle(
@@ -389,7 +389,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       Text(
                                         record.studentName,
                                         style: const TextStyle(
-                                          fontSize: 24,
+                                          fontSize: 21,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -399,7 +399,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       Text(
                                         record.studentId,
                                         style: const TextStyle(
-                                          fontSize: 24,
+                                          fontSize: 21,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -409,7 +409,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       Text(
                                         record.department,
                                         style: const TextStyle(
-                                          fontSize: 24,
+                                          fontSize: 21,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -420,7 +420,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                         record.violation,
                                         style: const TextStyle(
                                           color: Colors.red,
-                                          fontSize: 24,
+                                          fontSize: 21,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -436,7 +436,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                         ),
                                         child: Text(
                                           record.status,
-                                          style: const TextStyle(fontSize: 24),
+                                          style: const TextStyle(fontSize: 21),
                                         ),
                                       ),
                                     ),
@@ -444,7 +444,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       Text(
                                         record.reportedBy,
                                         style: const TextStyle(
-                                          fontSize: 24,
+                                          fontSize: 21,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -454,7 +454,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                                       Text(
                                         record.dateTime,
                                         style: const TextStyle(
-                                          fontSize: 24,
+                                          fontSize: 21,
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
                                         ),

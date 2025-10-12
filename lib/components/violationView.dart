@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
+import 'package:image/image.dart' as img;
+import 'package:photo_view/photo_view.dart';
 
 class ViolationDetails extends StatefulWidget {
   final ViolationRecord record;
@@ -54,9 +56,36 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     super.dispose();
   }
 
+  /// ✅ Compress image only if too large (before sending)
+  Future<String> _compressBase64(String base64String) async {
+    try {
+      if (base64String.isEmpty) return base64String;
+
+      final decodedBytes = base64Decode(base64String.split(',').last);
+      final decoded = img.decodeImage(decodedBytes);
+      if (decoded == null) return base64String;
+
+      // Resize only if width is huge
+      final resized = decoded.width > 800
+          ? img.copyResize(decoded, width: 800)
+          : decoded;
+
+      final compressedBytes = img.encodeJpg(resized, quality: 100);
+      return base64Encode(compressedBytes);
+    } catch (e) {
+      debugPrint("Image compression failed: $e");
+      return base64String;
+    }
+  }
+
+  /// ✅ Safe Base64 decoder
   Uint8List? _safeDecodeBase64(String base64String) {
     try {
-      final cleaned = base64String.split(',').last.trim();
+      if (base64String.isEmpty) return null;
+      final cleaned = base64String
+          .split(',')
+          .last
+          .replaceAll(RegExp(r'\s+'), '');
       final padding = cleaned.length % 4;
       final normalized = padding > 0
           ? cleaned.padRight(cleaned.length + (4 - padding), '=')
@@ -69,8 +98,17 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   }
 
   Future<void> saveChanges() async {
-    final violationId = widget.record.violationId; // ✅ correct field name
+    final violationId = widget.record.violationId;
     print("Updating violation with ID: $violationId");
+    print(
+      "Original Image String Length: ${widget.record.base64Imagestring.length}",
+    );
+
+    // ✅ Compress image safely before sending
+    final compressedImage = await _compressBase64(
+      widget.record.base64Imagestring,
+    );
+    print("Compressed Image String Length: ${compressedImage.length}");
 
     final url =
         '${GlobalConfiguration().getValue("server_url")}/violations/update/$violationId';
@@ -86,7 +124,8 @@ class _ViolationDetailsState extends State<ViolationDetails> {
       "status": statusController.text.trim(),
       "report_status": statusActionController.text.trim(),
       "offense_level": widget.record.offenseLevel,
-      "image": widget.record.base64Imagestring,
+      "photo_evidence": compressedImage, // ✅ Send compressed
+      "date_of_incident": widget.record.dateTime,
       "violation_id": violationId,
     };
 
@@ -108,6 +147,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
           SnackBar(content: Text("Failed to update: ${response.body}")),
         );
       }
+      fetchPendingReports();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -115,10 +155,39 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     }
   }
 
+  /// ✅ Zoomable full-screen view
+  void _showZoomableImage(Uint8List imageBytes) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            PhotoView(
+              imageProvider: MemoryImage(imageBytes),
+              backgroundDecoration: const BoxDecoration(color: Colors.black),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 3,
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth > 900;
+    final isWide = screenWidth > double.infinity;
     final imageBytes = _safeDecodeBase64(widget.record.base64Imagestring);
 
     return Scaffold(
@@ -142,32 +211,40 @@ class _ViolationDetailsState extends State<ViolationDetails> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: isWide ? 700 : 500,
-              height: isWide ? 700 : 500,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: imageBytes != null
-                  ? Image.memory(imageBytes, fit: BoxFit.cover)
-                  : const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.broken_image,
-                            size: 100,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "No valid image",
-                            style: TextStyle(color: Colors.grey, fontSize: 20),
-                          ),
-                        ],
+            GestureDetector(
+              onTap: imageBytes != null
+                  ? () => _showZoomableImage(imageBytes)
+                  : null,
+              child: Container(
+                width: isWide ? 800 : 600,
+                height: isWide ? 700 : 600,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: imageBytes != null
+                    ? Image.memory(imageBytes, fit: BoxFit.cover)
+                    : const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.broken_image,
+                              size: 100,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              "No valid image",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+              ),
             ),
             const SizedBox(width: 32),
             Expanded(
@@ -280,4 +357,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
       ),
     );
   }
+
+  void fetchPendingReports() {}
 }
