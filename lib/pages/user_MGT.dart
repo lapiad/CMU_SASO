@@ -55,50 +55,49 @@ class _UserManagementPageState extends State<UserMgt> {
   @override
   void initState() {
     super.initState();
-    fetchUsers();
+    fetchUser();
   }
 
-  Future<void> fetchUsers() async {
+  Future<void> fetchUser() async {
     try {
+      final box = GetStorage();
+      final userId = box.read('user_id');
+      if (userId == null) {
+        throw Exception("User ID not found in local storage.");
+      }
+
       final serverUrl = GlobalConfiguration().getValue("server_url");
       if (serverUrl == null || serverUrl.isEmpty) {
         throw Exception("Server URL is not configured.");
       }
 
-      final url = Uri.parse('$serverUrl/users');
+      final url = Uri.parse('$serverUrl/users/$userId');
 
-      // Optional: Add headers if your backend requires authentication
-      final headers = {
-        'Content-Type': 'application/json',
-        // 'Authorization': 'Bearer YOUR_TOKEN_HERE', // Uncomment if needed
-      };
+      final headers = {'Content-Type': 'application/json'};
 
       final response = await http.get(url, headers: headers);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final data = json.decode(response.body);
+
         setState(() {
-          users = data.map((u) {
-            return User(
-              name: u['first_name']?.toString() ?? '',
-              email: u['email']?.toString() ?? '',
-              office: u['office']?.toString() ?? '',
-              role: u['role']?.toString() ?? '',
-              status: u['status']?.toString() ?? '',
-            );
-          }).toList();
+          users = [
+            User(
+              name: data['first_name']?.toString() ?? '',
+              email: data['email']?.toString() ?? '',
+              office: data['department']?.toString() ?? '',
+              role: data['role']?.toString() ?? '',
+              status: data['status']?.toString() ?? '',
+            ),
+          ];
         });
       } else {
-        debugPrint("Failed to fetch users: ${response.statusCode}");
-        setState(() {
-          users = [];
-        });
+        debugPrint("Failed to fetch user: ${response.statusCode}");
+        setState(() => users = []);
       }
     } catch (e) {
-      debugPrint("Error fetching users: $e");
-      setState(() {
-        users = [];
-      });
+      debugPrint("Error fetching user: $e");
+      setState(() => users = []);
     }
   }
 

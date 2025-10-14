@@ -22,6 +22,7 @@ class ViolationDetails extends StatefulWidget {
 }
 
 class _ViolationDetailsState extends State<ViolationDetails> {
+  late TextEditingController studentIdController;
   late TextEditingController nameController;
   late TextEditingController idController;
   late TextEditingController violationController;
@@ -34,7 +35,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.record.studentName);
-    idController = TextEditingController(text: widget.record.studentId);
+    idController = TextEditingController(text: widget.record.violationId);
     violationController = TextEditingController(text: widget.record.violation);
     reportedByController = TextEditingController(
       text: widget.record.reportedBy,
@@ -42,6 +43,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     dateTimeController = TextEditingController(text: widget.record.dateTime);
     statusController = TextEditingController(text: widget.record.status);
     statusActionController = TextEditingController();
+    studentIdController = TextEditingController(text: widget.record.studentId);
   }
 
   @override
@@ -60,17 +62,15 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   Future<String> _compressBase64(String base64String) async {
     try {
       if (base64String.isEmpty) return base64String;
-
       final decodedBytes = base64Decode(base64String.split(',').last);
       final decoded = img.decodeImage(decodedBytes);
       if (decoded == null) return base64String;
 
-      // Resize only if width is huge
       final resized = decoded.width > 800
           ? img.copyResize(decoded, width: 800)
           : decoded;
 
-      final compressedBytes = img.encodeJpg(resized, quality: 100);
+      final compressedBytes = img.encodeJpg(resized, quality: 85);
       return base64Encode(compressedBytes);
     } catch (e) {
       debugPrint("Image compression failed: $e");
@@ -100,22 +100,15 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   Future<void> saveChanges() async {
     final violationId = widget.record.violationId;
     print("Updating violation with ID: $violationId");
-    print(
-      "Original Image String Length: ${widget.record.base64Imagestring.length}",
-    );
 
-    // ✅ Compress image safely before sending
-    final compressedImage = await _compressBase64(
-      widget.record.base64Imagestring,
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/violations/update/$violationId',
     );
-    print("Compressed Image String Length: ${compressedImage.length}");
-
-    final url =
-        '${GlobalConfiguration().getValue("server_url")}/violations/update/$violationId';
 
     final updatedData = {
+      "violation_id": idController.text.trim(),
       "student_name": nameController.text.trim(),
-      "student_id": idController.text.trim(),
+      "student_id": studentIdController.text.trim(),
       "violation": violationController.text.trim(),
       "violation_type": widget.record.violation,
       "department": widget.record.department,
@@ -124,14 +117,13 @@ class _ViolationDetailsState extends State<ViolationDetails> {
       "status": statusController.text.trim(),
       "report_status": statusActionController.text.trim(),
       "offense_level": widget.record.offenseLevel,
-      "photo_evidence": compressedImage, // ✅ Send compressed
+      "photo_evidence": widget.record.base64Imagestring,
       "date_of_incident": widget.record.dateTime,
-      "violation_id": violationId,
     };
 
     try {
-      final response = await http.put(
-        Uri.parse(url),
+      final response = await http.post(
+        url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(updatedData),
       );
@@ -147,7 +139,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
           SnackBar(content: Text("Failed to update: ${response.body}")),
         );
       }
-      fetchPendingReports();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -187,7 +178,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth > double.infinity;
+    final isWide = screenWidth > 900;
     final imageBytes = _safeDecodeBase64(widget.record.base64Imagestring);
 
     return Scaffold(
@@ -216,8 +207,8 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                   ? () => _showZoomableImage(imageBytes)
                   : null,
               child: Container(
-                width: isWide ? 800 : 600,
-                height: isWide ? 700 : 600,
+                width: isWide ? 600 : 400,
+                height: isWide ? 600 : 400,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black, width: 2),
                   borderRadius: BorderRadius.circular(12),
@@ -253,7 +244,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     buildDetailField("Student Name", nameController),
-                    buildDetailField("Student Number", idController),
+                    buildDetailField("Student Number", studentIdController),
                     buildDetailField("Violation", violationController),
                     buildDetailField(
                       "Department",
@@ -350,13 +341,14 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                   ),
                   child: Text(
                     controller.text,
-                    style: const TextStyle(fontSize: 20),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
         ],
       ),
     );
   }
-
-  void fetchPendingReports() {}
 }

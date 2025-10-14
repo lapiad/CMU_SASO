@@ -383,14 +383,19 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                   "Offense Level",
                                   "Select offense level",
                                 ),
-                                items: ["First Offense"]
-                                    .map(
-                                      (e) => DropdownMenuItem(
-                                        value: e,
-                                        child: Text(e),
-                                      ),
-                                    )
-                                    .toList(),
+                                items:
+                                    [
+                                          "First Offense",
+                                          "Second Offense",
+                                          "Third Offense",
+                                        ]
+                                        .map(
+                                          (e) => DropdownMenuItem(
+                                            value: e,
+                                            child: Text(e),
+                                          ),
+                                        )
+                                        .toList(),
                                 onChanged: (value) =>
                                     setState(() => offenseLevel = value),
                                 validator: (value) =>
@@ -442,7 +447,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                   "Status",
                                   "Select Status",
                                 ),
-                                items: ["Pending", "Reviewed", "Referred"]
+                                items: ["Pending"]
                                     .map(
                                       (e) => DropdownMenuItem(
                                         value: e,
@@ -484,7 +489,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                                     context: context,
                                     initialDate: incidentDate ?? DateTime.now(),
                                     firstDate: DateTime(2020, 1, 1),
-                                    lastDate: DateTime(2030, 12, 31),
+                                    lastDate: DateTime(3000, 12, 31),
                                   );
                                   if (picked != null) {
                                     setState(() {

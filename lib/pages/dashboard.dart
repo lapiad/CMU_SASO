@@ -14,21 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/components/violationEntryWidget.dart';
 
-Future<String> getName() async {
-  final box = GetStorage();
-  final url = Uri.parse(
-    '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
-  ); // Replace with your FastAPI URL
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    return data['first_name'];
-  } else {
-    // error message
-    return "null";
-  }
-}
+double sideMenuSize = 0.0;
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -39,8 +25,6 @@ class Dashboard extends StatelessWidget {
   }
 }
 
-double sideMenuSize = 0.0;
-
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
@@ -49,20 +33,74 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
-  Future<String> getName() async {
-    final box = GetStorage();
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
-    ); // Replace with your FastAPI URL
-    final response = await http.get(url);
+  List<dynamic> recentViolations = [];
+  String? userName;
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print(data['first_name']);
-      return data['first_name'];
-    } else {
-      // error message
-      return "null";
+  @override
+  void initState() {
+    super.initState();
+    fetchUserName();
+    fetchRecentViolations();
+  }
+
+  // Fetch logged-in user name
+  Future<void> fetchUserName() async {
+    try {
+      final box = GetStorage();
+      final url = Uri.parse(
+        '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+      );
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          userName = data['first_name'] ?? "Unknown";
+        });
+      } else {
+        setState(() {
+          userName = "Unknown";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        userName = "Unknown";
+      });
+    }
+  }
+
+  // Fetch recent violations from backend
+  Future<void> fetchRecentViolations() async {
+    try {
+      final url = Uri.parse(
+        '${GlobalConfiguration().getValue("server_url")}/violations/recent',
+      );
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        List<dynamic> violationsList = [];
+        if (data is List) {
+          violationsList = data;
+        } else if (data is Map<String, dynamic> &&
+            data.containsKey('violations')) {
+          violationsList = data['violations'] as List<dynamic>;
+        }
+
+        setState(() {
+          recentViolations = violationsList;
+        });
+      } else {
+        setState(() {
+          recentViolations = [];
+        });
+      }
+    } catch (e) {
+      print("Error fetching violations: $e");
+      setState(() {
+        recentViolations = [];
+      });
     }
   }
 
@@ -85,7 +123,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'signout',
           child: SizedBox(
             width: 300,
@@ -126,7 +164,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -141,25 +178,36 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  int countByStatus(String statusMatch) {
-    return cases
-        .where((c) => (c['status'] as String).contains(statusMatch))
-        .length;
+  Color getOffenseColor(String offenseLevel) {
+    // Normalize input (handle nulls, case differences, spacing)
+    final level = offenseLevel.trim().toLowerCase();
+
+    if (level.contains('first')) {
+      return Colors.amber; // 🟡 First Offense
+    } else if (level.contains('second')) {
+      return Colors.deepOrange; // 🟠 Second Offense
+    } else if (level.contains('third')) {
+      return Colors.red; // 🔴 Third Offense
+    } else if (level.contains('pending')) {
+      return Colors.blueGrey; // ⚪ Optional: Pending
+    } else if (level.contains('none')) {
+      return Colors.green; // ✅ Clean record (optional)
+    } else {
+      return Colors.grey; // ⚫ Default fallback
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'CMU-SASO DASHBOARD',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
         backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
-          padding: EdgeInsets.zero,
           onPressed: () {
             setState(() {
               sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
@@ -169,18 +217,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         actions: [
           Row(
             children: [
-              FutureBuilder(
-                future: getName(),
-                builder: (context, snapshot) {
-                  return Text(
-                    snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+              Text(
+                userName ?? "Loading...",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 16),
               CircleAvatar(
@@ -200,18 +243,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ],
         automaticallyImplyLeading: false,
       ),
-
       body: SingleChildScrollView(
         padding: EdgeInsets.zero,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Side menu
             if (sideMenuSize != 0.0)
               SizedBox(
                 width: sideMenuSize,
-                height: 900,
+                height: MediaQuery.of(context).size.height,
                 child: Container(
-                  decoration: BoxDecoration(color: Colors.blue[900]),
+                  color: Colors.blue[900],
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -224,12 +267,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      const Text(
-                        "  CMU_SASO DRMS",
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          "CMU_SASO DRMS",
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 30),
@@ -255,16 +301,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           'Dashboard',
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Dashboard(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Dashboard(),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
                       ListTile(
                         leading: const Icon(
                           Icons.list_alt,
@@ -275,16 +318,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           'Violation Logs',
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ViolationLogsPage(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ViolationLogsPage(),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
                       ListTile(
                         leading: const Icon(
                           Icons.pie_chart,
@@ -295,14 +335,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           'Summary of Reports',
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SummaryReportsPage(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SummaryReportsPage(),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       const Padding(
@@ -316,7 +354,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
                       ListTile(
                         leading: const Icon(
                           Icons.person,
@@ -327,26 +364,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           'User management',
                           style: TextStyle(color: Colors.white, fontSize: 20),
                         ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => UserMgt()),
-                          );
-                        },
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserMgt()),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+            // Main content
             Expanded(
               child: Column(
                 children: [
+                  // Summary widgets
                   SizedBox(
                     width: MediaQuery.of(context).size.width,
                     child: MediaQuery.of(context).size.width > 770
                         ? Row(
                             children: [
-                              SizedBox(width: 40),
+                              const SizedBox(width: 40),
                               SummaryWidget(
                                 title: "Total Cases",
                                 value: "3",
@@ -354,7 +391,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 icon: Icons.cases_outlined,
                                 iconColor: Colors.red,
                               ),
-                              SizedBox(width: 30),
                               SummaryWidget(
                                 title: "Under Review",
                                 value: "1",
@@ -362,7 +398,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 icon: Icons.reviews,
                                 iconColor: Colors.blue,
                               ),
-                              SizedBox(width: 30),
                               SummaryWidget(
                                 title: "Scheduled",
                                 value: "1",
@@ -370,7 +405,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 icon: Icons.schedule,
                                 iconColor: Colors.teal,
                               ),
-                              SizedBox(width: 30),
                               SummaryWidget(
                                 title: "Pending",
                                 value: "1",
@@ -378,12 +412,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 icon: Icons.pending,
                                 iconColor: Colors.yellow,
                               ),
-                              SizedBox(width: 30),
                             ],
                           )
                         : Container(
-                            margin: EdgeInsets.all(10),
-                            width: MediaQuery.of(context).size.width,
+                            margin: const EdgeInsets.all(10),
                             height: MediaQuery.of(context).size.height * 0.45,
                             child: GridView.count(
                               crossAxisSpacing: 10,
@@ -422,49 +454,53 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             ),
                           ),
                   ),
-
                   const SizedBox(height: 24),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Recent Violations
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           color: Colors.white,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
+                            children: [
+                              const Text(
                                 'Recent Violations',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 30,
                                 ),
                               ),
-                              SizedBox(height: 20),
-                              ViolationEntry(
-                                name: 'Annie Batumbakal',
-                                description: 'Improper Uniform',
-                                offenseType: 'First Offense',
-                                offenseColor: Colors.amber,
-                              ),
-                              ViolationEntry(
-                                name: 'Juan Dela Cruz',
-                                description: 'Late Attendance',
-                                offenseType: 'Second Offense',
-                                offenseColor: Colors.deepOrange,
-                              ),
-                              ViolationEntry(
-                                name: 'James Reid',
-                                description: 'Serious Misconduct',
-                                offenseType: 'Third Offense',
-                                offenseColor: Colors.red,
-                              ),
+                              const SizedBox(height: 20),
+                              recentViolations.isEmpty
+                                  ? const Text("No recent violations")
+                                  : Column(
+                                      children: recentViolations.map((
+                                        violation,
+                                      ) {
+                                        return ViolationEntry(
+                                          name: violation['student_name'] ?? "",
+                                          violationtype:
+                                              violation['violation_type'] ?? "",
+                                          offenselevel:
+                                              violation['offense_level'] ??
+                                              "Unknown",
+                                          offenseColor: getOffenseColor(
+                                            violation['offense_level'] ??
+                                                violation['violation_type'] ??
+                                                "Unknown",
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(width: 16),
+                      // Quick Actions
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(25),
@@ -486,12 +522,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 child: buildActionButton(
                                   Icons.add,
                                   "Create New Violation Report",
-                                  () {
-                                    showDialog(
+                                  () async {
+                                    await showDialog(
                                       context: context,
                                       builder: (_) =>
                                           const CreateViolationDialog(),
                                     );
+                                    fetchRecentViolations(); // Refresh after creating
                                   },
                                 ),
                               ),
@@ -500,7 +537,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 height: 80,
                                 child: buildActionButton(
                                   Icons.article_outlined,
-                                  " View Pending Reports",
+                                  "View Pending Reports",
                                   () {
                                     showDialog(
                                       context: context,

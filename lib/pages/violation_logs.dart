@@ -129,7 +129,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                     department: item['student_department']?.toString() ?? '',
                     base64Imagestring: item['photo_evidence']?.toString() ?? '',
                     offenseLevel: item['offense_level']?.toString() ?? '',
-                    violationId: item['violation_id'] ?? 0,
+                    violationId: item['id'] ?? '',
                   ),
                 )
                 .toList();

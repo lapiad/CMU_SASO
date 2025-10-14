@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 class ViolationEntry extends StatelessWidget {
   final String name;
-  final String description;
-  final String offenseType;
+  final String violationtype;
+  final String offenselevel;
   final Color offenseColor;
 
   const ViolationEntry({
     super.key,
     required this.name,
-    required this.description,
-    required this.offenseType,
+    required this.violationtype,
+    required this.offenselevel,
     required this.offenseColor,
   });
 
@@ -38,7 +38,7 @@ class ViolationEntry extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  description,
+                  violationtype,
                   style: const TextStyle(fontSize: 20, color: Colors.black87),
                 ),
               ],
@@ -51,7 +51,7 @@ class ViolationEntry extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              offenseType,
+              offenselevel,
               style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
           ),
