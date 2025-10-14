@@ -50,7 +50,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                     department: item['student_department']?.toString() ?? '',
                     base64Imagestring: item['photo_evidence']?.toString() ?? '',
                     offenseLevel: item['offense_level']?.toString() ?? '',
-                    course: item['student_course']?.toString() ?? '',
+                    violationId: item['id']?.toString() ?? '',
                   ),
                 )
                 .toList();

@@ -64,7 +64,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
   Future<void> fetchStudentInfo() async {
     try {
       final url = Uri.parse(
-        '${GlobalConfiguration().getValue("server_url")}/violations/student-info/${widget.studentNo}',
+        '${GlobalConfiguration().getValue("server_url")}/students/student-info/${widget.studentNo}',
       );
       final response = await http.get(url);
 
