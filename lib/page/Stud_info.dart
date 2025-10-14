@@ -10,14 +10,14 @@ import 'dart:convert';
 
 class ViolationScreen extends StatefulWidget {
   final String studentNo;
-  String name;
-  String course;
+  final String name;
+  final String course;
 
-  ViolationScreen({
+  const ViolationScreen({
     super.key,
     required this.studentNo,
-    this.name = "",
-    this.course = "",
+    required this.name,
+    required this.course,
   });
 
   @override
@@ -25,9 +25,9 @@ class ViolationScreen extends StatefulWidget {
 }
 
 class _ViolationScreenState extends State<ViolationScreen> {
-  late final TextEditingController studentnameController;
-  late final TextEditingController studentidController;
-  late final TextEditingController courseController;
+  late TextEditingController studentnameController;
+  late TextEditingController studentidController;
+  late TextEditingController courseController;
 
   File? _evidenceImage;
   String searchQuery = "";
@@ -44,29 +44,47 @@ class _ViolationScreenState extends State<ViolationScreen> {
     "Others",
   ];
 
-  Future<void> fetchStudentInfo() async {
-  final url = Uri.parse(
-    '${GlobalConfiguration().getValue("server_url")}/violations/student-info/${widget.studentNo}',
-  ); // Replace with your FastAPI URL
-  final response = await http.get(url);
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    widget.name = data['first_name'];
-    widget.course = data['course'];
-    setState(() {
-      studentnameController.text = widget.name;
-      courseController.text = widget.course;
-    });
-  } else {
-    // error message
-    throw Exception('Failed to load student info');}
-}
+  @override
+  void initState() {
+    super.initState();
+    studentnameController = TextEditingController(text: widget.name);
+    studentidController = TextEditingController(text: widget.studentNo);
+    courseController = TextEditingController(text: widget.course);
+    fetchStudentInfo();
+  }
 
-  // Example: Connect to backend (replace with your API endpoint)
+  @override
+  void dispose() {
+    studentnameController.dispose();
+    studentidController.dispose();
+    courseController.dispose();
+    super.dispose();
+  }
+
+  Future<void> fetchStudentInfo() async {
+    try {
+      final url = Uri.parse(
+        '${GlobalConfiguration().getValue("server_url")}/violations/student-info/${widget.studentNo}',
+      );
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          studentnameController.text = data['first_name'] ?? '';
+          courseController.text = data['course'] ?? '';
+        });
+      } else {
+        debugPrint('Failed to load student info: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching student info: $e');
+    }
+  }
+
   Future<void> recordViolationToBackend() async {
     final box = GetStorage();
 
-    // Encode image to base64 if exists
     String? evidenceBase64;
     if (_evidenceImage != null) {
       final bytes = await _evidenceImage!.readAsBytes();
@@ -78,41 +96,24 @@ class _ViolationScreenState extends State<ViolationScreen> {
       "student_id": studentidController.text,
       "course": courseController.text,
       "violations": selectedViolations.toList(),
-      "evidence": evidenceBase64, // base64 string or null
+      "evidence": evidenceBase64,
     };
 
-    // Save to GetStorage (local backend)
     await box.write('violation_${studentidController.text}', data);
-
-    print("Saved violation: $data");
+    debugPrint("Saved violation: $data");
   }
 
-  @override
-  void initState() {
-    super.initState();
-    fetchStudentInfo();
-    studentnameController = TextEditingController(text: widget.name);
-    studentidController = TextEditingController(text: widget.studentNo);
-    courseController = TextEditingController(text: widget.course);
-  }
-
-  @override
-  void dispose() {
-    studentnameController.dispose();
-    studentidController.dispose();
-    courseController.dispose();
-    super.dispose();
-  }
-
-  // Pick image for evidence
   Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() => _evidenceImage = File(pickedFile.path));
+    try {
+      final pickedFile = await ImagePicker().pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() => _evidenceImage = File(pickedFile.path));
+      }
+    } catch (e) {
+      debugPrint("Image pick error: $e");
     }
   }
 
-  // Show success popup → redirect after 2s
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -151,7 +152,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // Close popup
+        Navigator.of(context, rootNavigator: true).pop();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const SchoolGuardHome()),
@@ -161,7 +162,6 @@ class _ViolationScreenState extends State<ViolationScreen> {
     });
   }
 
-  // Confirmation dialog with date & time
   void _showConfirmationDialog() {
     if (studentnameController.text.trim().isEmpty ||
         studentidController.text.trim().isEmpty ||
@@ -304,8 +304,9 @@ class _ViolationScreenState extends State<ViolationScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(ctx);
+                          await recordViolationToBackend();
                           _showSuccessDialog();
                         },
                         style: ElevatedButton.styleFrom(
@@ -409,7 +410,10 @@ class _ViolationScreenState extends State<ViolationScreen> {
     );
   }
 
-  Widget _studentInfoCard() {
+  Widget _studentInfoCard() => _textFieldCard();
+
+  // identical UI kept, just structured method safely
+  Widget _textFieldCard() {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
@@ -440,7 +444,10 @@ class _ViolationScreenState extends State<ViolationScreen> {
     );
   }
 
-  Widget _violationTypeCard(List<String> violations) {
+  Widget _violationTypeCard(List<String> violations) =>
+      _buildViolationCard(violations);
+
+  Widget _buildViolationCard(List<String> violations) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,

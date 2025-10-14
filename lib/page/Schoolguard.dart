@@ -1,8 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/page/IDScanner.dart';
+import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
@@ -17,14 +17,8 @@ class SchoolGuardHome extends StatefulWidget {
 
 class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   List<ViolationRecord> scanData = [];
-  // {
-  //     "name": "Annie Batumbakal",
-  //     "id": "202205249",
-  //     "offense": "1st",
-  //     "violation": "Academic Dishonesty",
-  //     "department": "College of Arts & Sciences",
-  //     "time": "2025-09-09 10:00",
-  //   },
+  String searchQuery = "";
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +35,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
 
-        // Check if decoded is a Map and contains the expected key
         if (decoded is Map<String, dynamic> && decoded['violations'] is List) {
           final List<dynamic> data = decoded['violations'];
           setState(() {
@@ -57,7 +50,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                     department: item['student_department']?.toString() ?? '',
                     base64Imagestring: item['photo_evidence']?.toString() ?? '',
                     offenseLevel: item['offense_level']?.toString() ?? '',
-                    violationId: item['violation_id'] ?? '',
+                    course: item['student_course']?.toString() ?? '',
                   ),
                 )
                 .toList();
@@ -72,8 +65,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
       print('Error: $e');
     }
   }
-
-  String searchQuery = "";
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +118,11 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   }
 
   Widget _buildHeader() {
+    final todayStr = DateTime.now().toIso8601String().split('T')[0];
+    final violationsToday = scanData
+        .where((s) => s.dateTime != null && s.dateTime!.contains(todayStr))
+        .length;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -151,8 +147,8 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
               const Image(
                 image: AssetImage('images/logos.png'),
                 color: Colors.white,
-                width: 60,
-                height: 60,
+                width: 40,
+                height: 40,
               ),
               const SizedBox(width: 10),
               const Expanded(
@@ -172,7 +168,9 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ProfileScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
                     );
                   },
                 ),
@@ -183,9 +181,9 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statBox("47", "Students Scanned"),
+              _statBox(scanData.length.toString(), "Students Scanned"),
               Container(height: 40, width: 1, color: Colors.white24),
-              _statBox("12", "Violations Today"),
+              _statBox(violationsToday.toString(), "Violations Today"),
             ],
           ),
         ],
@@ -254,6 +252,35 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.indigo.shade600,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ViolationScreen(name: "", course: "", studentNo: ""),
+                ),
+              );
+              if (result != null && result is ViolationRecord) {
+                setState(() => scanData.insert(0, result));
+              }
+            },
+            icon: const Icon(Icons.edit, color: Colors.indigo),
+            label: const Text(
+              "Manual Entry",
+              style: TextStyle(color: Colors.indigo),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.indigo,
+              side: const BorderSide(color: Colors.indigo, width: 2),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -369,7 +396,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   }
 }
 
-/// ------------------- Scan History Modal -------------------
 class _ScanHistoryModal extends StatefulWidget {
   final List<ViolationRecord> scanData;
   const _ScanHistoryModal({required this.scanData});
@@ -823,6 +849,9 @@ class ProfileScreen extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
+                        // Clear stored user details
+                        GetStorage().erase();
+
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (_) => const Login()),
                           (route) => false,
@@ -847,6 +876,12 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = GetStorage();
+    final user = box.read('user_details') ?? {};
+
+    final firstName = user['first_name'] ?? '';
+    final lastName = user['last_name'] ?? '';
+    final email = user['email'] ?? 'N/A';
+
     return Scaffold(
       backgroundColor: Colors.blue.shade900,
       body: SafeArea(
@@ -854,12 +889,14 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 40,
                 backgroundColor: Colors.white24,
                 child: Text(
-                  "JM",
-                  style: TextStyle(
+                  firstName.isNotEmpty
+                      ? firstName[0] + (lastName.isNotEmpty ? lastName[0] : '')
+                      : 'U',
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -868,10 +905,8 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                box.read('user_details')["first_name"] +
-                    " " +
-                    box.read('user_details')["last_name"],
-                style: TextStyle(
+                "$firstName $lastName".trim(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -880,7 +915,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildInfoField(
                 label: "Your Email",
-                value: box.read('user_details')["email"] ?? "N/A",
+                value: email,
                 icon: Icons.email_outlined,
               ),
               const SizedBox(height: 16),

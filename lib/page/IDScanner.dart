@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/page/Schoolguard.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -41,12 +42,16 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   Future<void> _initCamera() async {
     await Permission.camera.request();
     if (await Permission.camera.isGranted) {
-      final backCamera = (await availableCameras()).firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
-      );
-      _cameraController = CameraController(backCamera, ResolutionPreset.high);
-      await _cameraController!.initialize();
-      if (mounted) setState(() {});
+      try {
+        final backCamera = (await availableCameras()).firstWhere(
+          (c) => c.lensDirection == CameraLensDirection.back,
+        );
+        _cameraController = CameraController(backCamera, ResolutionPreset.high);
+        await _cameraController!.initialize();
+        if (mounted) setState(() {});
+      } catch (e) {
+        debugPrint("Camera init error: $e");
+      }
     }
   }
 
@@ -66,36 +71,32 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
     try {
       setState(() => _isProcessing = true);
 
-      // Take picture
-      XFile picture = await _cameraController!.takePicture();
+      final picture = await _cameraController!.takePicture();
       _capturedImage = File(picture.path);
       setState(() {});
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      // OCR
-      String scannedText = await _extractTextFromFile(_capturedImage!);
-      // Extract info
+      final scannedText = await _extractTextFromFile(_capturedImage!);
       final nameReg = RegExp(
         r'([A-Z][a-zA-Z]+,\s+(?:[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)(?:\s+[A-Z]\.?)?)',
       );
-      // Allow any uppercase course-like word (e.g., BSIT, BSCPE, BSTM, etc.)
-      final courseReg = RegExp(r'\b[A-Z]{2,6}\b');
+      final courseReg = RegExp(
+        r'\b(?:BS|BA|B\.S\.|B\.A\.|BACHELOR(?:\s+OF)?(?:\s+[A-Z]+)*)(?:\s+IN\s+[A-Z][A-Z\s]+)?\b',
+        caseSensitive: false,
+      );
       final studNoReg = RegExp(r'\b(20\d{6,8})\b');
 
-      // String name = nameReg.firstMatch(scannedText)?.group(0) ?? '';
-      // String course = courseReg.firstMatch(scannedText)?.group(0) ?? '';
-      String studentNo = studNoReg.firstMatch(scannedText)?.group(0) ?? '';
+      final name = nameReg.firstMatch(scannedText)?.group(0) ?? '';
+      final course = courseReg.firstMatch(scannedText)?.group(0) ?? '';
+      final studentNo = studNoReg.firstMatch(scannedText)?.group(0) ?? '';
 
-      // name = name.replaceAll(',', '').trim();
-
-      // Retry if failed
-      // if ((name.isEmpty || studentNo.isEmpty) && attempt < 2) {
-      if ((studentNo.isEmpty) && attempt < 2) {
+      if ((studentNo.isEmpty || name.isEmpty || course.isEmpty) &&
+          attempt < 2) {
         debugPrint("⚠️ OCR incomplete. Retrying...");
         return _scanID(attempt: attempt + 1);
       }
 
-      // if (name.isEmpty || studentNo.isEmpty) {
-      if (studentNo.isEmpty) {
+      if (studentNo.isEmpty || name.isEmpty || course.isEmpty) {
         _showOverlayMessage("No valid ID details detected");
         setState(() {
           _isProcessing = false;
@@ -104,17 +105,15 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
         return;
       }
 
-      // Turn off flash
       await _cameraController!.setFlashMode(FlashMode.off);
       setState(() => _flashOn = false);
 
-      // Navigate to next screen with extracted info
       if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) =>
-              ViolationScreen(studentNo: studentNo),
+              ViolationScreen(name: name, studentNo: studentNo, course: course),
         ),
       ).then((_) {
         setState(() {
@@ -207,13 +206,29 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
                   },
                 ),
 
-          // Overlay frame
+          // Scanner frame overlay
           Positioned.fill(child: CustomPaint(painter: ScannerOverlay())),
 
-          // Flash button
+          // Back button (top-left)
           Positioned(
             top: 40,
             left: 20,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
+              onPressed: () {
+                // Navigate back to school guard dashboard/home
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SchoolGuardHome()),
+                );
+              },
+            ),
+          ),
+
+          // Flash button (moved to top-right)
+          Positioned(
+            top: 40,
+            right: 20,
             child: IconButton(
               icon: Icon(
                 _flashOn ? Icons.flash_on : Icons.flash_off,
@@ -224,7 +239,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
             ),
           ),
 
-          // Capture button
+          // Capture button (bottom center)
           if (!_isProcessing)
             Positioned(
               bottom: MediaQuery.of(context).padding.bottom + 30,
@@ -253,6 +268,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
               ),
             ),
 
+          // Processing overlay
           if (_isProcessing)
             Container(
               color: Colors.black45,

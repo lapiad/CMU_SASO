@@ -34,16 +34,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.record.studentName);
-    idController = TextEditingController(text: widget.record.violationId);
-    violationController = TextEditingController(text: widget.record.violation);
-    reportedByController = TextEditingController(
-      text: widget.record.reportedBy,
-    );
-    dateTimeController = TextEditingController(text: widget.record.dateTime);
-    statusController = TextEditingController(text: widget.record.status);
-    statusActionController = TextEditingController();
-    studentIdController = TextEditingController(text: widget.record.studentId);
   }
 
   @override
@@ -243,16 +233,13 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    buildDetailField("Student Name", nameController),
-                    buildDetailField("Student Number", studentIdController),
-                    buildDetailField("Violation", violationController),
-                    buildDetailField(
-                      "Department",
-                      TextEditingController(text: widget.record.department),
-                    ),
-                    buildDetailField("Reported by", reportedByController),
-                    buildDetailField("Date and Time", dateTimeController),
-                    buildDetailField("Status", statusController),
+                    buildDetailField("Student Name"),
+                    buildDetailField("Student Number"),
+                    buildDetailField("Violation"),
+                    buildDetailField("Department"),
+                    buildDetailField("Reported by"),
+                    buildDetailField("Date and Time"),
+                    buildDetailField("Status"),
                   ],
                 ),
               ),
@@ -304,7 +291,7 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     );
   }
 
-  Widget buildDetailField(String label, TextEditingController controller) {
+  Widget buildDetailField(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(
@@ -317,7 +304,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
           const SizedBox(height: 6),
           widget.isEditable
               ? TextField(
-                  controller: controller,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -338,13 +324,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.black54),
                     borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    controller.text,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
         ],
