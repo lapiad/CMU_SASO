@@ -4,11 +4,14 @@ class ViolationRecord {
   final String studentId;
   final String violation;
   final String department;
+  final String role;
   final String reportedBy;
   final String dateTime;
   final String status;
   final String base64Imagestring;
   final String offenseLevel;
+
+  var reportStatus;
 
   ViolationRecord({
     required this.violationId,
@@ -16,6 +19,7 @@ class ViolationRecord {
     required this.studentId,
     required this.violation,
     required this.department,
+    required this.role,
     required this.reportedBy,
     required this.dateTime,
     required this.status,
@@ -28,6 +32,7 @@ class ViolationRecord {
       violationId: json['id'] ?? '', // ✅ IMPORTANT
       studentName: json['student_name'] ?? '',
       studentId: json['student_id'] ?? '',
+      role: json['role'] ?? '',
       violation: json['violation'] ?? '',
       department: json['department'] ?? '',
       reportedBy: json['reported_by'] ?? '',
@@ -37,4 +42,8 @@ class ViolationRecord {
       offenseLevel: json['offense_level'] ?? '',
     );
   }
+
+  get remarks => null;
+
+  get photoEvidence => null;
 }

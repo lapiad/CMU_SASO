@@ -236,6 +236,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                         ),
                       ),
                       const SizedBox(height: 30),
+                      const Divider(color: Colors.white),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(
@@ -308,6 +309,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                         },
                       ),
                       const SizedBox(height: 20),
+                      const Divider(color: Colors.white),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(

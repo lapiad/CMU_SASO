@@ -1,81 +1,95 @@
-import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/classes/ViolationRecords.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
-import 'package:image/image.dart' as img;
-import 'package:photo_view/photo_view.dart';
+import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
-class ViolationDetails extends StatefulWidget {
+class ViolationFormPage extends StatefulWidget {
   final ViolationRecord record;
-  final bool isEditable;
 
-  const ViolationDetails({
-    super.key,
-    required this.record,
-    this.isEditable = false,
-  });
+  const ViolationFormPage({super.key, required this.record});
 
   @override
-  State<ViolationDetails> createState() => _ViolationDetailsState();
+  State<ViolationFormPage> createState() => _ViolationFormPageState();
 }
 
-class _ViolationDetailsState extends State<ViolationDetails> {
-  late TextEditingController studentIdController;
-  late TextEditingController nameController;
-  late TextEditingController idController;
-  late TextEditingController violationController;
-  late TextEditingController reportedByController;
-  late TextEditingController dateTimeController;
-  late TextEditingController statusController;
-  late TextEditingController statusActionController;
+class _ViolationFormPageState extends State<ViolationFormPage> {
+  final _studentIdController = TextEditingController();
+  final _studentNameController = TextEditingController();
+  final _departmentController = TextEditingController();
+  final _reportedByController = TextEditingController();
+  final _roleController = TextEditingController();
+  final _statusController = TextEditingController();
+  final _offenseLevelController = TextEditingController();
+  final _dateTimeController = TextEditingController();
+  final _remarksController = TextEditingController();
+
+  List<Uint8List> imageBytesList = [];
+  List<String> imageUrls = [];
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _fetchImagesFromBackend();
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    idController.dispose();
-    violationController.dispose();
-    reportedByController.dispose();
-    dateTimeController.dispose();
-    statusController.dispose();
-    statusActionController.dispose();
-    super.dispose();
+  void _initializeControllers() {
+    _studentIdController.text = widget.record.studentId;
+    _studentNameController.text = widget.record.studentName;
+    _departmentController.text = widget.record.department;
+    _reportedByController.text = widget.record.reportedBy;
+    _roleController.text = widget.record.role ?? ""; // default role
+    _statusController.text = widget.record.status ?? "";
+    _offenseLevelController.text = widget.record.offenseLevel ?? "";
+    _dateTimeController.text = widget.record.dateTime;
+    _remarksController.text = widget.record.remarks ?? "";
   }
 
-  /// ✅ Compress image only if too large (before sending)
-  Future<String> _compressBase64(String base64String) async {
+  Future<void> _fetchImagesFromBackend() async {
     try {
-      if (base64String.isEmpty) return base64String;
-      final decodedBytes = base64Decode(base64String.split(',').last);
-      final decoded = img.decodeImage(decodedBytes);
-      if (decoded == null) return base64String;
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse(
+        '$baseUrl/violations/image',
+      ).replace(queryParameters: {'violation_id': widget.record.violationId});
+      final response = await http.get(url);
 
-      final resized = decoded.width > 800
-          ? img.copyResize(decoded, width: 800)
-          : decoded;
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
 
-      final compressedBytes = img.encodeJpg(resized, quality: 85);
-      return base64Encode(compressedBytes);
+        // Case 1: backend returns base64 images
+        if (data is List &&
+            data.isNotEmpty &&
+            data.first.toString().startsWith("data:image")) {
+          List<Uint8List> tempImages = [];
+          for (var item in data) {
+            final bytes = _decodeBase64(item.toString());
+            if (bytes != null) tempImages.add(bytes);
+          }
+          setState(() {
+            imageBytesList = tempImages;
+          });
+        }
+        // Case 2: backend returns image URLs
+        else if (data is List) {
+          setState(() {
+            imageUrls = List<String>.from(data);
+          });
+        }
+      } else {
+        debugPrint("Failed to fetch images: ${response.statusCode}");
+      }
     } catch (e) {
-      debugPrint("Image compression failed: $e");
-      return base64String;
+      debugPrint("Error fetching images: $e");
     }
   }
 
-  /// ✅ Safe Base64 decoder
-  Uint8List? _safeDecodeBase64(String base64String) {
+  Uint8List? _decodeBase64(String base64String) {
     try {
       if (base64String.isEmpty) return null;
-      final cleaned = base64String
-          .split(',')
-          .last
-          .replaceAll(RegExp(r'\s+'), '');
+      final cleaned = base64String.split(',').last.trim();
       final padding = cleaned.length % 4;
       final normalized = padding > 0
           ? cleaned.padRight(cleaned.length + (4 - padding), '=')
@@ -87,56 +101,6 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     }
   }
 
-  Future<void> saveChanges() async {
-    final violationId = widget.record.violationId;
-    print("Updating violation with ID: $violationId");
-
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/violations/update/$violationId',
-    );
-
-    final updatedData = {
-      "violation_id": idController.text.trim(),
-      "student_name": nameController.text.trim(),
-      "student_id": studentIdController.text.trim(),
-      "violation": violationController.text.trim(),
-      "violation_type": widget.record.violation,
-      "department": widget.record.department,
-      "reported_by": reportedByController.text.trim(),
-      "date_time": dateTimeController.text.trim(),
-      "status": statusController.text.trim(),
-      "report_status": statusActionController.text.trim(),
-      "offense_level": widget.record.offenseLevel,
-      "photo_evidence": widget.record.base64Imagestring,
-      "date_of_incident": widget.record.dateTime,
-    };
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(updatedData),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Changes saved successfully!")),
-        );
-        Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to update: ${response.body}")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Connection error: $e")));
-    }
-  }
-
-  /// ✅ Zoomable full-screen view
   void _showZoomableImage(Uint8List imageBytes) {
     showDialog(
       context: context,
@@ -165,168 +129,200 @@ class _ViolationDetailsState extends State<ViolationDetails> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth > 900;
-    final imageBytes = _safeDecodeBase64(widget.record.base64Imagestring);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0033A0),
-        leading: const Icon(Icons.person, color: Colors.white),
-        title: const Text(
-          "Case Details",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  void _showZoomableNetworkImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
           children: [
-            GestureDetector(
-              onTap: imageBytes != null
-                  ? () => _showZoomableImage(imageBytes)
-                  : null,
-              child: Container(
-                width: isWide ? 600 : 400,
-                height: isWide ? 600 : 400,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: imageBytes != null
-                    ? Image.memory(imageBytes, fit: BoxFit.cover)
-                    : const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image,
-                              size: 100,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "No valid image",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
+            PhotoView(
+              imageProvider: NetworkImage(imageUrl),
+              backgroundDecoration: const BoxDecoration(color: Colors.black),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 3,
             ),
-            const SizedBox(width: 32),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildDetailField("Student Name"),
-                    buildDetailField("Student Number"),
-                    buildDetailField("Violation"),
-                    buildDetailField("Department"),
-                    buildDetailField("Reported by"),
-                    buildDetailField("Date and Time"),
-                    buildDetailField("Status"),
-                  ],
-                ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: widget.isEditable
-          ? Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: saveChanges,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0033A0),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                    ),
-                    child: const Text(
-                      "Save Changes",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : null,
     );
   }
 
-  Widget buildDetailField(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+  Widget _buildReadOnlyField(String label, TextEditingController controller) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: TextField(
+          controller: controller,
+          readOnly: true,
+          decoration: InputDecoration(
+            labelText: label,
+            filled: true,
+            fillColor: Colors.grey.shade200,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
           ),
-          const SizedBox(height: 6),
-          widget.isEditable
-              ? TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
-                    ),
-                  ),
-                )
-              : Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black54),
-                    borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyRemarks() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.black26),
+      ),
+      child: Text(
+        _remarksController.text.isEmpty
+            ? "No remarks available."
+            : _remarksController.text,
+        style: const TextStyle(fontSize: 14),
+      ),
+    );
+  }
+
+  Widget _buildImageGrid() {
+    if (imageBytesList.isEmpty && imageUrls.isEmpty) {
+      return const Center(child: Text("No photo evidence available."));
+    }
+
+    final totalImages = imageBytesList.length + imageUrls.length;
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: totalImages,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemBuilder: (context, index) {
+        if (index < imageBytesList.length) {
+          final imageBytes = imageBytesList[index];
+          return GestureDetector(
+            onTap: () => _showZoomableImage(imageBytes),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(
+                imageBytes,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: 120,
+              ),
+            ),
+          );
+        } else {
+          final imageUrl = imageUrls[index - imageBytesList.length];
+          return GestureDetector(
+            onTap: () => _showZoomableNetworkImage(imageUrl),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: 120,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Violation Details",
+          style: TextStyle(fontSize: 25, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF0033A0),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Violation ID: ${widget.record.violationId}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-        ],
+                const SizedBox(height: 16),
+
+                // Row 1
+                Row(
+                  children: [
+                    _buildReadOnlyField("Student ID", _studentIdController),
+                    _buildReadOnlyField("Department", _departmentController),
+                    _buildReadOnlyField("Reported By", _reportedByController),
+                    _buildReadOnlyField("Status", _statusController),
+                  ],
+                ),
+
+                // Row 2
+                Row(
+                  children: [
+                    _buildReadOnlyField("Student Name", _studentNameController),
+                    _buildReadOnlyField("Date and Time", _dateTimeController),
+                    _buildReadOnlyField("Role", _roleController),
+                    _buildReadOnlyField(
+                      "Offense Level",
+                      _offenseLevelController,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+                const Text(
+                  "Remarks",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 6),
+                _buildReadOnlyRemarks(),
+                const SizedBox(height: 20),
+                const Text(
+                  "Photo Evidence",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 10),
+                _buildImageGrid(),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

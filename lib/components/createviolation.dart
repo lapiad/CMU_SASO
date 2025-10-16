@@ -1,27 +1,26 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:photo_view/photo_view.dart';
+import 'package:intl/intl.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 
-Future<String> getName() async {
-  final box = GetStorage();
-  final url = Uri.parse(
-    '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
-  );
-  final response = await http.get(url);
+class Student {
+  final String id;
+  final String firstname;
+  final String department;
 
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    return data['first_name'];
-  } else {
-    return "null";
-  }
+  Student({
+    required this.id,
+    required this.firstname,
+    required this.department,
+  });
 }
 
 class CreateViolationDialog extends StatefulWidget {
@@ -37,15 +36,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   final TextEditingController studentIdController = TextEditingController();
   final TextEditingController studentNameController = TextEditingController();
   final TextEditingController reportedByController = TextEditingController();
-  final TextEditingController status = TextEditingController();
   final TextEditingController roleController = TextEditingController();
   final TextEditingController imageController = TextEditingController();
   final TextEditingController incidentDateController = TextEditingController();
+  final TextEditingController departmentController = TextEditingController();
+  final TextEditingController violationTypeController = TextEditingController();
 
-  String? violationType;
-  String? offenseLevel;
-  String? department;
-  String? statusValue;
+  String? offenseLevel = "First Offense";
+  String statusValue = "Pending";
   DateTime? incidentDate;
 
   File? _photoEvidenceFile;
@@ -55,27 +53,85 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   @override
   void initState() {
     super.initState();
+
     final userDetails = GetStorage().read('user_details');
     reportedByController.text = userDetails?['first_name'] ?? '';
     roleController.text = userDetails?['role'] ?? '';
     imageController.text = userDetails?['image'] ?? '';
+
+    incidentDate = DateTime.now();
+    incidentDateController.text = DateFormat(
+      'yyyy-MM-dd – hh:mm a',
+    ).format(incidentDate!);
   }
 
-  @override
-  void dispose() {
-    studentIdController.dispose();
-    studentNameController.dispose();
-    reportedByController.dispose();
-    status.dispose();
-    roleController.dispose();
-    imageController.dispose();
-    incidentDateController.dispose();
-    super.dispose();
+  // Fetch violation types from backend
+  Future<List<String>> fetchViolationTypes(String filter) async {
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse(
+        '$baseUrl/violations/get_violation_types',
+      ).replace(queryParameters: {'filter': filter});
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is List) return List<String>.from(data);
+        if (data is Map && data.containsKey('violation_types')) {
+          return List<String>.from(data['violation_types']);
+        }
+      } else {
+        print("Failed to fetch violation types: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching violation types: $e");
+    }
+    return [];
   }
 
+  // Fetch student by ID
+  Future<Student?> fetchStudentById(String studentId) async {
+    if (studentId.isEmpty) return null;
+    try {
+      final url = Uri.parse(
+        '${GlobalConfiguration().getValue("server_url")}/students/student-info/$studentId',
+      );
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return Student(
+          id: data['id'] ?? '',
+          firstname: data['first_name'] ?? '',
+          department: data['department'] ?? '',
+        );
+      }
+    } catch (e) {
+      print("Error fetching student: $e");
+    }
+    return null;
+  }
+
+  // Fetch violation count by Student ID
+  Future<int> fetchStudentViolationCountById(String studentId) async {
+    if (studentId.isEmpty) return 0;
+    try {
+      final url = Uri.parse(
+        '${GlobalConfiguration().getValue("server_url")}/violations$studentId',
+      );
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['count'] ?? '';
+      }
+    } catch (e) {
+      print("Error fetching violation count: $e");
+    }
+    return 0;
+  }
+
+  // Pick image
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       if (kIsWeb) {
         final bytes = await pickedFile.readAsBytes();
@@ -100,6 +156,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   }
 
   void _openFullScreenImage() {
+    if (_photoEvidenceFile == null && _photoEvidenceBytes == null) return;
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -154,7 +211,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         ),
       );
     }
-
     final imageWidget = kIsWeb
         ? Image.memory(_photoEvidenceBytes!, fit: BoxFit.cover)
         : Image.file(_photoEvidenceFile!, fit: BoxFit.cover);
@@ -195,9 +251,8 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     );
   }
 
+  // Submit violation
   Future<void> createViolation() async {
-    final box = GetStorage();
-
     if (incidentDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select the date of incident.")),
@@ -208,27 +263,20 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     Map<String, dynamic> violationData = {
       'student_id': studentIdController.text.trim(),
       'student_name': studentNameController.text.trim(),
-      'violation_type': violationType ?? '',
+      'violation_type': violationTypeController.text.trim(),
       'offense_level': offenseLevel ?? '',
-      'department': department ?? '',
+      'department': departmentController.text.trim(),
       'reported_by': reportedByController.text.trim(),
-      'status': statusValue ?? '',
+      'status': statusValue,
       'role': roleController.text.trim(),
       'date_of_incident': incidentDate!.toIso8601String(),
     };
 
-    String? base64Photo;
     if (_photoEvidenceFile != null) {
       final bytes = await _photoEvidenceFile!.readAsBytes();
-      base64Photo = base64Encode(bytes);
-      violationData['photo_evidence'] = base64Photo;
+      violationData['photo_evidence'] = base64Encode(bytes);
     } else if (_photoEvidenceBytes != null) {
-      base64Photo = base64Encode(_photoEvidenceBytes!);
-      violationData['photo_evidence'] = base64Photo;
-    }
-
-    if (base64Photo != null) {
-      box.write('photo_evidence_base64', base64Photo);
+      violationData['photo_evidence'] = base64Encode(_photoEvidenceBytes!);
     }
 
     try {
@@ -268,341 +316,265 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Create New Violation Report",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        size: 30,
-                        color: Colors.black,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Form(
-                  key: _formKey,
-                  child: Column(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: TextFormField(
-                                controller: studentIdController,
-                                decoration: _fieldDecoration(
-                                  "Student ID",
-                                  "Enter student ID",
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter Student ID';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: TextFormField(
-                                controller: studentNameController,
-                                decoration: _fieldDecoration(
-                                  "Student Name",
-                                  "Enter student name",
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter Student Name';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
+                      const Text(
+                        "Create New Violation Report",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: DropdownButtonFormField<String>(
-                                value: violationType,
-                                decoration: _fieldDecoration(
-                                  "Violation Type",
-                                  "Select violation type",
-                                ),
-                                items:
-                                    [
-                                          "Improper Uniform",
-                                          "Late Attendance",
-                                          "Serious Misconduct",
-                                          "Smoking on Campus",
-                                        ]
-                                        .map(
-                                          (e) => DropdownMenuItem(
-                                            value: e,
-                                            child: Text(e),
-                                          ),
-                                        )
-                                        .toList(),
-                                onChanged: (value) =>
-                                    setState(() => violationType = value),
-                                validator: (value) =>
-                                    value == null || value.isEmpty
-                                    ? 'Please select Violation Type'
-                                    : null,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: DropdownButtonFormField<String>(
-                                value: offenseLevel,
-                                decoration: _fieldDecoration(
-                                  "Offense Level",
-                                  "Select offense level",
-                                ),
-                                items:
-                                    [
-                                          "First Offense",
-                                          "Second Offense",
-                                          "Third Offense",
-                                        ]
-                                        .map(
-                                          (e) => DropdownMenuItem(
-                                            value: e,
-                                            child: Text(e),
-                                          ),
-                                        )
-                                        .toList(),
-                                onChanged: (value) =>
-                                    setState(() => offenseLevel = value),
-                                validator: (value) =>
-                                    value == null || value.isEmpty
-                                    ? 'Please select Offense Level'
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: DropdownButtonFormField<String>(
-                                value: department,
-                                decoration: _fieldDecoration(
-                                  "Department",
-                                  "Select Department",
-                                ),
-                                items:
-                                    ["CAS", "CBA", "CCS", "COA", "CTE", "CCJE"]
-                                        .map(
-                                          (e) => DropdownMenuItem(
-                                            value: e,
-                                            child: Text(e),
-                                          ),
-                                        )
-                                        .toList(),
-                                onChanged: (value) =>
-                                    setState(() => department = value),
-                                validator: (value) =>
-                                    value == null || value.isEmpty
-                                    ? 'Please select Department'
-                                    : null,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: DropdownButtonFormField<String>(
-                                value: statusValue,
-                                decoration: _fieldDecoration(
-                                  "Status",
-                                  "Select Status",
-                                ),
-                                items: ["Pending"]
-                                    .map(
-                                      (e) => DropdownMenuItem(
-                                        value: e,
-                                        child: Text(e),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) =>
-                                    setState(() => statusValue = value),
-                                validator: (value) =>
-                                    value == null || value.isEmpty
-                                    ? 'Please select Status'
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: TextFormField(
-                                readOnly: true,
-                                decoration:
-                                    _fieldDecoration(
-                                      "Date of Incident",
-                                      "Pick a date",
-                                    ).copyWith(
-                                      prefixIcon: const Icon(
-                                        Icons.calendar_today,
-                                      ),
-                                    ),
-                                onTap: () async {
-                                  final picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: incidentDate ?? DateTime.now(),
-                                    firstDate: DateTime(2020, 1, 1),
-                                    lastDate: DateTime(3000, 12, 31),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      incidentDate = picked;
-                                      incidentDateController.text =
-                                          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                                    });
-                                  }
-                                },
-                                controller: incidentDateController,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please select the date of incident';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: InkWell(
-                              onTap:
-                                  _photoEvidenceFile == null &&
-                                      _photoEvidenceBytes == null
-                                  ? _pickImage
-                                  : _openFullScreenImage,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey),
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.grey[50],
-                                ),
-                                child: _buildPhotoPreview(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: TextFormField(
-                                controller: reportedByController,
-                                readOnly: true,
-                                decoration: _fieldDecoration("Reported By", ""),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: SizedBox(
-                              height: 58,
-                              child: TextFormField(
-                                controller: roleController,
-                                readOnly: true,
-                                decoration: _fieldDecoration("Role", ""),
-                              ),
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 30),
+                        onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 26),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      onPressed: () => Navigator.pop(context),
+                  const SizedBox(height: 20),
+
+                  // Student ID
+                  TextFormField(
+                    controller: studentIdController,
+                    decoration: _fieldDecoration(
+                      "Student ID",
+                      "Enter Student ID",
                     ),
-                    const SizedBox(width: 14),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[800],
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 26,
-                          vertical: 14,
+                    onChanged: (value) async {
+                      final student = await fetchStudentById(value.trim());
+                      if (student != null) {
+                        setState(() {
+                          studentNameController.text = student.firstname;
+                          departmentController.text = student.department;
+                        });
+                        int violationCount =
+                            await fetchStudentViolationCountById(student.id);
+                        if (violationCount == 0)
+                          offenseLevel = "First Offense";
+                        else if (violationCount == 1)
+                          offenseLevel = "Second Offense";
+                        else
+                          offenseLevel = "Third Offense";
+                        setState(() {});
+                      } else {
+                        setState(() {
+                          studentNameController.text = '';
+                          departmentController.text = '';
+                          offenseLevel = "First Offense";
+                        });
+                      }
+                    },
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Please enter Student ID'
+                        : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Student Name
+                  TextFormField(
+                    controller: studentNameController,
+                    readOnly: true,
+                    decoration: _fieldDecoration(
+                      "Student Name",
+                      "Student Name",
+                    ),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Student Name cannot be empty'
+                        : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Department
+                  TextFormField(
+                    controller: departmentController,
+                    readOnly: true,
+                    decoration: _fieldDecoration("Department", "Department"),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Department cannot be empty'
+                        : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Violation Type Dropdown
+                  DropdownSearch<String>(
+                    asyncItems: (filter) => fetchViolationTypes(filter),
+                    selectedItem: violationTypeController.text.isEmpty
+                        ? null
+                        : violationTypeController.text,
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: const TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: "Search violation type...",
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 3,
                       ),
-                      child: const Text(
-                        "Submit Report",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                    ),
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: _fieldDecoration(
+                        "Violation Type",
+                        "Search or select violation type",
                       ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          createViolation();
+                    ),
+                    onChanged: (value) {
+                      setState(
+                        () => violationTypeController.text = value ?? '',
+                      );
+                    },
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please select Violation Type'
+                        : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Offense Level
+                  TextFormField(
+                    readOnly: true,
+                    initialValue: offenseLevel,
+                    decoration: _fieldDecoration(
+                      "Offense Level",
+                      "Auto-calculated based on previous violations",
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Status
+                  TextFormField(
+                    readOnly: true,
+                    initialValue: statusValue,
+                    decoration: _fieldDecoration("Status", ""),
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Date & Time
+                  TextFormField(
+                    readOnly: true,
+                    controller: incidentDateController,
+                    decoration: _fieldDecoration(
+                      "Date & Time of Incident",
+                      "Pick date and time",
+                    ).copyWith(prefixIcon: const Icon(Icons.calendar_today)),
+                    onTap: () async {
+                      final pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: incidentDate ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(3000),
+                      );
+                      if (pickedDate != null) {
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.fromDateTime(
+                            incidentDate ?? DateTime.now(),
+                          ),
+                        );
+                        if (pickedTime != null) {
+                          setState(() {
+                            incidentDate = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              pickedTime.hour,
+                              pickedTime.minute,
+                            );
+                            incidentDateController.text = DateFormat(
+                              'yyyy-MM-dd – hh:mm a',
+                            ).format(incidentDate!);
+                          });
                         }
-                      },
+                      }
+                    },
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please select date and time'
+                        : null,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Reported By
+                  TextFormField(
+                    controller: reportedByController,
+                    readOnly: true,
+                    decoration: _fieldDecoration("Reported By", ""),
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Role
+                  TextFormField(
+                    controller: roleController,
+                    readOnly: true,
+                    decoration: _fieldDecoration("Role", ""),
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Photo Evidence
+                  InkWell(
+                    onTap:
+                        _photoEvidenceFile == null &&
+                            _photoEvidenceBytes == null
+                        ? _pickImage
+                        : _openFullScreenImage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey[50],
+                      ),
+                      child: _buildPhotoPreview(),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const SizedBox(width: 14),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[800],
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 26,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 3,
+                        ),
+                        child: const Text(
+                          "Submit Report",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate())
+                            createViolation();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

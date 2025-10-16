@@ -45,6 +45,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                     studentId: item['student_id']?.toString() ?? '',
                     violation: item['violation_type']?.toString() ?? '',
                     status: item['status']?.toString() ?? '',
+                    role: item['role']?.toString() ?? '',
                     reportedBy: item['reported_by']?.toString() ?? '',
                     dateTime: item['date_of_incident']?.toString() ?? '',
                     department: item['student_department']?.toString() ?? '',
@@ -120,7 +121,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   Widget _buildHeader() {
     final todayStr = DateTime.now().toIso8601String().split('T')[0];
     final violationsToday = scanData
-        .where((s) => s.dateTime != null && s.dateTime!.contains(todayStr))
+        .where((s) => s.dateTime.contains(todayStr))
         .length;
 
     return Container(
