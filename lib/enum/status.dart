@@ -1,0 +1,1 @@
+List<String> violation_status = ['PENDING', 'IN_PROGRESS', 'RESOLVED', 'DISMISSED'];

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/enum/status.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
@@ -31,7 +32,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   final List<String> _roles = [];
 
   String? _selectedStatus;
-  List<String> _status = [];
+  List<String> _status = violation_status;
 
   String? _selectedOffenseLevel;
   List<String> _offenseLevels = [];
@@ -295,21 +296,19 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
     final baseUrl = GlobalConfiguration().getValue("server_url");
-    final url = Uri.parse('$baseUrl/update/${widget.record.violationId}');
+    final url = Uri.parse('$baseUrl/violations/update/${widget.record.violationId}');
 
     final updatedData = {
-      "studentId": _studentIdController.text,
-      "studentName": _studentNameController.text,
-      "department": _departmentController.text,
-      "reportedBy": _reportedByController.text,
-      "role": _roleController.text,
+    
+      "reported_by": _reportedByController.text,
       "status": _selectedStatus,
-      "offenseLevel": _selectedOffenseLevel,
-      "dateTime": _dateTimeController.text,
+      "offense_level": _selectedOffenseLevel,
       "remarks": _remarksController.text,
+      "photo_evidence": _remarksController.text,
     };
 
     try {
+      print(jsonEncode(updatedData));
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

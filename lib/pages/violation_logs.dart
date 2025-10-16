@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/classes/Integrations.dart';
 import 'package:flutter_application_1/components/violationView.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/components/violationedit.dart';
@@ -61,43 +62,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     return "User";
   }
 
-  Future<void> fetchViolations() async {
-    try {
-      final url = Uri.parse(
-        '${GlobalConfiguration().getValue("server_url")}/violations',
-      );
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        if (decoded is Map<String, dynamic> && decoded['violations'] is List) {
-          final List<dynamic> data = decoded['violations'];
-          setState(() {
-            allRecords = data
-                .map(
-                  (item) => ViolationRecord(
-                    studentName: item['student_name']?.toString() ?? '',
-                    studentId: item['student_id']?.toString() ?? '',
-                    violation: item['violation_type']?.toString() ?? '',
-                    status: item['status']?.toString() ?? '',
-                    role: item['role']?.toString() ?? '',
-                    reportedBy: item['reported_by']?.toString() ?? '',
-                    dateTime: item['date_of_incident']?.toString() ?? '',
-                    department: item['student_department']?.toString() ?? '',
-                    base64Imagestring: item['photo_evidence']?.toString() ?? '',
-                    offenseLevel: item['offense_level']?.toString() ?? '',
-                    violationId: item['id'] ?? '',
-                  ),
-                )
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching violations: $e');
-    }
-  }
-
   List<ViolationRecord> get filteredRecords {
     return allRecords.where((record) {
       final query = searchQuery.toLowerCase();
@@ -157,7 +121,29 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   @override
   void initState() {
     super.initState();
-    fetchViolations();
+    Integration().fetchViolations().then((data) {
+      if (data != null) {
+        setState(() {
+          allRecords = data
+              .map(
+                (item) => ViolationRecord(
+                  studentName: item['student_name']?.toString() ?? '',
+                  studentId: item['student_id']?.toString() ?? '',
+                  violation: item['violation_type']?.toString() ?? '',
+                  status: item['status']?.toString() ?? '',
+                  role: item['role']?.toString() ?? '',
+                  reportedBy: item['reported_by']?.toString() ?? '',
+                  dateTime: item['date_of_incident']?.toString() ?? '',
+                  department: item['student_department']?.toString() ?? '',
+                  base64Imagestring: item['photo_evidence']?.toString() ?? '',
+                  offenseLevel: item['offense_level']?.toString() ?? '',
+                  violationId: item['id'] ?? '',
+                ),
+              )
+              .toList();
+        });
+      }
+    });
   }
 
   Color getStatusColor(String status) {

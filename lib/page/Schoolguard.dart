@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/classes/Integrations.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/page/IDScanner.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
@@ -22,50 +23,18 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   @override
   void initState() {
     super.initState();
-    fetchViolations();
-  }
-
-  Future<void> fetchViolations() async {
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/violations',
-    );
-
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-
-        if (decoded is Map<String, dynamic> && decoded['violations'] is List) {
-          final List<dynamic> data = decoded['violations'];
-          setState(() {
-            scanData = data
-                .map(
-                  (item) => ViolationRecord(
-                    studentName: item['student_name']?.toString() ?? '',
-                    studentId: item['student_id']?.toString() ?? '',
-                    violation: item['violation_type']?.toString() ?? '',
-                    status: item['status']?.toString() ?? '',
-                    role: item['role']?.toString() ?? '',
-                    reportedBy: item['reported_by']?.toString() ?? '',
-                    dateTime: item['date_of_incident']?.toString() ?? '',
-                    department: item['student_department']?.toString() ?? '',
-                    base64Imagestring: item['photo_evidence']?.toString() ?? '',
-                    offenseLevel: item['offense_level']?.toString() ?? '',
-                    violationId: item['id']?.toString() ?? '',
-                  ),
-                )
-                .toList();
-          });
-        } else {
-          print('Unexpected JSON structure: missing "violations" list');
-        }
-      } else {
-        print('Failed to load violations: ${response.statusCode}');
+    Integration().fetchViolations().then((data) {
+      if (data != null) {
+        setState(() {
+          scanData = data
+              .map((item) => ViolationRecord.fromJson(item))
+              .toList();
+        });
       }
-    } catch (e) {
-      print('Error: $e');
-    }
+    });
   }
+
+  
 
   @override
   Widget build(BuildContext context) {

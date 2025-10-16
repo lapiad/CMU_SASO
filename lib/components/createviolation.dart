@@ -71,14 +71,20 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       final baseUrl = GlobalConfiguration().getValue("server_url");
       final url = Uri.parse(
         '$baseUrl/violations/get_violation_types',
-      ).replace(queryParameters: {'filter': filter});
+      );//.replace(queryParameters: {'filter': filter});
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        
         if (data is List) return List<String>.from(data);
         if (data is Map && data.containsKey('violation_types')) {
-          return List<String>.from(data['violation_types']);
+          List<String> types = [];
+          print(data['violation_types']);
+          for (var item in data['violation_types']) {
+            types.add(item['type_name']);
+          }
+          return types;
         }
       } else {
         print("Failed to fetch violation types: ${response.statusCode}");
