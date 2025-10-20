@@ -13,16 +13,20 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
   List<Report> reports = [];
   bool isLoading = true;
 
+  // Change this IP to your backend’s IP if needed
+  static const String baseUrl = 'http://192.168.1.4:8000';
+
   @override
   void initState() {
     super.initState();
     fetchPendingReports();
   }
 
+  /// Fetch all pending reports
   Future<void> fetchPendingReports() async {
-    const apiUrl = 'http://192.168.1.7:8000/violations/pending';
+    final apiUrl = Uri.parse('$baseUrl/violations/pending');
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(apiUrl);
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         setState(() {
@@ -30,55 +34,71 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
           isLoading = false;
         });
       } else {
-        throw Exception('Failed to load reports: ${response.statusCode}');
+        debugPrint('Failed to load pending reports: ${response.body}');
+        setState(() => isLoading = false);
+        _showSnackBar(
+          "Failed to load reports (Code: ${response.statusCode})",
+          isError: true,
+        );
       }
     } catch (e) {
       debugPrint("Error fetching reports: $e");
       setState(() => isLoading = false);
+      _showSnackBar("Error fetching reports: $e", isError: true);
     }
   }
 
+  /// Approve all selected reports
   Future<void> approveSelectedReports() async {
     final selectedIds = reports
         .where((r) => r.isSelected)
         .map((r) => r.id)
         .toList();
-    if (selectedIds.isEmpty) return;
 
-    const apiUrl = 'http:/192.168.1.7:8000/violations/approve';
+    if (selectedIds.isEmpty) {
+      _showSnackBar("No reports selected", isError: true);
+      return;
+    }
+
+    final apiUrl = Uri.parse('$baseUrl/violations/approve');
     try {
       final response = await http.put(
-        Uri.parse(apiUrl),
+        apiUrl,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(selectedIds),
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.green,
-            content: Text(
-              "Approved ${selectedIds.length} report(s).",
-              style: const TextStyle(fontSize: 18, color: Colors.white),
-            ),
-          ),
+        _showSnackBar(
+          "Approved ${selectedIds.length} report(s).",
+          isError: false,
         );
-        fetchPendingReports();
+        fetchPendingReports(); // Refresh list after approving
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Text("Failed to approve reports: ${response.body}"),
-          ),
+        _showSnackBar(
+          "Failed to approve reports: ${response.body}",
+          isError: true,
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error approving reports: $e")));
+      _showSnackBar("Error approving reports: $e", isError: true);
     }
   }
 
+  /// Helper method to show consistent snackbars
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: isError ? Colors.red : Colors.green,
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 16, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  /// Color indicator for offense level
   Color getOffenseColor(String offenseLevel) {
     switch (offenseLevel.toLowerCase()) {
       case 'third offense':
@@ -96,7 +116,7 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: SizedBox(
         width: 1100,
-        height: 1100,
+        height: 800,
         child: Column(
           children: [
             // Header
@@ -154,6 +174,7 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                 },
                               ),
                               const SizedBox(width: 12),
+                              // Image preview
                               Container(
                                 width: 150,
                                 height: 150,
@@ -175,6 +196,7 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                               (context, error, stackTrace) {
                                                 return const Icon(
                                                   Icons.image_not_supported,
+                                                  color: Colors.grey,
                                                 );
                                               },
                                         ),
@@ -188,6 +210,7 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                       ),
                               ),
                               const SizedBox(width: 14),
+                              // Info section
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,8 +328,9 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
   }
 }
 
+/// Data model
 class Report {
-  final int id;
+  final dynamic id;
   final String date;
   final String studentName;
   final String studentId;
@@ -330,16 +354,16 @@ class Report {
 
   factory Report.fromJson(Map<String, dynamic> json) {
     return Report(
-      id: json['id'] is int
-          ? json['id']
-          : int.tryParse(json['id'].toString()) ?? 0,
+      id: json['id'] ?? '',
       date: json['date_of_incident'] ?? json['date'] ?? '',
       studentName: json['student_name'] ?? '',
       studentId: json['student_id'] ?? '',
       violation: json['violation_type'] ?? '',
       reporter: json['reported_by'] ?? '',
       offenseLevel: json['offense_level'] ?? '',
-      imageUrl: json['photo_evidence'] != null && json['photo_evidence'] != ''
+      imageUrl:
+          (json['photo_evidence'] != null &&
+              json['photo_evidence'].toString().isNotEmpty)
           ? "data:image/jpeg;base64,${json['photo_evidence']}"
           : null,
     );

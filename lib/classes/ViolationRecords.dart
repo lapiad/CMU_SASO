@@ -43,7 +43,7 @@ class ViolationRecord {
     );
   }
 
-  get remarks => null;
+  Null get remarks => null;
 
-  get photoEvidence => null;
+  Null get photoEvidence => null;
 }

@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/enum/status.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
@@ -25,14 +24,12 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   final _dateTimeController = TextEditingController();
   final _remarksController = TextEditingController();
   final _roleController = TextEditingController();
-  final _statusController = TextEditingController();
-  final _offenseLevel = TextEditingController();
 
   String? _selectedRole;
   final List<String> _roles = [];
 
-  String? _selectedStatus;
-  List<String> _status = violation_status;
+  String? violation_status;
+  List<String> _status = [];
 
   String? _selectedOffenseLevel;
   List<String> _offenseLevels = [];
@@ -44,6 +41,11 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   void initState() {
     super.initState();
     _initializeControllers();
+
+    // Keep existing status and offense level from record
+    violation_status = widget.record.status;
+    _selectedOffenseLevel = widget.record.offenseLevel;
+
     _fetchImagesFromBackend();
     _fetchStatusAndOffense();
   }
@@ -55,30 +57,36 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     _reportedByController.text = widget.record.reportedBy;
     _dateTimeController.text = widget.record.dateTime;
     _roleController.text = widget.record.role;
-    _statusController.text = widget.record.status;
-    _offenseLevel.text = widget.record.offenseLevel;
+    _remarksController.text = widget.record.remarks ?? '';
   }
 
   Future<void> _fetchStatusAndOffense() async {
     final baseUrl = GlobalConfiguration().getValue("server_url");
     try {
+      // Fetch status list
       final statusResp = await http.get(Uri.parse('$baseUrl/status'));
       if (statusResp.statusCode == 200) {
         final List<dynamic> data = jsonDecode(statusResp.body);
         setState(() {
           _status = data.map((e) => e.toString()).toList();
-          _selectedStatus ??= (_status.isNotEmpty ? _status[0] : null);
+          // Preserve record's current status
+          violation_status = widget.record.status.isNotEmpty
+              ? widget.record.status
+              : (violation_status ?? (_status.isNotEmpty ? _status[0] : null));
         });
       }
 
+      // Fetch offense level list
       final offenseResp = await http.get(Uri.parse('$baseUrl/offense-level'));
       if (offenseResp.statusCode == 200) {
         final List<dynamic> data = jsonDecode(offenseResp.body);
         setState(() {
           _offenseLevels = data.map((e) => e.toString()).toList();
-          _selectedOffenseLevel ??= (_offenseLevels.isNotEmpty
-              ? _offenseLevels[0]
-              : null);
+          // Preserve record's current offense level
+          _selectedOffenseLevel = widget.record.offenseLevel.isNotEmpty
+              ? widget.record.offenseLevel
+              : (_selectedOffenseLevel ??
+                    (_offenseLevels.isNotEmpty ? _offenseLevels[0] : null));
         });
       }
     } catch (e) {
@@ -190,27 +198,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     );
   }
 
-  Widget _buildRoleDropdown() {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: DropdownButtonFormField<String>(
-          value: _selectedRole,
-          decoration: InputDecoration(
-            labelText: "Role",
-            filled: true,
-            fillColor: Colors.white,
-            border: const OutlineInputBorder(),
-          ),
-          items: _roles
-              .map((role) => DropdownMenuItem(value: role, child: Text(role)))
-              .toList(),
-          onChanged: (value) => setState(() => _selectedRole = value),
-        ),
-      ),
-    );
-  }
-
   Widget _buildStyledDropdown({
     required String label,
     required String? selectedValue,
@@ -264,8 +251,9 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   }
 
   Widget _buildImageGrid() {
-    if (imageBytesList.isEmpty)
+    if (imageBytesList.isEmpty) {
       return const Center(child: Text("No photo evidence available."));
+    }
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -296,19 +284,20 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
     final baseUrl = GlobalConfiguration().getValue("server_url");
-    final url = Uri.parse('$baseUrl/violations/update/${widget.record.violationId}');
+    final url = Uri.parse(
+      '$baseUrl/violations/update/${widget.record.violationId}',
+    );
 
     final updatedData = {
-    
-      "reported_by": _reportedByController.text,
-      "status": _selectedStatus,
-      "offense_level": _selectedOffenseLevel,
+      "reportedBy": _reportedByController.text,
+      "role": _roleController.text,
+      "status": violation_status,
+      "offenseLevel": _selectedOffenseLevel,
+      "dateTime": _dateTimeController.text,
       "remarks": _remarksController.text,
-      "photo_evidence": _remarksController.text,
     };
 
     try {
-      print(jsonEncode(updatedData));
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -369,7 +358,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Row 1
                 Row(
                   children: [
                     _buildEditableField("Student ID", _studentIdController),
@@ -377,13 +365,13 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                     _buildEditableField("Reported By", _reportedByController),
                     _buildStyledDropdown(
                       label: "Status",
-                      selectedValue: _selectedStatus,
+                      selectedValue: violation_status,
                       options: _status,
-                      onChanged: (val) => setState(() => _selectedStatus = val),
+                      onChanged: (val) =>
+                          setState(() => violation_status = val),
                     ),
                   ],
                 ),
-                // Row 2
                 Row(
                   children: [
                     _buildEditableField("Student Name", _studentNameController),

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/Integrations.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
@@ -6,8 +5,6 @@ import 'package:flutter_application_1/page/IDScanner.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:global_configuration/global_configuration.dart';
-import 'package:http/http.dart' as http;
 
 class SchoolGuardHome extends StatefulWidget {
   const SchoolGuardHome({super.key});
@@ -33,8 +30,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
       }
     });
   }
-
-  
 
   @override
   Widget build(BuildContext context) {

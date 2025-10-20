@@ -14,11 +14,13 @@ import 'package:dropdown_search/dropdown_search.dart';
 class Student {
   final String id;
   final String firstname;
+  final String lastname;
   final String department;
 
   Student({
     required this.id,
     required this.firstname,
+    required this.lastname,
     required this.department,
   });
 }
@@ -65,26 +67,22 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     ).format(incidentDate!);
   }
 
-  // Fetch violation types from backend
+  /// Fetch all violation types
   Future<List<String>> fetchViolationTypes(String filter) async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse(
-        '$baseUrl/violations/get_violation_types',
-      );//.replace(queryParameters: {'filter': filter});
+      final url = Uri.parse('$baseUrl/violations/get_violation_types');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
-        if (data is List) return List<String>.from(data);
-        if (data is Map && data.containsKey('violation_types')) {
-          List<String> types = [];
-          print(data['violation_types']);
-          for (var item in data['violation_types']) {
-            types.add(item['type_name']);
-          }
-          return types;
+
+        if (data is List) {
+          return List<String>.from(data);
+        } else if (data is Map && data.containsKey('violation_types')) {
+          return List<String>.from(
+            data['violation_types'].map((e) => e['type_name']),
+          );
         }
       } else {
         print("Failed to fetch violation types: ${response.statusCode}");
@@ -95,39 +93,85 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return [];
   }
 
-  // Fetch student by ID
-  Future<Student?> fetchStudentById(String studentId) async {
-    if (studentId.isEmpty) return null;
+  /// Fetch students list for dropdown (ID + name)
+  Future<List<String>> fetchStudents(String filter) async {
     try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
       final url = Uri.parse(
-        '${GlobalConfiguration().getValue("server_url")}/students/student-info/$studentId',
-      );
+        '$baseUrl/students/search',
+      ).replace(queryParameters: {'query': filter});
       final response = await http.get(url);
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return Student(
-          id: data['id'] ?? '',
-          firstname: data['first_name'] ?? '',
-          department: data['department'] ?? '',
-        );
+
+        if (data is List) {
+          return data.map<String>((students) {
+            final id = students['id'] ?? '';
+            final firstname = students['first_name'] ?? '';
+            final lastname = students['last_name'] ?? '';
+            return '$id - $firstname $lastname';
+          }).toList();
+        } else if (data is Map && data.containsKey('students')) {
+          return (data['students'] as List)
+              .map<String>(
+                (s) =>
+                    '${s['id']} - ${s['first_name'] ?? ''} ${s['last_name'] ?? ''}',
+              )
+              .toList();
+        }
+      } else {
+        print("Failed to fetch students: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching students: $e");
+    }
+    return [];
+  }
+
+  /// Fetch detailed student info by ID
+  Future<Student?> fetchStudentById(String studentId) async {
+    if (studentId.isEmpty) return null;
+
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/students/student-info/$studentId');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data is Map<String, dynamic>) {
+          return Student(
+            id: data['id'] ?? '',
+            firstname: data['first_name'] ?? '',
+            lastname: data['last_name'] ?? '',
+            department: data['department'] ?? '',
+          );
+        } else {
+          print('Unexpected data format: $data');
+        }
+      } else {
+        print('Failed to fetch student. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print("Error fetching student: $e");
     }
+
     return null;
   }
 
-  // Fetch violation count by Student ID
+  /// Fetch how many violations the student already has
   Future<int> fetchStudentViolationCountById(String studentId) async {
     if (studentId.isEmpty) return 0;
     try {
       final url = Uri.parse(
-        '${GlobalConfiguration().getValue("server_url")}/violations$studentId',
+        '${GlobalConfiguration().getValue("server_url")}/violations/$studentId/count',
       );
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['count'] ?? '';
+        return data['count'] ?? 0;
       }
     } catch (e) {
       print("Error fetching violation count: $e");
@@ -135,7 +179,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return 0;
   }
 
-  // Pick image
+  /// Pick image from gallery
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -203,12 +247,12 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
   Widget _buildPhotoPreview() {
     if (_photoEvidenceFile == null && _photoEvidenceBytes == null) {
-      return SizedBox(
+      return const SizedBox(
         height: 80,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(Icons.cloud_upload, size: 30, color: Colors.grey),
               SizedBox(height: 6),
               Text("Tap to upload", style: TextStyle(color: Colors.grey)),
@@ -217,6 +261,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         ),
       );
     }
+
     final imageWidget = kIsWeb
         ? Image.memory(_photoEvidenceBytes!, fit: BoxFit.cover)
         : Image.file(_photoEvidenceFile!, fit: BoxFit.cover);
@@ -257,7 +302,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     );
   }
 
-  // Submit violation
+  /// Submit new violation
   Future<void> createViolation() async {
     if (incidentDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -295,9 +340,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Violation report submitted successfully."),
-          ),
+          const SnackBar(content: Text("Violation report submitted.")),
         );
         Navigator.pop(context);
       } else {
@@ -327,7 +370,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
+                  /// HEADER
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -346,44 +389,56 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Student ID
-                  TextFormField(
-                    controller: studentIdController,
-                    decoration: _fieldDecoration(
-                      "Student ID",
-                      "Enter Student ID",
+                  /// STUDENT DROPDOWN
+                  DropdownSearch<String>(
+                    popupProps: const PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: "Search student...",
+                        ),
+                      ),
                     ),
-                    onChanged: (value) async {
-                      final student = await fetchStudentById(value.trim());
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: _fieldDecoration(
+                        "Student ID",
+                        "Select student",
+                      ),
+                    ),
+                    asyncItems: (String filter) => fetchStudents(filter),
+                    selectedItem: studentIdController.text.isEmpty
+                        ? null
+                        : '${studentIdController.text} - ${studentNameController.text}',
+                    onChanged: (selected) async {
+                      if (selected == null || selected.isEmpty) return;
+                      final id = selected.split('-').first.trim();
+                      final student = await fetchStudentById(id);
+
                       if (student != null) {
                         setState(() {
-                          studentNameController.text = student.firstname;
+                          studentIdController.text = student.id;
+                          studentNameController.text =
+                              '${student.firstname} ${student.lastname}';
                           departmentController.text = student.department;
                         });
+
                         int violationCount =
                             await fetchStudentViolationCountById(student.id);
-                        if (violationCount == 0)
-                          offenseLevel = "First Offense";
-                        else if (violationCount == 1)
-                          offenseLevel = "Second Offense";
-                        else
-                          offenseLevel = "Third Offense";
-                        setState(() {});
-                      } else {
                         setState(() {
-                          studentNameController.text = '';
-                          departmentController.text = '';
-                          offenseLevel = "First Offense";
+                          if (violationCount == 0) {
+                            offenseLevel = "First Offense";
+                          } else if (violationCount == 1)
+                            offenseLevel = "Second Offense";
+                          else
+                            offenseLevel = "Third Offense";
                         });
                       }
                     },
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Please enter Student ID'
-                        : null,
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Student Name
+                  /// STUDENT NAME
                   TextFormField(
                     controller: studentNameController,
                     readOnly: true,
@@ -391,32 +446,31 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       "Student Name",
                       "Student Name",
                     ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Student Name cannot be empty'
-                        : null,
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Department
+                  /// DEPARTMENT
                   TextFormField(
                     controller: departmentController,
                     readOnly: true,
-                    decoration: _fieldDecoration("Department", "Department"),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Department cannot be empty'
-                        : null,
+                    decoration: _fieldDecoration(
+                      "Department",
+                      "Department Name",
+                    ),
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Violation Type Dropdown
+                  /// VIOLATION TYPE DROPDOWN
                   DropdownSearch<String>(
                     asyncItems: (filter) => fetchViolationTypes(filter),
                     selectedItem: violationTypeController.text.isEmpty
                         ? null
                         : violationTypeController.text,
-                    popupProps: PopupProps.menu(
+                    popupProps: const PopupProps.menu(
                       showSearchBox: true,
-                      searchFieldProps: const TextFieldProps(
+                      searchFieldProps: TextFieldProps(
                         decoration: InputDecoration(
                           hintText: "Search violation type...",
                         ),
@@ -425,7 +479,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                     dropdownDecoratorProps: DropDownDecoratorProps(
                       dropdownSearchDecoration: _fieldDecoration(
                         "Violation Type",
-                        "Search or select violation type",
+                        "Select Violation Type",
                       ),
                     ),
                     onChanged: (value) {
@@ -433,32 +487,32 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         () => violationTypeController.text = value ?? '',
                       );
                     },
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Please select Violation Type'
-                        : null,
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Offense Level
+                  /// OFFENSE LEVEL
                   TextFormField(
                     readOnly: true,
                     initialValue: offenseLevel,
                     decoration: _fieldDecoration(
                       "Offense Level",
-                      "Auto-calculated based on previous violations",
+                      "Auto-detected offense level",
                     ),
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Status
+                  /// STATUS
                   TextFormField(
                     readOnly: true,
                     initialValue: statusValue,
                     decoration: _fieldDecoration("Status", ""),
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Date & Time
+                  /// DATE & TIME
                   TextFormField(
                     readOnly: true,
                     controller: incidentDateController,
@@ -496,29 +550,29 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         }
                       }
                     },
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Please select date and time'
-                        : null,
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Reported By
+                  /// REPORTED BY
                   TextFormField(
                     controller: reportedByController,
                     readOnly: true,
                     decoration: _fieldDecoration("Reported By", ""),
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Role
+                  /// ROLE
                   TextFormField(
                     controller: roleController,
                     readOnly: true,
                     decoration: _fieldDecoration("Role", ""),
                   ),
+
                   const SizedBox(height: 15),
 
-                  // Photo Evidence
+                  /// PHOTO EVIDENCE
                   InkWell(
                     onTap:
                         _photoEvidenceFile == null &&
@@ -534,9 +588,10 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       child: _buildPhotoPreview(),
                     ),
                   ),
+
                   const SizedBox(height: 20),
 
-                  // Buttons
+                  /// BUTTONS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -562,7 +617,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          elevation: 3,
                         ),
                         child: const Text(
                           "Submit Report",
@@ -573,8 +627,9 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                           ),
                         ),
                         onPressed: () {
-                          if (_formKey.currentState!.validate())
+                          if (_formKey.currentState!.validate()) {
                             createViolation();
+                          }
                         },
                       ),
                     ],

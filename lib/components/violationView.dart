@@ -28,6 +28,8 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
 
   List<Uint8List> imageBytesList = [];
   List<String> imageUrls = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -41,7 +43,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     _studentNameController.text = widget.record.studentName;
     _departmentController.text = widget.record.department;
     _reportedByController.text = widget.record.reportedBy;
-    _roleController.text = widget.record.role ?? ""; // default role
+    _roleController.text = widget.record.role ?? "";
     _statusController.text = widget.record.status ?? "";
     _offenseLevelController.text = widget.record.offenseLevel ?? "";
     _dateTimeController.text = widget.record.dateTime;
@@ -54,35 +56,49 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
       final url = Uri.parse(
         '$baseUrl/violations/image',
       ).replace(queryParameters: {'violation_id': widget.record.violationId});
+
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        // Case 1: backend returns base64 images
-        if (data is List &&
-            data.isNotEmpty &&
-            data.first.toString().startsWith("data:image")) {
-          List<Uint8List> tempImages = [];
-          for (var item in data) {
-            final bytes = _decodeBase64(item.toString());
-            if (bytes != null) tempImages.add(bytes);
+        if (data is List && data.isNotEmpty) {
+          if (data.first.toString().startsWith("data:image")) {
+            final tempImages = <Uint8List>[];
+            for (var item in data) {
+              final bytes = _decodeBase64(item.toString());
+              if (bytes != null) tempImages.add(bytes);
+            }
+            setState(() {
+              imageBytesList = tempImages;
+              imageUrls = [];
+              _errorMessage = null;
+            });
+          } else {
+            setState(() {
+              imageUrls = List<String>.from(data);
+              imageBytesList = [];
+              _errorMessage = null;
+            });
           }
+        } else {
           setState(() {
-            imageBytesList = tempImages;
-          });
-        }
-        // Case 2: backend returns image URLs
-        else if (data is List) {
-          setState(() {
-            imageUrls = List<String>.from(data);
+            _errorMessage = "No photo evidence available.";
           });
         }
       } else {
-        debugPrint("Failed to fetch images: ${response.statusCode}");
+        setState(() {
+          _errorMessage = "Failed to fetch images: ${response.statusCode}";
+        });
       }
     } catch (e) {
-      debugPrint("Error fetching images: $e");
+      setState(() {
+        _errorMessage = "Error fetching images: $e";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -198,8 +214,12 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   }
 
   Widget _buildImageGrid() {
-    if (imageBytesList.isEmpty && imageUrls.isEmpty) {
-      return const Center(child: Text("No photo evidence available."));
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Center(child: Text(_errorMessage!));
     }
 
     final totalImages = imageBytesList.length + imageUrls.length;
@@ -280,8 +300,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Row 1
                 Row(
                   children: [
                     _buildReadOnlyField("Student ID", _studentIdController),
@@ -290,8 +308,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                     _buildReadOnlyField("Status", _statusController),
                   ],
                 ),
-
-                // Row 2
                 Row(
                   children: [
                     _buildReadOnlyField("Student Name", _studentNameController),
@@ -303,7 +319,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 10),
                 const Text(
                   "Remarks",

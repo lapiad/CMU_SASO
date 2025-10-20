@@ -18,12 +18,12 @@ class Integration {
           final List<dynamic> data = decoded['violations'];
           return data;
         }
-      }
-      else{
+      } else {
         return [];
       }
     } catch (e) {
       debugPrint('Error fetching violations: $e');
     }
+    return null;
   }
 }
