@@ -67,6 +67,37 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     ).format(incidentDate!);
   }
 
+  /// ✅ Fetch students for dropdown
+  Future<List<Student>> fetchStudents(String filter) async {
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/students');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data is List) {
+          return data
+              .map<Student>(
+                (e) => Student(
+                  id: e['student_id'].toString(),
+                  firstname: e['first_name'] ?? '',
+                  lastname: e['last_name'] ?? '',
+                  department: e['department'] ?? '',
+                ),
+              )
+              .toList();
+        }
+      } else {
+        print("Failed to fetch students: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching students: $e");
+    }
+    return [];
+  }
+
   /// ✅ Fetch violation types
   Future<List<String>> fetchViolationTypes(String filter) async {
     try {
@@ -91,63 +122,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       print("Error fetching violation types: $e");
     }
     return [];
-  }
-
-  /// ✅ Fetch students for dropdown
-  Future<List<String>> fetchStudents(String studenId) async {
-    try {
-      final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse('$baseUrl/students/student_info/$studenId');
-
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data is List) {
-          return List<String>.from(data);
-        } else if (data is Map && data.containsKey('student_Info')) {
-          return List<String>.from(
-            data['student_Info'].map((e) => e['student_id']),
-          );
-        }
-      } else {
-        print("Failed to fetch student id: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error fetching student id: $e");
-    }
-    return [];
-  }
-
-  /// ✅ Fetch student details by ID
-  Future<Student?> fetchStudentById(String studentId) async {
-    if (studentId.isEmpty) return null;
-
-    try {
-      final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse('$baseUrl/students/student-info/$studentId');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data is Map<String, dynamic>) {
-          return Student(
-            id: data['id'] ?? '',
-            firstname: data['first_name'] ?? '',
-            lastname: data['last_name'] ?? '',
-            department: data['department'] ?? '',
-          );
-        }
-      } else {
-        print('Failed to fetch student. Status: ${response.statusCode}');
-      }
-    } catch (e) {
-      print("Error fetching student: $e");
-    }
-
-    return null;
   }
 
   /// ✅ Fetch violation count for student
@@ -380,9 +354,11 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  /// ✅ STUDENT DROPDOWN
-                  DropdownSearch<String>(
-                    asyncItems: (studenId) => fetchStudents(studenId),
+                  /// ✅ STUDENT DROPDOWN + DETAILS
+                  DropdownSearch<Student>(
+                    asyncItems: (filter) => fetchStudents(filter),
+                    itemAsString: (Student s) =>
+                        "${s.id} - ${s.firstname} ${s.lastname}",
                     popupProps: const PopupProps.menu(
                       showSearchBox: true,
                       searchFieldProps: TextFieldProps(
@@ -393,45 +369,57 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                     ),
                     dropdownDecoratorProps: DropDownDecoratorProps(
                       dropdownSearchDecoration: _fieldDecoration(
-                        "Student ID",
-                        "Select student",
+                        "Search Student",
+                        "Select student by ID or name",
                       ),
                     ),
-                    selectedItem: studentIdController.text.isEmpty
-                        ? null
-                        : '${studentIdController.text} - ${studentNameController.text}',
-                    onChanged: (selected) async {
-                      if (selected == null || selected.isEmpty) return;
+                    selectedItem:
+                        (studentIdController.text.isNotEmpty &&
+                            studentNameController.text.isNotEmpty)
+                        ? Student(
+                            id: studentIdController.text,
+                            firstname: studentNameController.text
+                                .split(' ')
+                                .first,
+                            lastname: studentNameController.text
+                                .split(' ')
+                                .last,
+                            department: departmentController.text,
+                          )
+                        : null,
+                    onChanged: (Student? selectedStudent) async {
+                      if (selectedStudent == null) return;
 
-                      final id = selected.split('-').first.trim();
-                      final student = await fetchStudentById(id);
+                      setState(() {
+                        studentIdController.text = selectedStudent.id;
+                        studentNameController.text =
+                            '${selectedStudent.firstname} ${selectedStudent.lastname}';
+                        departmentController.text = selectedStudent.department;
+                      });
 
-                      if (student != null) {
-                        setState(() {
-                          studentIdController.text = student.id;
-                          studentNameController.text =
-                              '${student.firstname} ${student.lastname}';
-                          departmentController.text = student.department;
-                        });
-
-                        int count = await fetchStudentViolationCountById(
-                          student.id,
-                        );
-
-                        setState(() {
-                          offenseLevel = (count == 0)
-                              ? "First Offense"
-                              : (count == 1)
-                              ? "Second Offense"
-                              : "Third Offense";
-                        });
-                      }
+                      int count = await fetchStudentViolationCountById(
+                        selectedStudent.id,
+                      );
+                      setState(() {
+                        offenseLevel = (count == 0)
+                            ? "First Offense"
+                            : (count == 1)
+                            ? "Second Offense"
+                            : "Third Offense";
+                      });
                     },
                   ),
 
                   const SizedBox(height: 15),
 
-                  /// Student Name
+                  TextFormField(
+                    controller: studentIdController,
+                    readOnly: true,
+                    decoration: _fieldDecoration("Student ID", ""),
+                  ),
+
+                  const SizedBox(height: 15),
+
                   TextFormField(
                     controller: studentNameController,
                     readOnly: true,
@@ -440,7 +428,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Department
                   TextFormField(
                     controller: departmentController,
                     readOnly: true,
@@ -449,7 +436,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Violation Type Dropdown
+                  /// ✅ Violation Type Dropdown
                   DropdownSearch<String>(
                     asyncItems: (filter) => fetchViolationTypes(filter),
                     selectedItem: violationTypeController.text.isEmpty
@@ -478,7 +465,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Offense Level
                   TextFormField(
                     readOnly: true,
                     initialValue: offenseLevel,
@@ -490,7 +476,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Status
                   TextFormField(
                     readOnly: true,
                     initialValue: statusValue,
@@ -499,7 +484,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Date & Time
                   TextFormField(
                     readOnly: true,
                     controller: incidentDateController,
@@ -541,7 +525,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Reported By
                   TextFormField(
                     controller: reportedByController,
                     readOnly: true,
@@ -550,7 +533,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Role
                   TextFormField(
                     controller: roleController,
                     readOnly: true,
@@ -559,7 +541,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  /// Photo Evidence
                   InkWell(
                     onTap:
                         _photoEvidenceFile == null &&
@@ -578,7 +559,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 20),
 
-                  /// Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
