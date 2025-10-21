@@ -10,35 +10,49 @@ class EditUserForms extends StatefulWidget {
 }
 
 class _EditUserFormState extends State<EditUserForms> {
-  // Form key to validate the form
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Text controllers for the form fields
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _roleController;
   late TextEditingController _departmentController;
   late TextEditingController _initialController;
+  late TextEditingController _passwordController;
+
+  // Dropdown roles list (no duplicates, lowercase only)
+  final List<String> _roles = ['admin', 'sao', 'guard'];
+
+  // Selected dropdown value
+  late String _selectedRole;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the text controllers with the current values from the User object
+
     _nameController = TextEditingController(text: widget.user.name);
     _emailController = TextEditingController(text: widget.user.email);
-    _roleController = TextEditingController(text: widget.user.role);
     _departmentController = TextEditingController(text: widget.user.department);
     _initialController = TextEditingController(text: widget.user.initial);
+    _passwordController = TextEditingController();
+
+    // Normalize and validate the incoming role
+    String normalizedRole = widget.user.role.trim().toLowerCase();
+    if (_roles.contains(normalizedRole)) {
+      _selectedRole = normalizedRole;
+    } else {
+      print(
+        '⚠️ Warning: user role "${widget.user.role}" not found in roles list. Defaulting to first role.',
+      );
+      _selectedRole = _roles.first;
+    }
   }
 
   @override
   void dispose() {
-    // Dispose controllers when done
     _nameController.dispose();
     _emailController.dispose();
-    _roleController.dispose();
     _departmentController.dispose();
     _initialController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -67,22 +81,38 @@ class _EditUserFormState extends State<EditUserForms> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text('Edit User'),
+                    const Text(
+                      'Edit User',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     Form(
-                      key: _formKey, // Attach form key to validate
+                      key: _formKey,
                       child: Column(
                         children: [
                           _buildTextField('Name', _nameController),
                           const SizedBox(height: 16),
                           _buildTextField('Email', _emailController),
                           const SizedBox(height: 16),
-                          _buildTextField('Role', _roleController),
+
+                          // ✅ Role Dropdown (restored)
+                          _buildDropdownField(),
                           const SizedBox(height: 16),
+
                           _buildTextField('Department', _departmentController),
                           const SizedBox(height: 16),
                           _buildTextField('Initial', _initialController),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            'Password',
+                            _passwordController,
+                            obscure: true,
+                          ),
+                          const SizedBox(height: 24),
+
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -99,17 +129,16 @@ class _EditUserFormState extends State<EditUserForms> {
                                 onPressed: () {
                                   if (_formKey.currentState?.validate() ??
                                       false) {
-                                    // Handle saving changes here
                                     widget.user.name = _nameController.text;
                                     widget.user.email = _emailController.text;
-                                    widget.user.role = _roleController.text;
+                                    widget.user.role = _selectedRole;
                                     widget.user.department =
                                         _departmentController.text;
                                     widget.user.initial =
                                         _initialController.text;
 
                                     print(
-                                      'User details saved: ${widget.user.name}',
+                                      '✅ User saved: ${widget.user.name}, role: $_selectedRole',
                                     );
                                     Navigator.pop(context);
                                   }
@@ -134,13 +163,18 @@ class _EditUserFormState extends State<EditUserForms> {
     );
   }
 
-  // Helper method to build form text fields
-  Widget _buildTextField(String label, TextEditingController controller) {
+  // Reusable text field builder
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool obscure = false,
+  }) {
     return TextFormField(
       controller: controller,
+      obscureText: obscure,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -150,9 +184,37 @@ class _EditUserFormState extends State<EditUserForms> {
       },
     );
   }
+
+  // ✅ Dropdown builder for role
+  Widget _buildDropdownField() {
+    return DropdownButtonFormField<String>(
+      decoration: const InputDecoration(
+        labelText: 'Role',
+        border: OutlineInputBorder(),
+      ),
+      value: _roles.contains(_selectedRole) ? _selectedRole : _roles.first,
+      items: _roles.map((role) {
+        return DropdownMenuItem<String>(
+          value: role,
+          child: Text(role.toUpperCase()),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedRole = value!;
+        });
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Role is required';
+        }
+        return null;
+      },
+    );
+  }
 }
 
-// Assuming you have a User model class like this:
+// ✅ User model
 class User {
   String name;
   String email;

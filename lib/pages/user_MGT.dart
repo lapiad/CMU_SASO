@@ -87,7 +87,7 @@ class _UserManagementPageState extends State<UserMgt> {
               email: data['email']?.toString() ?? '',
               office: data['department']?.toString() ?? '',
               role: data['role']?.toString() ?? '',
-              status: data['status']?.toString() ?? '',
+              status: data['status']?.toString() ?? 'Inactive',
             ),
           ];
         });
@@ -107,8 +107,9 @@ class _UserManagementPageState extends State<UserMgt> {
     final emailController = TextEditingController(text: user.email);
     final officeController = TextEditingController(text: user.office);
 
-    // Role choices
+    // Role & Status values
     String roleValue = user.role;
+    String statusValue = user.status;
 
     showDialog(
       context: context,
@@ -157,6 +158,19 @@ class _UserManagementPageState extends State<UserMgt> {
                         if (value != null) roleValue = value;
                       },
                     ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: statusValue,
+                      decoration: _inputDecoration("Status"),
+                      items: ["Active", "Inactive"]
+                          .map(
+                            (s) => DropdownMenuItem(value: s, child: Text(s)),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) statusValue = value;
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -191,7 +205,7 @@ class _UserManagementPageState extends State<UserMgt> {
                   email: emailController.text,
                   office: officeController.text,
                   role: roleValue,
-                  status: user.status, // keep old status silently
+                  status: statusValue, // update status now
                 );
               });
               Navigator.pop(context);
@@ -211,7 +225,6 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
-  /// Delete confirmation dialog
   void _deleteUser(int index) {
     showDialog(
       context: context,
@@ -280,7 +293,6 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
-  /// Reusable input decoration
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -290,7 +302,6 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
-  /// Reusable textfield builder
   Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -616,132 +627,130 @@ class _UserManagementPageState extends State<UserMgt> {
                   SizedBox(
                     width: 1900,
                     height: 650,
-                    child: Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(
-                              label: Text(
-                                'Name',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
-                                ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: DataTable(
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              'Name',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
                               ),
                             ),
-                            DataColumn(
-                              label: Text(
-                                'Email',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
-                                ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Email',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
                               ),
                             ),
-                            DataColumn(
-                              label: Text(
-                                'Office',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
-                                ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Office',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
                               ),
                             ),
-                            DataColumn(
-                              label: Text(
-                                'Role',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
-                                ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Role',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
                               ),
                             ),
-                            DataColumn(
-                              label: Text(
-                                'Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
-                                ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Status',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
                               ),
                             ),
-                            DataColumn(
-                              label: Text(
-                                'Actions',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
-                                ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Actions',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
                               ),
                             ),
-                          ],
-                          rows: users.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final user = entry.value;
-                            return DataRow(
-                              cells: [
-                                DataCell(
-                                  Text(
-                                    user.name,
+                          ),
+                        ],
+                        rows: users.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final user = entry.value;
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  user.name,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  user.email,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  user.office,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  user.role,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                              DataCell(
+                                Chip(
+                                  label: Text(
+                                    user.status,
                                     style: const TextStyle(fontSize: 20),
                                   ),
+                                  backgroundColor: user.status == "Active"
+                                      ? Colors.green
+                                      : Colors.red,
                                 ),
-                                DataCell(
-                                  Text(
-                                    user.email,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    user.office,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    user.role,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Chip(
-                                    label: Text(
-                                      user.status,
-                                      style: const TextStyle(fontSize: 20),
+                              ),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                        size: 25,
+                                      ),
+                                      onPressed: () => _editUser(index),
                                     ),
-                                    backgroundColor: user.status == "Active"
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                                DataCell(
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.blue,
-                                          size: 25,
-                                        ),
-                                        onPressed: () => _editUser(index),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                        size: 25,
                                       ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                          size: 25,
-                                        ),
-                                        onPressed: () => _deleteUser(index),
-                                      ),
-                                    ],
-                                  ),
+                                      onPressed: () => _deleteUser(index),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),

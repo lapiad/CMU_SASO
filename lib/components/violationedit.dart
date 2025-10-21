@@ -25,15 +25,23 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   final _remarksController = TextEditingController();
   final _roleController = TextEditingController();
 
-  String? _selectedRole;
-  final List<String> _roles = [];
+  final List<String> violationStatus = [
+    'Pending',
+    'In Progress',
+    'Reviewed',
+    'Referred',
+  ];
 
-  String? violation_status;
-  List<String> _status = [];
+  final List<String> offenseLevels = [
+    'First Offense',
+    'Second Offense',
+    'Third Offense',
+  ];
 
+  String? _selectedStatus;
   String? _selectedOffenseLevel;
-  List<String> _offenseLevels = [];
 
+  List<String> imageUrls = [];
   List<Uint8List> imageBytesList = [];
   bool _isSaving = false;
 
@@ -41,13 +49,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   void initState() {
     super.initState();
     _initializeControllers();
-
-    // Keep existing status and offense level from record
-    violation_status = widget.record.status;
-    _selectedOffenseLevel = widget.record.offenseLevel;
-
     _fetchImagesFromBackend();
-    _fetchStatusAndOffense();
   }
 
   void _initializeControllers() {
@@ -58,43 +60,13 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     _dateTimeController.text = widget.record.dateTime;
     _roleController.text = widget.record.role;
     _remarksController.text = widget.record.remarks ?? '';
-  }
 
-  Future<void> _fetchStatusAndOffense() async {
-    final baseUrl = GlobalConfiguration().getValue("server_url");
-    try {
-      // Fetch status list
-      final statusResp = await http.get(Uri.parse('$baseUrl/status'));
-      if (statusResp.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(statusResp.body);
-        setState(() {
-          _status = data.map((e) => e.toString()).toList();
-          // Preserve record's current status
-          violation_status = widget.record.status.isNotEmpty
-              ? widget.record.status
-              : (violation_status ?? (_status.isNotEmpty ? _status[0] : null));
-        });
-      }
-
-      // Fetch offense level list
-      final offenseResp = await http.get(Uri.parse('$baseUrl/offense-level'));
-      if (offenseResp.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(offenseResp.body);
-        setState(() {
-          _offenseLevels = data.map((e) => e.toString()).toList();
-          // Preserve record's current offense level
-          _selectedOffenseLevel = widget.record.offenseLevel.isNotEmpty
-              ? widget.record.offenseLevel
-              : (_selectedOffenseLevel ??
-                    (_offenseLevels.isNotEmpty ? _offenseLevels[0] : null));
-        });
-      }
-    } catch (e) {
-      _showSnackBar(
-        "Error fetching status/offense options: $e",
-        color: Colors.red,
-      );
-    }
+    _selectedStatus = violationStatus.contains(widget.record.status)
+        ? widget.record.status
+        : violationStatus.first;
+    _selectedOffenseLevel = offenseLevels.contains(widget.record.offenseLevel)
+        ? widget.record.offenseLevel
+        : offenseLevels.first;
   }
 
   Future<void> _fetchImagesFromBackend() async {
@@ -107,24 +79,24 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        List<String> images = [];
+
         if (data is List) {
-          setState(() {
-            imageBytesList = data
-                .map((e) => _safeDecodeBase64(e.toString()))
-                .whereType<Uint8List>()
-                .toList();
-          });
-        } else if (data is Map<String, dynamic>) {
-          final imagesData = data['photo_evidence'] ?? [];
-          if (imagesData is List) {
-            setState(() {
-              imageBytesList = imagesData
-                  .map((e) => _safeDecodeBase64(e.toString()))
-                  .whereType<Uint8List>()
-                  .toList();
-            });
-          }
+          images = data.map((e) => e.toString()).toList();
+        } else if (data is Map<String, dynamic> &&
+            data['photo_evidence'] is List) {
+          images = List<String>.from(data['photo_evidence']);
         }
+
+        setState(() {
+          imageBytesList = images
+              .map(
+                (img) => img.startsWith('http') ? null : _safeDecodeBase64(img),
+              )
+              .whereType<Uint8List>()
+              .toList();
+          imageUrls = images.where((img) => img.startsWith('http')).toList();
+        });
       } else {
         _showSnackBar("Failed to fetch images: ${response.statusCode}");
       }
@@ -146,12 +118,27 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
           : cleaned;
       return base64Decode(normalized);
     } catch (e) {
-      debugPrint("Invalid Base64 image: $e");
+      debugPrint("Invalid Base64: $e");
       return null;
     }
   }
 
-  void _showZoomableImage(Uint8List imageBytes) {
+  void _showZoomableImage({Uint8List? bytes, String? url}) {
+    Widget imageWidget;
+    if (bytes != null) {
+      imageWidget = PhotoView(
+        imageProvider: MemoryImage(bytes),
+        backgroundDecoration: const BoxDecoration(color: Colors.black),
+      );
+    } else if (url != null) {
+      imageWidget = PhotoView(
+        imageProvider: NetworkImage(url),
+        backgroundDecoration: const BoxDecoration(color: Colors.black),
+      );
+    } else {
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -159,10 +146,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         insetPadding: EdgeInsets.zero,
         child: Stack(
           children: [
-            PhotoView(
-              imageProvider: MemoryImage(imageBytes),
-              backgroundDecoration: const BoxDecoration(color: Colors.black),
-            ),
+            imageWidget,
             Positioned(
               top: 40,
               right: 20,
@@ -177,12 +161,17 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     );
   }
 
-  Widget _buildEditableField(String label, TextEditingController controller) {
+  Widget _buildEditableField(
+    String label,
+    TextEditingController controller, {
+    bool readOnly = false,
+  }) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(6.0),
         child: TextField(
           controller: controller,
+          readOnly: readOnly,
           decoration: InputDecoration(
             labelText: label,
             filled: true,
@@ -203,17 +192,20 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     required String? selectedValue,
     required List<String> options,
     required ValueChanged<String?> onChanged,
-    Color fillColor = const Color(0xFFE0E0E0),
   }) {
+    final safeValue = (selectedValue != null && options.contains(selectedValue))
+        ? selectedValue
+        : null;
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(6.0),
         child: DropdownButtonFormField<String>(
-          value: selectedValue,
+          value: safeValue,
           decoration: InputDecoration(
             labelText: label,
             filled: true,
-            fillColor: fillColor,
+            fillColor: Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -221,7 +213,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
             ),
           ),
           style: const TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.normal,
             fontSize: 16,
             color: Colors.black,
           ),
@@ -251,50 +243,67 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   }
 
   Widget _buildImageGrid() {
-    if (imageBytesList.isEmpty) {
+    final allImagesCount = imageBytesList.length + imageUrls.length;
+
+    if (allImagesCount == 0) {
       return const Center(child: Text("No photo evidence available."));
     }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: imageBytesList.length,
+      itemCount: allImagesCount,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
       itemBuilder: (context, index) {
-        final imageBytes = imageBytesList[index];
-        return GestureDetector(
-          onTap: () => _showZoomableImage(imageBytes),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.memory(
-              imageBytes,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 120,
+        if (index < imageBytesList.length) {
+          final bytes = imageBytesList[index];
+          return GestureDetector(
+            onTap: () => _showZoomableImage(bytes: bytes),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(bytes, fit: BoxFit.cover),
             ),
-          ),
-        );
+          );
+        } else {
+          final url = imageUrls[index - imageBytesList.length];
+          return GestureDetector(
+            onTap: () => _showZoomableImage(url: url),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(url, fit: BoxFit.cover),
+            ),
+          );
+        }
       },
     );
   }
 
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
+
     final baseUrl = GlobalConfiguration().getValue("server_url");
     final url = Uri.parse(
       '$baseUrl/violations/update/${widget.record.violationId}',
     );
 
+    String photoEvidenceBase64 = '';
+    if (imageBytesList.isNotEmpty) {
+      photoEvidenceBase64 = imageBytesList
+          .map((e) => base64Encode(e))
+          .join(',');
+    }
+
     final updatedData = {
-      "reportedBy": _reportedByController.text,
-      "role": _roleController.text,
-      "status": violation_status,
-      "offenseLevel": _selectedOffenseLevel,
-      "dateTime": _dateTimeController.text,
+      "id": widget.record.violationId,
+      "offense_level": _selectedOffenseLevel ?? '',
+      "status": _selectedStatus ?? '',
       "remarks": _remarksController.text,
+      "reported_by": _reportedByController.text,
+      "photo_evidence": photoEvidenceBase64,
     };
 
     try {
@@ -303,6 +312,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(updatedData),
       );
+
       if (response.statusCode == 200) {
         _showSnackBar("Changes saved successfully!", color: Colors.green);
         await Future.delayed(const Duration(seconds: 1));
@@ -360,29 +370,49 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildEditableField("Student ID", _studentIdController),
-                    _buildEditableField("Department", _departmentController),
-                    _buildEditableField("Reported By", _reportedByController),
+                    _buildEditableField(
+                      "Student ID",
+                      _studentIdController,
+                      readOnly: true,
+                    ),
+                    _buildEditableField(
+                      "Department",
+                      _departmentController,
+                      readOnly: true,
+                    ),
+                    _buildEditableField(
+                      "Reported By",
+                      _reportedByController,
+                      readOnly: true,
+                    ),
                     _buildStyledDropdown(
                       label: "Status",
-                      selectedValue: violation_status,
-                      options: _status,
-                      onChanged: (val) =>
-                          setState(() => violation_status = val),
+                      selectedValue: _selectedStatus,
+                      options: violationStatus,
+                      onChanged: (value) =>
+                          setState(() => _selectedStatus = value),
                     ),
                   ],
                 ),
                 Row(
                   children: [
-                    _buildEditableField("Student Name", _studentNameController),
-                    _buildEditableField("Date and Time", _dateTimeController),
+                    _buildEditableField(
+                      "Student Name",
+                      _studentNameController,
+                      readOnly: true,
+                    ),
+                    _buildEditableField(
+                      "Date and Time",
+                      _dateTimeController,
+                      readOnly: true,
+                    ),
                     _buildEditableField("Role", _roleController),
                     _buildStyledDropdown(
                       label: "Offense Level",
                       selectedValue: _selectedOffenseLevel,
-                      options: _offenseLevels,
-                      onChanged: (val) =>
-                          setState(() => _selectedOffenseLevel = val),
+                      options: offenseLevels,
+                      onChanged: (value) =>
+                          setState(() => _selectedOffenseLevel = value),
                     ),
                   ],
                 ),

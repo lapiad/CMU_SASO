@@ -150,6 +150,8 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     switch (status.toLowerCase()) {
       case 'pending':
         return Colors.yellowAccent;
+      case 'in progress':
+        return const Color.fromARGB(255, 66, 184, 66);
       case 'reviewed':
         return Colors.orange;
       case 'referred':
