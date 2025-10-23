@@ -17,11 +17,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
 
-  bool isEditable = false; // Add this line to define isEditable
+  bool isEditable = false;
 
   String userFirstName = "Loading...";
   String userInitials = "AD";
-  String userRole = "ADMIN"; // default role
+  String userRole = "ADMIN";
 
   @override
   void initState() {
@@ -117,7 +117,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  /// Profile Header (Avatar + Name + Role)
   Widget _buildProfileHeader() {
     return Card(
       elevation: 4,
@@ -168,7 +167,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  /// Profile Details (TextFields with shadow)
   Widget _buildProfileDetails() {
     return Card(
       elevation: 4,
@@ -209,7 +207,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
-  /// Custom TextField with shadow
   Widget buildLabeledField(
     String label,
     TextEditingController controller, {
@@ -267,4 +264,4 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       ],
     );
   }
-} // <-- Add this closing bracket for _ProfileSettingsPageState
+}

@@ -28,21 +28,17 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   DateTime? startDate;
   DateTime? endDate;
 
-  // Filter states
   bool filterFirstOffense = false;
   bool filterSecondOffense = false;
   bool filterThirdOffense = false;
-
   bool filterImproperUniform = false;
   bool filterLateAttendance = false;
   bool filterSeriousMisconduct = false;
-
   bool filterCAS = false;
   bool filterCBA = false;
   bool filterCCS = false;
   bool filterCTE = false;
   bool filterCCJE = false;
-
   bool filterPending = false;
   bool filterUnderReview = false;
   bool filterReviewed = false;
@@ -57,7 +53,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     super.initState();
     _fetchViolations();
 
-    // Automatically refresh every 10 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       _fetchViolations();
     });
@@ -90,7 +85,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           )
           .toList();
 
-      // Sort oldest → latest
       records.sort(
         (a, b) =>
             DateTime.parse(a.dateTime).compareTo(DateTime.parse(b.dateTime)),
@@ -378,7 +372,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
-  // ------------------ FILTER DRAWER -------------------
   Widget _buildFilterDrawer() {
     return Material(
       elevation: 10,
@@ -386,11 +379,10 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: SingleChildScrollView(
-          scrollDirection: Axis.vertical, // Explicit vertical scrolling
+          scrollDirection: Axis.vertical,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with title and close button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -405,8 +397,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 ],
               ),
               const SizedBox(height: 10),
-
-              // Priority section
               _buildFilterSection("Priority", [
                 _buildCheckbox(
                   "First Offense",
@@ -425,8 +415,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 ),
               ]),
               const Divider(),
-
-              // Report Status section
               _buildFilterSection("Report Status", [
                 _buildCheckbox(
                   "Pending",
@@ -450,8 +438,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 ),
               ]),
               const Divider(),
-
-              // Violation Type section
               _buildFilterSection("Violation Type", [
                 _buildCheckbox(
                   "Dress Code",
@@ -505,8 +491,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 ),
               ]),
               const Divider(),
-
-              // Department section
               _buildFilterSection("Department", [
                 _buildCheckbox(
                   "CAS",
@@ -535,8 +519,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 ),
               ]),
               const SizedBox(height: 20),
-
-              // Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -606,7 +588,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
-  // ------------------- SIDE MENU ---------------------
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
@@ -676,7 +657,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
-  // ------------------- DATA TABLE -------------------
   Widget _buildDataTable() {
     return ValueListenableBuilder<List<ViolationRecord>>(
       valueListenable: allRecordsNotifier,

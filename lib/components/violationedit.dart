@@ -68,7 +68,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         : offenseLevels.first;
   }
 
-  /// ✅ Fetch all images and filter locally by violation_id
   Future<void> _fetchImagesFromBackend() async {
     setState(() => _isLoadingImages = true);
 
@@ -87,8 +86,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
             return img["violation_id"].toString() ==
                 widget.record.violationId.toString();
           }).toList();
-
-          // ✅ Safely build image URLs
           setState(() {
             imageUrls = filteredImages
                 .map<String>((img) {

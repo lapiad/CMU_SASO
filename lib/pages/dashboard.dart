@@ -43,7 +43,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     fetchRecentViolations();
   }
 
-  // Fetch logged-in user name
   Future<void> fetchUserName() async {
     try {
       final box = GetStorage();
@@ -69,7 +68,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
-  // Fetch recent violations from backend
   Future<void> fetchRecentViolations() async {
     try {
       final url = Uri.parse(
@@ -179,7 +177,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Color getOffenseColor(String offenseLevel) {
-    // Normalize input (handle nulls, case differences, spacing)
     final level = offenseLevel.trim().toLowerCase();
 
     if (level.contains('first')) {
@@ -248,7 +245,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Side menu
             if (sideMenuSize != 0.0)
               SizedBox(
                 width: sideMenuSize,
@@ -376,11 +372,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
               ),
-            // Main content
             Expanded(
               child: Column(
                 children: [
-                  // Summary widgets
                   SizedBox(
                     width: MediaQuery.of(context).size.width,
                     child: MediaQuery.of(context).size.width > 770
@@ -461,7 +455,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Recent Violations
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(16),
@@ -503,7 +496,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      // Quick Actions
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(25),
@@ -531,7 +523,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                       builder: (_) =>
                                           const CreateViolationDialog(),
                                     );
-                                    fetchRecentViolations(); // Refresh after creating
+                                    fetchRecentViolations();
                                   },
                                 ),
                               ),

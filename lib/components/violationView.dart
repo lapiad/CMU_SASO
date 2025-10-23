@@ -59,7 +59,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     }
   }
 
-  /// ✅ Fetch images (optional, based on router without parameters)
   Future<void> _fetchImagesFromBackend() async {
     setState(() {
       _isLoading = true;
@@ -80,7 +79,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
         final images = data['images'] as List?;
 
         if (images != null && images.isNotEmpty) {
-          // ✅ Filter by violation_id locally (optional)
           final filteredImages = images.where((img) {
             final imgViolationId = img['violation_id']?.toString() ?? "";
             return imgViolationId == widget.record.violationId;
@@ -194,14 +192,12 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     );
   }
 
-  /// ✅ Only build grid if images exist
   Widget _buildImageGrid() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (imageUrls.isEmpty) {
-      // Don’t show anything if no image
       return const SizedBox.shrink();
     }
 
@@ -351,7 +347,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                 const SizedBox(height: 6),
                 _buildReadOnlyRemarks(),
                 const SizedBox(height: 20),
-                _buildImageGrid(), // ✅ Only appears if images exist
+                _buildImageGrid(),
               ],
             ),
           ),

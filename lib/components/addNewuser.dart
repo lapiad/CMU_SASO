@@ -111,8 +111,6 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                   ],
                 ),
                 const Divider(),
-
-                // Avatar initials
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 20),
                   width: 150,
@@ -161,8 +159,6 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                // First + Last Name
                 Row(
                   children: [
                     Expanded(
@@ -181,13 +177,12 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                         labelText: "Middle Name",
                         hintText: "Enter middle name",
                         onSaved: (val) => _middleName = val,
-                        validator: (val) => null, // No validation, optional
+                        validator: (val) => null,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Email
                 Row(
                   children: [
                     Expanded(
@@ -211,9 +206,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                           if (val == null || val.isEmpty) {
                             return 'Enter email address';
                           }
-                          final emailRegex = RegExp(
-                            r'^[^@]+@[^@]+\.[^@]+',
-                          ); // Simple email validation
+                          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                           if (!emailRegex.hasMatch(val)) {
                             return 'Enter a valid email address';
                           }
@@ -224,8 +217,6 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                // Role + Department
                 Row(
                   children: [
                     Expanded(
@@ -256,8 +247,6 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -303,7 +292,6 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     );
   }
 
-  // Helpers
   Widget _buildTextField({
     required String labelText,
     required String hintText,

@@ -13,7 +13,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
   List<Report> reports = [];
   bool isLoading = true;
 
-  // Change this IP to your backend’s IP if needed
   static const String baseUrl = 'http://192.168.1.4:8000';
 
   @override
@@ -22,7 +21,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     fetchPendingReports();
   }
 
-  /// Fetch all pending reports
   Future<void> fetchPendingReports() async {
     final apiUrl = Uri.parse('$baseUrl/violations/pending');
     try {
@@ -48,7 +46,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     }
   }
 
-  /// Approve all selected reports
   Future<void> approveSelectedReports() async {
     final selectedIds = reports
         .where((r) => r.isSelected)
@@ -73,7 +70,7 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
           "Approved ${selectedIds.length} report(s).",
           isError: false,
         );
-        fetchPendingReports(); // Refresh list after approving
+        fetchPendingReports();
       } else {
         _showSnackBar(
           "Failed to approve reports: ${response.body}",
@@ -85,7 +82,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     }
   }
 
-  /// Helper method to show consistent snackbars
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -98,7 +94,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
     );
   }
 
-  /// Color indicator for offense level
   Color getOffenseColor(String offenseLevel) {
     switch (offenseLevel.toLowerCase()) {
       case 'third offense':
@@ -119,7 +114,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
         height: 800,
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
               child: Row(
@@ -137,8 +131,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
               ),
             ),
             const Divider(height: 1),
-
-            // Body
             Expanded(
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -174,7 +166,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                 },
                               ),
                               const SizedBox(width: 12),
-                              // Image preview
                               Container(
                                 width: 150,
                                 height: 150,
@@ -210,7 +201,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                       ),
                               ),
                               const SizedBox(width: 14),
-                              // Info section
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,8 +260,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                       },
                     ),
             ),
-
-            // Approve button
             Container(
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -328,7 +316,6 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
   }
 }
 
-/// Data model
 class Report {
   final dynamic id;
   final String date;

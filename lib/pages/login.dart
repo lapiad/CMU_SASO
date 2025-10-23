@@ -10,20 +10,18 @@ void _onItemTapped(BuildContext context) async {
   final box = GetStorage();
   final url = Uri.parse(
     '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
-  ); // Replace with your FastAPI URL
+  );
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
     box.write('user_details', data);
     if (data['role'] == 'guard') {
-      // Navigate to the admin dashboard
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => SchoolGuardHome()),
       );
     } else {
-      // Navigate to the user dashboard
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => Dashboard()),
@@ -38,7 +36,7 @@ Future<String?> loginUser(String username, String password) async {
   final box = GetStorage();
   final url = Uri.parse(
     '${GlobalConfiguration().getValue("server_url")}/login',
-  ); // Replace with your FastAPI URL
+  );
   Map<String, String> body = {'username': username, 'password': password};
   Map<String, String> headers = {'Content-Type': 'application/json'};
   final response = await http.post(
@@ -52,7 +50,6 @@ Future<String?> loginUser(String username, String password) async {
     box.write('user_id', data['user_id']);
     return data['message'];
   } else {
-    // error message
     return null;
   }
 }
@@ -100,7 +97,6 @@ class _LoginPage extends State<LoginPage> {
               SizedBox(height: 20.0),
               Image.asset('images/logos.png', height: 100.0, width: 100.0),
               const SizedBox(height: 16),
-              // Title
               const Text(
                 'CMU SASO',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -112,7 +108,6 @@ class _LoginPage extends State<LoginPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              // Username Field
               TextField(
                 controller: usernameController,
                 decoration: InputDecoration(
@@ -125,7 +120,6 @@ class _LoginPage extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Password Field
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -139,7 +133,6 @@ class _LoginPage extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Sign In Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -172,7 +165,6 @@ class _LoginPage extends State<LoginPage> {
                       isloading = false;
                     });
                     if (token != null) {
-                      // Navigate to the dashboard or next screen
                       _onItemTapped(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(

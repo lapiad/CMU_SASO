@@ -18,10 +18,8 @@ class _EditUserFormState extends State<EditUserForms> {
   late TextEditingController _initialController;
   late TextEditingController _passwordController;
 
-  // Dropdown roles list (no duplicates, lowercase only)
   final List<String> _roles = ['admin', 'sao', 'guard'];
 
-  // Selected dropdown value
   late String _selectedRole;
 
   @override
@@ -34,7 +32,6 @@ class _EditUserFormState extends State<EditUserForms> {
     _initialController = TextEditingController(text: widget.user.initial);
     _passwordController = TextEditingController();
 
-    // Normalize and validate the incoming role
     String normalizedRole = widget.user.role.trim().toLowerCase();
     if (_roles.contains(normalizedRole)) {
       _selectedRole = normalizedRole;
@@ -98,7 +95,6 @@ class _EditUserFormState extends State<EditUserForms> {
                           _buildTextField('Email', _emailController),
                           const SizedBox(height: 16),
 
-                          // ✅ Role Dropdown (restored)
                           _buildDropdownField(),
                           const SizedBox(height: 16),
 
@@ -163,7 +159,6 @@ class _EditUserFormState extends State<EditUserForms> {
     );
   }
 
-  // Reusable text field builder
   Widget _buildTextField(
     String label,
     TextEditingController controller, {
@@ -185,7 +180,6 @@ class _EditUserFormState extends State<EditUserForms> {
     );
   }
 
-  // ✅ Dropdown builder for role
   Widget _buildDropdownField() {
     return DropdownButtonFormField<String>(
       decoration: const InputDecoration(
@@ -214,7 +208,6 @@ class _EditUserFormState extends State<EditUserForms> {
   }
 }
 
-// ✅ User model
 class User {
   String name;
   String email;

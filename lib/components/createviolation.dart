@@ -67,7 +67,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     ).format(incidentDate!);
   }
 
-  /// ✅ Fetch students for dropdown
   Future<List<Student>> fetchStudents(String filter) async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
@@ -98,7 +97,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return [];
   }
 
-  /// ✅ Fetch violation types
   Future<List<String>> fetchViolationTypes(String filter) async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
@@ -124,7 +122,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return [];
   }
 
-  /// ✅ Fetch violation count for student
   Future<int> fetchStudentViolationCountById(String studentId) async {
     if (studentId.isEmpty) return 0;
 
@@ -144,7 +141,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return 0;
   }
 
-  /// ✅ Pick image
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -267,7 +263,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     );
   }
 
-  /// ✅ Submit violation
   Future<void> createViolation() async {
     if (incidentDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -335,7 +330,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// ✅ Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -353,8 +347,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  /// ✅ STUDENT DROPDOWN + DETAILS
                   DropdownSearch<Student>(
                     asyncItems: (filter) => fetchStudents(filter),
                     itemAsString: (Student s) =>
@@ -435,8 +427,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
 
                   const SizedBox(height: 15),
-
-                  /// ✅ Violation Type Dropdown
                   DropdownSearch<String>(
                     asyncItems: (filter) => fetchViolationTypes(filter),
                     selectedItem: violationTypeController.text.isEmpty

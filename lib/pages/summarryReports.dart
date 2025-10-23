@@ -368,7 +368,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     );
   }
 
-  // ---------------- PDF GENERATION -----------------
   Future<void> _generatePdfAndSave() async {
     try {
       final pieImg = await _pieController.capture();
@@ -446,8 +445,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
             ),
             pw.Divider(thickness: 1.5, color: PdfColors.blueGrey400),
             pw.SizedBox(height: 12),
-
-            // Title
             pw.Center(
               child: pw.Text(
                 'SUMMARY REPORT OF STUDENT VIOLATIONS',
@@ -469,8 +466,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
               ),
             ),
             pw.SizedBox(height: 20),
-
-            // Summary Paragraph
             pw.Container(
               decoration: pw.BoxDecoration(
                 color: PdfColors.blue50,
@@ -487,12 +482,9 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
               ),
             ),
             pw.SizedBox(height: 20),
-
-            // Charts on the first page
             _sectionRow("Violations per Department", pieImg, departmentDist),
             _sectionRow("Violations per Type", barImg, typeDist),
             _sectionRow("Weekly Violations Overview", lineImg, weeklyData),
-
             pw.SizedBox(height: 20),
             pw.Divider(thickness: 1),
             pw.Align(
@@ -591,7 +583,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     );
   }
 
-  // ---------------- CHART BUILDERS ----------------
   Widget _buildPieChartCard(String title, Map<String, int> data) {
     final entries = data.entries.toList();
     return _chartContainer(

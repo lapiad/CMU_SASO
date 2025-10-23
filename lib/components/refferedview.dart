@@ -22,7 +22,7 @@ class _ViolationDetailsState extends State<refferedDetails> {
   late TextEditingController reportedByController;
   late TextEditingController dateTimeController;
   late TextEditingController statusController;
-  late TextEditingController statusActionController; // Renamed for clarity
+  late TextEditingController statusActionController;
 
   @override
   void initState() {
@@ -35,21 +35,18 @@ class _ViolationDetailsState extends State<refferedDetails> {
     );
     dateTimeController = TextEditingController(text: widget.record.dateTime);
     statusController = TextEditingController(text: widget.record.status);
-    // Renamed the controller to match its purpose
     statusActionController = TextEditingController();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Adjust breakpoint for better responsiveness
     final isWide = screenWidth > 900;
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF0033A0),
-        // MODIFICATION: Added leading person icon as seen in the image
         leading: const Icon(Icons.person, color: Colors.white),
         title: Text(
           "Violation Details",
@@ -70,17 +67,14 @@ class _ViolationDetailsState extends State<refferedDetails> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // MODIFICATION: Adjusted styling for the image container
             Container(
               width: isWide ? 300 : 200,
               height: isWide ? 300 : 200,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black, width: 2),
-                // Added rounded corners to match the image
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                // Used a more fitting icon for the placeholder
                 Icons.image_outlined,
                 size: isWide ? 150 : 100,
                 color: Colors.grey[700],
@@ -93,7 +87,6 @@ class _ViolationDetailsState extends State<refferedDetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top three fields remain in a single column
                     buildDetailField("Student Name", nameController),
                     buildDetailField("Student Number", idController),
                     buildDetailField("Violation", violationController),
@@ -102,7 +95,6 @@ class _ViolationDetailsState extends State<refferedDetails> {
                       TextEditingController(text: widget.record.department),
                     ),
                     const SizedBox(height: 18),
-                    // Bottom four fields are now in a two-column Row
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -141,7 +133,6 @@ class _ViolationDetailsState extends State<refferedDetails> {
           ],
         ),
       ),
-      // No changes needed for the bottom navigation bar
       bottomNavigationBar: widget.isEditable
           ? Padding(
               padding: const EdgeInsets.all(16),
@@ -192,7 +183,7 @@ class _ViolationDetailsState extends State<refferedDetails> {
             label,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          const SizedBox(height: 8), // Slightly increased spacing
+          const SizedBox(height: 8),
           widget.isEditable
               ? TextField(
                   controller: controller,

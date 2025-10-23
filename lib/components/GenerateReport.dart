@@ -20,7 +20,6 @@ class _ReportDialogState extends State<ReportDialog> {
   List<ViolationRecord> allRecords = [];
   final _dateFormat = DateFormat('yyyy-MM-dd');
 
-  // =================== DATE PICKER ===================
   Future<void> _pickDate(BuildContext context, bool isStartDate) async {
     final picked = await showDatePicker(
       context: context,
@@ -40,7 +39,6 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
-  // =================== FETCH VIOLATIONS ===================
   Future<void> _fetchViolations() async {
     final data = await Integration().fetchViolations();
     if (data != null) {
@@ -64,7 +62,6 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
-  // =================== FILTER RECORDS BY DATE ===================
   List<ViolationRecord> _filterRecords() {
     if (startDate == null || endDate == null) return [];
     return allRecords.where((record) {
@@ -80,7 +77,6 @@ class _ReportDialogState extends State<ReportDialog> {
     }).toList();
   }
 
-  // =================== GENERATE PDF ===================
   Future<void> _generatePdfReport() async {
     if (startDate == null || endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +99,6 @@ class _ReportDialogState extends State<ReportDialog> {
 
     final pdf = pw.Document();
 
-    // =================== TITLE PAGE ===================
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -143,7 +138,6 @@ class _ReportDialogState extends State<ReportDialog> {
       ),
     );
 
-    // =================== TABLE PAGE ===================
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -162,7 +156,6 @@ class _ReportDialogState extends State<ReportDialog> {
     await _savePdfToDevice(pdfBytes);
   }
 
-  // =================== PDF HEADER ===================
   pw.Widget _buildPdfHeader() {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -184,7 +177,6 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
-  // =================== ENHANCED TABLE ===================
   pw.Widget _buildStyledTable(List<ViolationRecord> records) {
     final headers = [
       'Student ID',
@@ -268,7 +260,6 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
-  // =================== AUTO-FITTED CELL ===================
   pw.Widget _buildCell(String text) {
     double fontSize = 10.0;
     if (text.length > 25) fontSize = 9.5;
@@ -292,7 +283,6 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
-  // =================== PDF FOOTER ===================
   pw.Widget _buildPdfFooter() {
     return pw.Align(
       alignment: pw.Alignment.centerRight,
@@ -307,7 +297,6 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
-  // =================== SAVE TO DEVICE ===================
   Future<void> _savePdfToDevice(Uint8List pdfBytes) async {
     try {
       final blob = html.Blob([pdfBytes], 'application/pdf');
@@ -340,7 +329,6 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
-  // =================== UI ===================
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -423,7 +411,6 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
-  // =================== DATE FIELD WIDGET ===================
   Widget _buildDateField({
     required String label,
     required IconData icon,
