@@ -205,7 +205,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           'CMU-SASO DASHBOARD',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
@@ -232,7 +232,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   icon: const Icon(
                     Icons.person,
                     size: 25,
-                    color: Color.fromARGB(255, 10, 44, 158),
+                    color: Color.fromARGB(255, 68, 110, 173),
                   ),
                   onPressed: () => _showAdminMenu(context),
                 ),
@@ -254,7 +254,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 width: sideMenuSize,
                 height: MediaQuery.of(context).size.height,
                 child: Container(
-                  color: Colors.blue[900],
+                  color: const Color.fromARGB(255, 68, 110, 173),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -29,14 +29,14 @@ Future<String> getName() async {
 class User {
   final String name;
   final String email;
-  final String office;
+  final String department;
   final String role;
   final String status;
 
   User({
     required this.name,
     required this.email,
-    required this.office,
+    required this.department,
     required this.role,
     required this.status,
   });
@@ -55,23 +55,18 @@ class _UserManagementPageState extends State<UserMgt> {
   @override
   void initState() {
     super.initState();
-    fetchUser();
+    fetchUsers();
   }
 
-  Future<void> fetchUser() async {
+  Future<void> fetchUsers() async {
     try {
       final box = GetStorage();
-      final userId = box.read('user_id');
-      if (userId == null) {
-        throw Exception("User ID not found in local storage.");
-      }
-
       final serverUrl = GlobalConfiguration().getValue("server_url");
       if (serverUrl == null || serverUrl.isEmpty) {
         throw Exception("Server URL is not configured.");
       }
 
-      final url = Uri.parse('$serverUrl/users/$userId');
+      final url = Uri.parse('$serverUrl/users'); // Endpoint to fetch all users
       final response = await http.get(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -79,22 +74,28 @@ class _UserManagementPageState extends State<UserMgt> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        setState(() {
-          users = [
-            User(
-              name: data['first_name']?.toString() ?? '',
-              email: data['email']?.toString() ?? '',
-              office: data['department']?.toString() ?? '',
-              role: data['role']?.toString() ?? '',
-              status: data['status']?.toString() ?? 'Active',
-            ),
-          ];
-        });
+
+        // Ensure data['users'] exists and is a list
+        if (data['users'] != null && data['users'] is List) {
+          setState(() {
+            users = (data['users'] as List).map((user) {
+              return User(
+                name: user['username']?.toString() ?? '',
+                email: user['email']?.toString() ?? '',
+                department: user['department']?.toString() ?? '',
+                role: user['role']?.toString() ?? '',
+                status: user['status']?.toString() ?? 'Active',
+              );
+            }).toList();
+          });
+        } else {
+          debugPrint("No users found in response");
+        }
       } else {
-        debugPrint("Failed to fetch user: ${response.statusCode}");
+        debugPrint("Failed to fetch users: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      debugPrint("Error fetching users: $e");
     }
   }
 
@@ -102,7 +103,7 @@ class _UserManagementPageState extends State<UserMgt> {
     final user = users[index];
     final nameController = TextEditingController(text: user.name);
     final emailController = TextEditingController(text: user.email);
-    final officeController = TextEditingController(text: user.office);
+    final officeController = TextEditingController(text: user.department);
     String roleValue = user.role;
     String statusValue = user.status;
 
@@ -182,7 +183,7 @@ class _UserManagementPageState extends State<UserMgt> {
                 users[index] = User(
                   name: nameController.text,
                   email: emailController.text,
-                  office: officeController.text,
+                  department: officeController.text,
                   role: roleValue,
                   status: statusValue,
                 );
@@ -599,7 +600,7 @@ class _UserManagementPageState extends State<UserMgt> {
                               ),
                               DataCell(
                                 Text(
-                                  user.office,
+                                  user.department,
                                   style: const TextStyle(fontSize: 20),
                                 ),
                               ),

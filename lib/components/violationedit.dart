@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -42,8 +41,8 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   String? _selectedOffenseLevel;
 
   List<String> imageUrls = [];
-  List<Uint8List> imageBytesList = [];
   bool _isSaving = false;
+  bool _isLoadingImages = false;
 
   @override
   void initState() {
@@ -69,76 +68,53 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         : offenseLevels.first;
   }
 
+  /// ✅ Fetch all images and filter locally by violation_id
   Future<void> _fetchImagesFromBackend() async {
+    setState(() => _isLoadingImages = true);
+
     final baseUrl = GlobalConfiguration().getValue("server_url");
-    final url = Uri.parse(
-      '$baseUrl/violations/image',
-    ).replace(queryParameters: {'violation_id': widget.record.violationId});
+    final imageBaseUrl = GlobalConfiguration().getValue("image_base_url");
 
     try {
+      final url = Uri.parse('$baseUrl/violations/image');
       final response = await http.get(url);
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        List<String> images = [];
+        if (data is Map && data["images"] is List) {
+          final List images = data["images"];
+          final filteredImages = images.where((img) {
+            return img["violation_id"].toString() ==
+                widget.record.violationId.toString();
+          }).toList();
 
-        if (data is List) {
-          images = data.map((e) => e.toString()).toList();
-        } else if (data is Map<String, dynamic> &&
-            data['photo_evidence'] is List) {
-          images = List<String>.from(data['photo_evidence']);
+          // ✅ Safely build image URLs
+          setState(() {
+            imageUrls = filteredImages
+                .map<String>((img) {
+                  String? path = img["image_path"];
+                  if (path == null || path.isEmpty) return "";
+                  if (!path.startsWith("http")) {
+                    if (!path.startsWith("/")) path = "/$path";
+                    path = imageBaseUrl != null ? "$imageBaseUrl$path" : path;
+                  }
+                  return path;
+                })
+                .where((path) => path.isNotEmpty)
+                .toList();
+          });
         }
-
-        setState(() {
-          imageBytesList = images
-              .map(
-                (img) => img.startsWith('http') ? null : _safeDecodeBase64(img),
-              )
-              .whereType<Uint8List>()
-              .toList();
-          imageUrls = images.where((img) => img.startsWith('http')).toList();
-        });
       } else {
         _showSnackBar("Failed to fetch images: ${response.statusCode}");
       }
     } catch (e) {
       _showSnackBar("Error fetching images: $e", color: Colors.red);
+    } finally {
+      setState(() => _isLoadingImages = false);
     }
   }
 
-  Uint8List? _safeDecodeBase64(String base64String) {
-    try {
-      if (base64String.isEmpty) return null;
-      final cleaned = base64String
-          .split(',')
-          .last
-          .replaceAll(RegExp(r'\s+'), '');
-      final padding = cleaned.length % 4;
-      final normalized = padding > 0
-          ? cleaned.padRight(cleaned.length + (4 - padding), '=')
-          : cleaned;
-      return base64Decode(normalized);
-    } catch (e) {
-      debugPrint("Invalid Base64: $e");
-      return null;
-    }
-  }
-
-  void _showZoomableImage({Uint8List? bytes, String? url}) {
-    Widget imageWidget;
-    if (bytes != null) {
-      imageWidget = PhotoView(
-        imageProvider: MemoryImage(bytes),
-        backgroundDecoration: const BoxDecoration(color: Colors.black),
-      );
-    } else if (url != null) {
-      imageWidget = PhotoView(
-        imageProvider: NetworkImage(url),
-        backgroundDecoration: const BoxDecoration(color: Colors.black),
-      );
-    } else {
-      return;
-    }
-
+  void _showZoomableImage(String imageUrl) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -146,7 +122,10 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         insetPadding: EdgeInsets.zero,
         child: Stack(
           children: [
-            imageWidget,
+            PhotoView(
+              imageProvider: NetworkImage(imageUrl),
+              backgroundDecoration: const BoxDecoration(color: Colors.black),
+            ),
             Positioned(
               top: 40,
               right: 20,
@@ -212,11 +191,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
               vertical: 8,
             ),
           ),
-          style: const TextStyle(
-            fontWeight: FontWeight.normal,
-            fontSize: 16,
-            color: Colors.black,
-          ),
           items: options
               .map(
                 (option) =>
@@ -243,41 +217,44 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   }
 
   Widget _buildImageGrid() {
-    final allImagesCount = imageBytesList.length + imageUrls.length;
+    if (_isLoadingImages) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    if (allImagesCount == 0) {
-      return const Center(child: Text("No photo evidence available."));
+    if (imageUrls.isEmpty) {
+      return const Center(
+        child: Text(
+          "No photo evidence available.",
+          style: TextStyle(color: Colors.black54),
+        ),
+      );
     }
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: allImagesCount,
+      itemCount: imageUrls.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
       itemBuilder: (context, index) {
-        if (index < imageBytesList.length) {
-          final bytes = imageBytesList[index];
-          return GestureDetector(
-            onTap: () => _showZoomableImage(bytes: bytes),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.memory(bytes, fit: BoxFit.cover),
+        final url = imageUrls[index];
+        return GestureDetector(
+          onTap: () => _showZoomableImage(url),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.broken_image, color: Colors.grey),
+              ),
             ),
-          );
-        } else {
-          final url = imageUrls[index - imageBytesList.length];
-          return GestureDetector(
-            onTap: () => _showZoomableImage(url: url),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(url, fit: BoxFit.cover),
-            ),
-          );
-        }
+          ),
+        );
       },
     );
   }
@@ -290,20 +267,12 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       '$baseUrl/violations/update/${widget.record.violationId}',
     );
 
-    String photoEvidenceBase64 = '';
-    if (imageBytesList.isNotEmpty) {
-      photoEvidenceBase64 = imageBytesList
-          .map((e) => base64Encode(e))
-          .join(',');
-    }
-
     final updatedData = {
       "id": widget.record.violationId,
       "offense_level": _selectedOffenseLevel ?? '',
       "status": _selectedStatus ?? '',
       "remarks": _remarksController.text,
       "reported_by": _reportedByController.text,
-      "photo_evidence": photoEvidenceBase64,
     };
 
     try {
@@ -429,7 +398,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                 _buildEditableRemarks(),
                 const SizedBox(height: 20),
                 const Text(
-                  "Photo Evidence",
+                  "Photo Evidence (Optional)",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 10),

@@ -232,7 +232,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           'Violation Logs',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
@@ -262,7 +262,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                       icon: const Icon(
                         Icons.person,
                         size: 25,
-                        color: Color.fromARGB(255, 10, 44, 158),
+                        color: Color.fromARGB(255, 68, 110, 173),
                       ),
                       onPressed: () {},
                     ),
@@ -490,7 +490,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
-      color: Colors.blue[900],
+      color: const Color.fromARGB(255, 68, 110, 173),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

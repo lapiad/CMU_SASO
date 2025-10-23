@@ -1,101 +1,134 @@
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_application_1/classes/Integrations.dart';
+import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
-import 'package:flutter_application_1/pages/user_MGT.dart';
+import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/user_mgt.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-Future<String> getName() async {
-  final box = GetStorage();
-  final url = Uri.parse(
-    '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
-  ); // Replace with your FastAPI URL
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    print(data['first_name']);
-    return data['first_name'];
-  } else {
-    // error message
-    return "null";
-  }
-}
-
-const List<Map<String, dynamic>> cases = [
-  {
-    'priority': 'High',
-    'status': 'Scheduled Hearing',
-    'name': 'John Doe',
-    'id': '20230001',
-    'violation': 'Cheating',
-    'details': 'Caught cheating during midterm exams. Evidence submitted.',
-    'referred': '2024-06-01',
-  },
-  {
-    'priority': 'Medium',
-    'status': 'Under Review',
-    'name': 'Jane Smith',
-    'id': '20230002',
-    'violation': 'Plagiarism',
-    'details': 'Plagiarized assignment. Awaiting further investigation.',
-    'referred': '2024-06-03',
-  },
-  {
-    'priority': 'Low',
-    'status': 'Pending',
-    'name': 'Alice Johnson',
-    'id': '20230003',
-    'violation': 'Disruptive Behavior',
-    'details': 'Disrupted class repeatedly. Awaiting decision.',
-    'referred': '2024-06-05',
-  },
-];
-
-double expandedClass = 0.0;
+import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:screenshot/screenshot.dart';
 
 class SummaryReportsPage extends StatefulWidget {
   const SummaryReportsPage({super.key});
+
   @override
   State<SummaryReportsPage> createState() => _SummaryReportsPageState();
 }
 
 class _SummaryReportsPageState extends State<SummaryReportsPage> {
-  Future<String> getName() async {
-    final box = GetStorage();
-    final url = Uri.parse(
-      '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
-    ); // Replace with your FastAPI URL
-    final response = await http.get(url);
+  List<ViolationRecord> allRecords = [];
+  double sideMenuSize = 0.0;
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print(data['first_name']);
-      return data['first_name'];
-    } else {
-      // error message
-      return "null";
-    }
+  final ScreenshotController _pieController = ScreenshotController();
+  final ScreenshotController _barController = ScreenshotController();
+  final ScreenshotController _lineController = ScreenshotController();
+
+  final Map<String, String> departmentNames = {
+    'CBA': 'College of Business Administration',
+    'CCS': 'College of Computer Science',
+    'COA': 'College of Accountancy',
+    'CTE': 'College of Teachers Education',
+    'CAS': 'College of Arts & Science',
+    'CCJE': 'College of Criminal Justice Education',
+  };
+
+  final Map<String, Color> departmentColors = {
+    'CAS': Colors.grey,
+    'CBA': Colors.cyan,
+    'CCS': Colors.orange,
+    'COA': Colors.yellow,
+    'CTE': Colors.indigo,
+    'CCJE': Colors.red,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    Integration().fetchViolations().then((data) {
+      if (data != null) {
+        setState(() {
+          allRecords = data
+              .map<ViolationRecord>(
+                (item) => ViolationRecord(
+                  studentName: item['student_name'] ?? '',
+                  studentId: item['student_id'] ?? '',
+                  violation: item['violation_type'] ?? '',
+                  status: item['status'] ?? '',
+                  role: item['role'] ?? '',
+                  reportedBy: item['reported_by'] ?? '',
+                  dateTime: item['date_of_incident'] ?? '',
+                  department: item['student_department'] ?? '',
+                  base64Imagestring: item['photo_evidence'] ?? '',
+                  offenseLevel: item['offense_level'] ?? '',
+                  violationId: item['id'] ?? '',
+                ),
+              )
+              .toList();
+        });
+      }
+    });
   }
 
-  Map<String, int> getViolationDistribution() {
-    final Map<String, int> counts = {};
-    for (var c in cases) {
-      String violation = c['violation'] as String;
-      counts[violation] = (counts[violation] ?? 0) + 1;
+  Map<String, int> getDepartmentDistribution() {
+    final counts = <String, int>{};
+    for (var record in allRecords) {
+      final dept = (record.department ?? '').toUpperCase();
+      if (dept.isNotEmpty) counts[dept] = (counts[dept] ?? 0) + 1;
     }
     return counts;
   }
 
-  int countByStatus(String statusMatch) {
-    return cases
-        .where((c) => (c['status'] as String).contains(statusMatch))
-        .length;
+  Map<String, int> getViolationTypeDistribution() {
+    final counts = <String, int>{};
+    for (var record in allRecords) {
+      final type = record.violation.isNotEmpty ? record.violation : 'Unknown';
+      counts[type] = (counts[type] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  Map<String, int> getWeeklyViolationCounts() {
+    final weeklyCount = <String, int>{};
+    final now = DateTime.now();
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      weeklyCount[DateFormat('yyyy-MM-dd').format(date)] = 0;
+    }
+    for (var record in allRecords) {
+      try {
+        final date = DateTime.parse(record.dateTime);
+        final formatted = DateFormat('yyyy-MM-dd').format(date);
+        if (weeklyCount.containsKey(formatted)) {
+          weeklyCount[formatted] = weeklyCount[formatted]! + 1;
+        }
+      } catch (_) {}
+    }
+    return weeklyCount;
+  }
+
+  Future<String> getName() async {
+    final box = GetStorage();
+    final url = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/users/${box.read('user_id')}',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['first_name'];
+    } else {
+      return "User";
+    }
   }
 
   void _showAdminMenu(BuildContext context) async {
@@ -105,30 +138,22 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       items: [
         const PopupMenuItem(
           value: 'profile',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.person, size: 30),
-                SizedBox(width: 16),
-                Text('Profile Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.person, size: 30),
+              SizedBox(width: 16),
+              Text('Profile Settings', style: TextStyle(fontSize: 20)),
+            ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'signout',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 30),
-                SizedBox(width: 16),
-                Text("Sign Out", style: TextStyle(fontSize: 20)),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.logout, size: 30),
+              SizedBox(width: 16),
+              Text("Sign Out", style: TextStyle(fontSize: 20)),
+            ],
           ),
         ),
       ],
@@ -137,21 +162,21 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     if (result == 'profile') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
       );
-    }
-
-    if (result == 'signout') {
+    } else if (result == 'signout') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (context) => const Login()),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final distribution = getViolationDistribution();
+    final departmentDist = getDepartmentDistribution();
+    final typeDist = getViolationTypeDistribution();
+    final weeklyData = getWeeklyViolationCounts();
 
     return Scaffold(
       appBar: AppBar(
@@ -159,11 +184,9 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           'Summary of Reports',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
-          padding: EdgeInsets.zero,
           onPressed: () {
             setState(() {
               sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
@@ -171,442 +194,546 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           },
         ),
         actions: [
-          Row(
-            children: [
-              FutureBuilder(
-                future: getName(),
-                builder: (context, snapshot) {
-                  return Text(
-                    snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: TextStyle(
+          FutureBuilder(
+            future: getName(),
+            builder: (context, snapshot) {
+              return Row(
+                children: [
+                  Text(
+                    snapshot.data ?? "Loading...",
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                       color: Colors.white,
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: 16),
-              CircleAvatar(
-                backgroundColor: Colors.white,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.person,
-                    size: 25,
-                    color: Color.fromARGB(255, 10, 44, 158),
                   ),
-                  onPressed: () => _showAdminMenu(context),
-                ),
-              ),
-              const SizedBox(width: 40),
-            ],
+                  const SizedBox(width: 16),
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.person,
+                        size: 25,
+                        color: Color.fromARGB(255, 68, 110, 173),
+                      ),
+                      onPressed: () => _showAdminMenu(context),
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                ],
+              );
+            },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.zero,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (sideMenuSize != 0.0)
-              SizedBox(
-                width: sideMenuSize,
-                height: 900,
-                child: Container(
-                  decoration: BoxDecoration(color: Colors.blue[900]),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 100,
-                        height: 100,
-                        child: Image.asset(
-                          'images/logos.png',
-                          height: 80,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "  CMU_SASO DRMS",
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-
-                      const Divider(color: Colors.white),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'GENERAL',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-
-                      ListTile(
-                        leading: const Icon(
-                          Icons.home,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'Dashboard',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Dashboard(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      ListTile(
-                        leading: const Icon(
-                          Icons.list_alt,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'Violation Logs',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ViolationLogsPage(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      ListTile(
-                        leading: const Icon(
-                          Icons.pie_chart,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'Summary of Reports',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SummaryReportsPage(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const Divider(color: Colors.white),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'ADMINISTRATION',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-
-                      ListTile(
-                        leading: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        title: const Text(
-                          'User management',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => UserMgt()),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: Row(
+        children: [
+          if (sideMenuSize != 0.0) _buildSideMenu(context),
+          Expanded(
+            child: allRecords.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
                       children: [
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 300,
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Violation Types Distribution",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Expanded(
-                                          child: PieChart(
-                                            PieChartData(
-                                              sections: distribution.entries
-                                                  .toList()
-                                                  .asMap()
-                                                  .entries
-                                                  .map((entry) {
-                                                    int index = entry.key;
-                                                    String key =
-                                                        entry.value.key;
-                                                    int value =
-                                                        entry.value.value;
-                                                    return PieChartSectionData(
-                                                      value: value.toDouble(),
-                                                      title: key,
-                                                      color:
-                                                          Colors
-                                                              .primaries[index %
-                                                              Colors
-                                                                  .primaries
-                                                                  .length],
-                                                      radius: 50,
-                                                      titleStyle:
-                                                          const TextStyle(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                    );
-                                                  })
-                                                  .toList(),
-                                              borderData: FlBorderData(
-                                                show: false,
-                                              ),
-                                              centerSpaceRadius: 40,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Screenshot(
+                                controller: _pieController,
+                                child: _buildPieChartCard(
+                                  "Total Violations per Department",
+                                  departmentDist,
                                 ),
                               ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                height: 300,
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Weekly Violation Trends",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Expanded(
-                                          child: BarChart(
-                                            BarChartData(
-                                              alignment:
-                                                  BarChartAlignment.spaceAround,
-                                              maxY: 20,
-                                              barGroups: [
-                                                BarChartGroupData(
-                                                  x: 1,
-                                                  barRods: [
-                                                    BarChartRodData(
-                                                      toY: 14,
-                                                      color: Colors.red,
-                                                      width: 20,
-                                                    ),
-                                                    BarChartRodData(
-                                                      toY: 16,
-                                                      color: Colors.orange,
-                                                      width: 20,
-                                                    ),
-                                                  ],
-                                                ),
-                                                BarChartGroupData(
-                                                  x: 2,
-                                                  barRods: [
-                                                    BarChartRodData(
-                                                      toY: 18,
-                                                      color: Colors.red,
-                                                      width: 20,
-                                                    ),
-                                                    BarChartRodData(
-                                                      toY: 17,
-                                                      color: Colors.blueAccent,
-                                                      width: 20,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Screenshot(
+                                controller: _barController,
+                                child: _buildBarChartCard(
+                                  "Violations per Type",
+                                  typeDist,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 300,
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Offense Level Distribution",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        buildProgressRow(
-                                          "First Offense",
-                                          45,
-                                          Colors.blue,
-                                        ),
-                                        buildProgressRow(
-                                          "Second Offense",
-                                          50,
-                                          Colors.blueAccent,
-                                        ),
-                                        buildProgressRow(
-                                          "Third Offense",
-                                          25,
-                                          Colors.lightBlue,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                height: 300,
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Most Common Violations",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        buildViolationItem(
-                                          "Late Attendance",
-                                          5,
-                                        ),
-                                        buildViolationItem(
-                                          "Improper Uniform",
-                                          10,
-                                        ),
-                                        buildViolationItem("Cheating", 4),
-                                        buildViolationItem("Plagiarism", 25),
-                                        buildViolationItem(
-                                          "Disruptive Behavior",
-                                          6,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 30),
+                        Screenshot(
+                          controller: _lineController,
+                          child: _buildWeeklyLineChart(weeklyData),
                         ),
                       ],
                     ),
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _generatePdfAndSave,
+        icon: const Icon(Icons.picture_as_pdf),
+        label: const Text("Export PDF"),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
+
+  Widget _buildSideMenu(BuildContext context) {
+    return Container(
+      width: sideMenuSize,
+      color: const Color.fromARGB(255, 68, 110, 173),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Image.asset('images/logos.png', color: Colors.white, height: 80),
+          const SizedBox(height: 10),
+          const Text(
+            "CMU_SASO DRMS",
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const Divider(color: Colors.white),
+          const Text(
+            'GENERAL',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          _menuItem(Icons.home, 'Dashboard', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const Dashboard()),
+            );
+          }),
+          _menuItem(Icons.list_alt, 'Violation Logs', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ViolationLogsPage()),
+            );
+          }),
+          _menuItem(Icons.pie_chart, 'Summary of Reports', () {}),
+          const Divider(color: Colors.white),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'ADMINISTRATION',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          _menuItem(Icons.person, 'User Management', () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const UserMgt()),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.white, fontSize: 18),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  // ---------------- PDF GENERATION -----------------
+  Future<void> _generatePdfAndSave() async {
+    try {
+      final pieImg = await _pieController.capture();
+      final barImg = await _barController.capture();
+      final lineImg = await _lineController.capture();
+
+      final logoData = await rootBundle.load('images/logos.png');
+      final logoBytes = logoData.buffer.asUint8List();
+
+      final pdf = pw.Document();
+      final departmentDist = getDepartmentDistribution();
+      final typeDist = getViolationTypeDistribution();
+      final weeklyData = getWeeklyViolationCounts();
+      final totalViolations = allRecords.length;
+      final topDept = departmentDist.entries.isEmpty
+          ? "N/A"
+          : departmentDist.entries
+                .reduce((a, b) => a.value > b.value ? a : b)
+                .key;
+      final topType = typeDist.entries.isEmpty
+          ? "N/A"
+          : typeDist.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+
+      final now = DateTime.now();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+          footer: (context) => pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Text(
+              'Page ${context.pageNumber} of ${context.pagesCount}',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey),
+            ),
+          ),
+          build: (context) => [
+            // Header
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      "CITY OF MALABON UNIVERSITY",
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 14,
+                        color: PdfColors.blue900,
+                      ),
+                    ),
+                    pw.Text(
+                      "Student Affairs & Services Office",
+                      style: const pw.TextStyle(
+                        fontSize: 11,
+                        color: PdfColors.blueGrey700,
+                      ),
+                    ),
+                    pw.Text(
+                      "Disciplinary Records Management System",
+                      style: const pw.TextStyle(
+                        fontSize: 9,
+                        color: PdfColors.blueGrey600,
+                      ),
+                    ),
                   ],
                 ),
+                pw.Container(
+                  height: 45,
+                  width: 45,
+                  child: pw.Image(pw.MemoryImage(logoBytes)),
+                ),
+              ],
+            ),
+            pw.Divider(thickness: 1.5, color: PdfColors.blueGrey400),
+            pw.SizedBox(height: 12),
+
+            // Title
+            pw.Center(
+              child: pw.Text(
+                'SUMMARY REPORT OF STUDENT VIOLATIONS',
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue800,
+                ),
               ),
+            ),
+            pw.SizedBox(height: 4),
+            pw.Center(
+              child: pw.Text(
+                'Generated on ${DateFormat('MMMM dd, yyyy – hh:mm a').format(now)}',
+                style: const pw.TextStyle(
+                  fontSize: 9,
+                  color: PdfColors.grey600,
+                ),
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            // Summary Paragraph
+            pw.Container(
+              decoration: pw.BoxDecoration(
+                color: PdfColors.blue50,
+                borderRadius: pw.BorderRadius.circular(6),
+                border: pw.Border.all(color: PdfColors.blue200, width: 0.5),
+              ),
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text(
+                "As of ${DateFormat('MMMM yyyy').format(now)}, the Student Affairs and Services Office recorded a total of $totalViolations student violation cases. "
+                "The most common violation is '${topType}', with the highest number of incidents reported from the '${topDept}' department. "
+                "This report summarizes department-wise, type-wise, and weekly violation trends to support informed decision-making.",
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+                textAlign: pw.TextAlign.justify,
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            // Charts on the first page
+            _sectionRow("Violations per Department", pieImg, departmentDist),
+            _sectionRow("Violations per Type", barImg, typeDist),
+            _sectionRow("Weekly Violations Overview", lineImg, weeklyData),
+
+            pw.SizedBox(height: 20),
+            pw.Divider(thickness: 1),
+            pw.Align(
+              alignment: pw.Alignment.centerLeft,
+              child: pw.Text(
+                "Prepared automatically by CMU_SASO DRMS",
+                style: const pw.TextStyle(
+                  fontSize: 9,
+                  color: PdfColors.grey700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      final bytes = await pdf.save();
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename:
+            'Summary_Report_${DateFormat("yyyyMMdd_HHmm").format(now)}.pdf',
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Organized 2-page PDF generated!')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ Error generating PDF: $e')));
+      }
+    }
+  }
+
+  pw.Widget _sectionRow(String title, Uint8List? image, Map<String, int> data) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          title,
+          style: pw.TextStyle(
+            fontSize: 13,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.blue800,
+          ),
+        ),
+        pw.SizedBox(height: 6),
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            if (image != null)
+              pw.Container(
+                width: 230,
+                height: 150,
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.grey400),
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Image(pw.MemoryImage(image), fit: pw.BoxFit.contain),
+              ),
+            pw.SizedBox(width: 10),
+            pw.Expanded(child: _buildCompactSummaryTable(data)),
+          ],
+        ),
+        pw.SizedBox(height: 10),
+      ],
+    );
+  }
+
+  pw.Widget _buildCompactSummaryTable(Map<String, int> data) {
+    final headers = ['Category', 'Count'];
+    final rows = data.entries.map((e) => [e.key, e.value.toString()]).toList();
+
+    return pw.TableHelper.fromTextArray(
+      headers: headers,
+      data: rows,
+      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.3),
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        color: PdfColors.white,
+        fontSize: 9,
+      ),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.blue700),
+      oddRowDecoration: const pw.BoxDecoration(
+        color: PdfColor.fromInt(0xFFF5F5F5),
+      ),
+      cellStyle: const pw.TextStyle(fontSize: 8),
+      cellAlignment: pw.Alignment.centerLeft,
+      columnWidths: {
+        0: const pw.FlexColumnWidth(3),
+        1: const pw.FlexColumnWidth(1),
+      },
+    );
+  }
+
+  // ---------------- CHART BUILDERS ----------------
+  Widget _buildPieChartCard(String title, Map<String, int> data) {
+    final entries = data.entries.toList();
+    return _chartContainer(
+      title,
+      PieChart(
+        PieChartData(
+          sections: List.generate(entries.length, (i) {
+            final key = entries[i].key;
+            final value = entries[i].value;
+            return PieChartSectionData(
+              color:
+                  departmentColors[key] ??
+                  Colors.primaries[i % Colors.primaries.length],
+              value: value.toDouble(),
+              title: "$key\n$value",
+              radius: 90,
+              titleStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            );
+          }),
+          borderData: FlBorderData(show: false),
+          centerSpaceRadius: 0,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBarChartCard(String title, Map<String, int> data) {
+    final entries = data.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final colors = [
+      Colors.red,
+      Colors.orange,
+      Colors.yellow,
+      Colors.green,
+      Colors.blue,
+      Colors.purple,
+    ];
+
+    return _chartContainer(
+      title,
+      BarChart(
+        BarChartData(
+          borderData: FlBorderData(show: false),
+          gridData: FlGridData(show: true, drawVerticalLine: false),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, _) {
+                  if (value.toInt() < entries.length) {
+                    return Text(
+                      entries[value.toInt()].key,
+                      style: const TextStyle(fontSize: 10),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+          barGroups: List.generate(entries.length, (i) {
+            return BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: entries[i].value.toDouble(),
+                  color: colors[i % colors.length],
+                  width: 18,
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeeklyLineChart(Map<String, int> weeklyData) {
+    final dates = weeklyData.keys.toList();
+    final counts = weeklyData.values.toList();
+
+    return _chartContainer(
+      "Weekly Violation Reports",
+      LineChart(
+        LineChartData(
+          gridData: FlGridData(show: true, drawVerticalLine: false),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, _) {
+                  if (value.toInt() < dates.length) {
+                    return Text(
+                      DateFormat(
+                        'E',
+                      ).format(DateTime.parse(dates[value.toInt()])),
+                      style: const TextStyle(fontSize: 12),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              isCurved: true,
+              color: Colors.blueAccent,
+              spots: List.generate(
+                dates.length,
+                (i) => FlSpot(i.toDouble(), counts[i].toDouble()),
+              ),
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: FlDotData(show: true),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-Widget buildProgressRow(String title, int value, Color color) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(title),
-      const SizedBox(height: 4),
-      LinearProgressIndicator(
-        value: value / 100,
-        color: color,
-        backgroundColor: Colors.grey[200],
+  Widget _chartContainer(String title, Widget chart) {
+    return Container(
+      height: 400,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black, width: 2),
       ),
-      const SizedBox(height: 8),
-    ],
-  );
-}
-
-Widget buildViolationItem(String violation, int count) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(violation, style: const TextStyle(fontSize: 19)),
-        Text(
-          count.toString(),
-          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-        ),
-      ],
-    ),
-  );
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E88E5),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            padding: const EdgeInsets.all(10),
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            child: Padding(padding: const EdgeInsets.all(8), child: chart),
+          ),
+        ],
+      ),
+    );
+  }
 }
