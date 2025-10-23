@@ -21,7 +21,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
   String? _selectedRole;
   String? _selectedDepartment;
 
-  final List<String> _roles = ['Admin', 'guard'];
+  final List<String> _roles = ['admin', 'guard'];
   final List<String> _departments = [
     'Security Department',
     'Guard Department',

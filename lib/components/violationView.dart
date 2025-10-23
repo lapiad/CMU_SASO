@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
@@ -35,7 +36,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   void initState() {
     super.initState();
     _initializeControllers();
-    _fetchImagesFromBackend();
+    _fetchImagesFromBackend(); // fetch images when page loads
   }
 
   void _initializeControllers() {
@@ -43,14 +44,29 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     _studentNameController.text = widget.record.studentName;
     _departmentController.text = widget.record.department;
     _reportedByController.text = widget.record.reportedBy;
-    _roleController.text = widget.record.role ?? ""; // Fixed Role connection
+    _roleController.text = widget.record.role;
     _statusController.text = widget.record.status ?? "";
     _offenseLevelController.text = widget.record.offenseLevel ?? "";
-    _dateTimeController.text = widget.record.dateTime;
+    _dateTimeController.text = _formatDateTime(widget.record.dateTime);
     _remarksController.text = widget.record.remarks ?? "";
   }
 
+  String _formatDateTime(String dateTimeStr) {
+    try {
+      DateTime dt = DateTime.parse(dateTimeStr).toLocal();
+      return DateFormat('MMM dd, yyyy hh:mm a').format(dt);
+    } catch (e) {
+      debugPrint('Date format error: $e');
+      return dateTimeStr;
+    }
+  }
+
   Future<void> _fetchImagesFromBackend() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
       final url = Uri.parse(
@@ -64,37 +80,25 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
 
         if (data is List && data.isNotEmpty) {
           if (data.first.toString().startsWith("data:image")) {
-            final tempImages = <Uint8List>[];
-            for (var item in data) {
-              final bytes = _decodeBase64(item.toString());
-              if (bytes != null) tempImages.add(bytes);
-            }
-            setState(() {
-              imageBytesList = tempImages;
-              imageUrls = [];
-              _errorMessage = null;
-            });
+            // Base64 images
+            imageBytesList = data
+                .map<Uint8List?>((item) => _decodeBase64(item.toString()))
+                .whereType<Uint8List>()
+                .toList();
+            imageUrls = [];
           } else {
-            setState(() {
-              imageUrls = List<String>.from(data);
-              imageBytesList = [];
-              _errorMessage = null;
-            });
+            // Network images
+            imageUrls = List<String>.from(data);
+            imageBytesList = [];
           }
         } else {
-          setState(() {
-            _errorMessage = "No photo evidence available.";
-          });
+          _errorMessage = "No photo evidence available.";
         }
       } else {
-        setState(() {
-          _errorMessage = "Failed to fetch images: ${response.statusCode}";
-        });
+        _errorMessage = "Failed to fetch images: ${response.statusCode}";
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = "Error fetching images: $e";
-      });
+      _errorMessage = "Error fetching images: $e";
     } finally {
       setState(() {
         _isLoading = false;
@@ -105,7 +109,9 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   Uint8List? _decodeBase64(String base64String) {
     try {
       if (base64String.isEmpty) return null;
-      final cleaned = base64String.split(',').last.trim();
+      final cleaned = base64String.contains(',')
+          ? base64String.split(',').last.trim()
+          : base64String.trim();
       final padding = cleaned.length % 4;
       final normalized = padding > 0
           ? cleaned.padRight(cleaned.length + (4 - padding), '=')
@@ -183,7 +189,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
           decoration: InputDecoration(
             labelText: label,
             filled: true,
-            fillColor: Colors.white, // White background
+            fillColor: Colors.white,
             border: const OutlineInputBorder(),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -200,7 +206,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white, // White background
+        color: Colors.white,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.black26),
       ),
@@ -215,60 +221,88 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
 
   Widget _buildImageGrid() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          border: Border.all(color: Colors.black26),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const CircularProgressIndicator(),
+      );
     }
 
-    if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
+    if (_errorMessage != null ||
+        (imageBytesList.isEmpty && imageUrls.isEmpty)) {
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          border: Border.all(color: Colors.black26),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          _errorMessage ?? "No photo evidence available.",
+          style: const TextStyle(color: Colors.black54, fontSize: 14),
+        ),
+      );
     }
 
     final totalImages = imageBytesList.length + imageUrls.length;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: totalImages,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemBuilder: (context, index) {
-        if (index < imageBytesList.length) {
-          final imageBytes = imageBytesList[index];
-          return GestureDetector(
-            onTap: () => _showZoomableImage(imageBytes),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.memory(
-                imageBytes,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 120,
-              ),
-            ),
-          );
-        } else {
-          final imageUrl = imageUrls[index - imageBytesList.length];
-          return GestureDetector(
-            onTap: () => _showZoomableNetworkImage(imageUrl),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 120,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
-                  );
-                },
-              ),
-            ),
-          );
-        }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = constraints.maxWidth < 600 ? 2 : 3;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: totalImages,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1,
+          ),
+          itemBuilder: (context, index) {
+            if (index < imageBytesList.length) {
+              final imageBytes = imageBytesList[index];
+              return GestureDetector(
+                onTap: () => _showZoomableImage(imageBytes),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    imageBytes,
+                    fit: BoxFit.contain, // <-- Changed here
+                  ),
+                ),
+              );
+            } else {
+              final imageUrl = imageUrls[index - imageBytesList.length];
+              return GestureDetector(
+                onTap: () => _showZoomableNetworkImage(imageUrl),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain, // <-- Changed here
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            }
+          },
+        );
       },
     );
   }

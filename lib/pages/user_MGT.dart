@@ -72,14 +72,13 @@ class _UserManagementPageState extends State<UserMgt> {
       }
 
       final url = Uri.parse('$serverUrl/users/$userId');
-
-      final headers = {'Content-Type': 'application/json'};
-
-      final response = await http.get(url, headers: headers);
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         setState(() {
           users = [
             User(
@@ -87,17 +86,15 @@ class _UserManagementPageState extends State<UserMgt> {
               email: data['email']?.toString() ?? '',
               office: data['department']?.toString() ?? '',
               role: data['role']?.toString() ?? '',
-              status: data['status']?.toString() ?? 'Inactive',
+              status: data['status']?.toString() ?? 'Active',
             ),
           ];
         });
       } else {
         debugPrint("Failed to fetch user: ${response.statusCode}");
-        setState(() => users = []);
       }
     } catch (e) {
       debugPrint("Error fetching user: $e");
-      setState(() => users = []);
     }
   }
 
@@ -106,8 +103,6 @@ class _UserManagementPageState extends State<UserMgt> {
     final nameController = TextEditingController(text: user.name);
     final emailController = TextEditingController(text: user.email);
     final officeController = TextEditingController(text: user.office);
-
-    // Role & Status values
     String roleValue = user.role;
     String statusValue = user.status;
 
@@ -115,8 +110,8 @@ class _UserManagementPageState extends State<UserMgt> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: const [
+        title: const Row(
+          children: [
             Icon(Icons.edit, color: Colors.blue, size: 30),
             SizedBox(width: 8),
             Text(
@@ -127,9 +122,7 @@ class _UserManagementPageState extends State<UserMgt> {
         ),
         content: SingleChildScrollView(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Left column
               Expanded(
                 child: Column(
                   children: [
@@ -139,8 +132,6 @@ class _UserManagementPageState extends State<UserMgt> {
                 ),
               ),
               const SizedBox(width: 16),
-
-              /// Right column
               Expanded(
                 child: Column(
                   children: [
@@ -154,9 +145,7 @@ class _UserManagementPageState extends State<UserMgt> {
                             (r) => DropdownMenuItem(value: r, child: Text(r)),
                           )
                           .toList(),
-                      onChanged: (value) {
-                        if (value != null) roleValue = value;
-                      },
+                      onChanged: (value) => roleValue = value ?? roleValue,
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
@@ -167,9 +156,7 @@ class _UserManagementPageState extends State<UserMgt> {
                             (s) => DropdownMenuItem(value: s, child: Text(s)),
                           )
                           .toList(),
-                      onChanged: (value) {
-                        if (value != null) statusValue = value;
-                      },
+                      onChanged: (value) => statusValue = value ?? statusValue,
                     ),
                   ],
                 ),
@@ -177,26 +164,18 @@ class _UserManagementPageState extends State<UserMgt> {
             ],
           ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               "Cancel",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
               backgroundColor: Colors.blue[900],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              foregroundColor: Colors.white,
             ),
             onPressed: () {
               setState(() {
@@ -205,7 +184,7 @@ class _UserManagementPageState extends State<UserMgt> {
                   email: emailController.text,
                   office: officeController.text,
                   role: roleValue,
-                  status: statusValue, // update status now
+                  status: statusValue,
                 );
               });
               Navigator.pop(context);
@@ -213,11 +192,7 @@ class _UserManagementPageState extends State<UserMgt> {
             icon: const Icon(Icons.save, size: 20),
             label: const Text(
               "Save",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -230,8 +205,8 @@ class _UserManagementPageState extends State<UserMgt> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: const [
+        title: const Row(
+          children: [
             Icon(Icons.warning, color: Colors.red, size: 30),
             SizedBox(width: 8),
             Text(
@@ -240,52 +215,28 @@ class _UserManagementPageState extends State<UserMgt> {
             ),
           ],
         ),
-        content: Row(
-          children: [
-            const Icon(Icons.person, size: 35, color: Colors.black),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "Are you sure you want to delete '${users[index].name}'?",
-                style: const TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
+        content: Text(
+          "Are you sure you want to delete '${users[index].name}'?",
+          style: const TextStyle(fontSize: 18),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
               "Cancel",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF0033A0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              setState(() {
-                users.removeAt(index);
-              });
+              setState(() => users.removeAt(index));
               Navigator.pop(context);
             },
-            icon: const Icon(Icons.delete, size: 20, color: Colors.white),
+            icon: const Icon(Icons.delete, color: Colors.white),
             label: const Text(
               "Delete",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -293,24 +244,21 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      filled: true,
-      fillColor: Colors.grey[100],
-    );
-  }
+  InputDecoration _inputDecoration(String label) => InputDecoration(
+    labelText: label,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    filled: true,
+    fillColor: Colors.grey[100],
+  );
 
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: TextField(
-        controller: controller,
-        decoration: _inputDecoration(label),
-      ),
-    );
-  }
+  Widget _buildTextField(String label, TextEditingController controller) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: TextField(
+          controller: controller,
+          decoration: _inputDecoration(label),
+        ),
+      );
 
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
@@ -319,30 +267,22 @@ class _UserManagementPageState extends State<UserMgt> {
       items: [
         const PopupMenuItem(
           value: 'profile',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.person, size: 30),
-                SizedBox(width: 16),
-                Text('Profile Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.person),
+              SizedBox(width: 16),
+              Text('Profile Settings'),
+            ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'signout',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 30),
-                SizedBox(width: 16),
-                Text("Sign Out", style: TextStyle(fontSize: 20)),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.logout),
+              SizedBox(width: 16),
+              Text('Sign Out'),
+            ],
           ),
         ),
       ],
@@ -353,9 +293,7 @@ class _UserManagementPageState extends State<UserMgt> {
         context,
         MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
       );
-    }
-
-    if (result == 'signout') {
+    } else if (result == 'signout') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Login()),
@@ -372,41 +310,26 @@ class _UserManagementPageState extends State<UserMgt> {
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
         backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.black,
         leading: IconButton(
-          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
-          padding: EdgeInsets.zero,
-          onPressed: () {
-            setState(() {
-              sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
-            });
-          },
+          icon: const Icon(Icons.menu, color: Colors.white, size: 40),
+          onPressed: () =>
+              setState(() => sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0),
         ),
         actions: [
           Row(
             children: [
               FutureBuilder<String>(
                 future: getName(),
-                builder: (context, snapshot) {
-                  return Text(
-                    snapshot.hasData ? snapshot.data! : "Loading...",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+                builder: (context, snapshot) => Text(
+                  snapshot.data ?? "Loading...",
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
               const SizedBox(width: 16),
               CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.person,
-                    size: 25,
-                    color: Color.fromARGB(255, 10, 44, 158),
-                  ),
+                  icon: const Icon(Icons.person, color: Color(0xFF0A2C9E)),
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
@@ -416,7 +339,6 @@ class _UserManagementPageState extends State<UserMgt> {
         ],
       ),
       body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (sideMenuSize != 0.0)
             SizedBox(
@@ -435,7 +357,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 10),
                     const Text(
                       "  CMU_SASO DRMS",
                       style: TextStyle(
@@ -444,7 +366,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 30),
+
                     const Divider(color: Colors.white),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -457,7 +379,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+
                     ListTile(
                       leading: const Icon(
                         Icons.home,
@@ -477,7 +399,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         );
                       },
                     ),
-                    const SizedBox(height: 10),
+
                     ListTile(
                       leading: const Icon(
                         Icons.list_alt,
@@ -497,7 +419,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         );
                       },
                     ),
-                    const SizedBox(height: 10),
+
                     ListTile(
                       leading: const Icon(
                         Icons.pie_chart,
@@ -518,7 +440,6 @@ class _UserManagementPageState extends State<UserMgt> {
                       },
                     ),
 
-                    const SizedBox(height: 20),
                     const Divider(color: Colors.white),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -531,7 +452,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+
                     ListTile(
                       leading: const Icon(
                         Icons.person,
@@ -554,7 +475,7 @@ class _UserManagementPageState extends State<UserMgt> {
               ),
             ),
           Expanded(
-            child: Container(
+            child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
@@ -565,7 +486,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         value: users.length.toString(),
                         subtitle: "Registered Users",
                         icon: Icons.supervised_user_circle_outlined,
-                        iconColor: const Color.fromARGB(255, 76, 50, 221),
+                        iconColor: Colors.blue,
                       ),
                       const SizedBox(width: 30),
                       SummaryWidget(
@@ -576,112 +497,85 @@ class _UserManagementPageState extends State<UserMgt> {
                             .toString(),
                         subtitle: "Currently Active",
                         icon: Icons.online_prediction,
-                        iconColor: const Color.fromARGB(255, 33, 243, 33),
-                      ),
-                      const SizedBox(width: 30),
-                      SummaryWidget(
-                        title: "SASO Officer",
-                        value: users
-                            .where((u) => u.role == "SASO Officer")
-                            .length
-                            .toString(),
-                        subtitle: "Officers Assigned",
-                        icon: Icons.shield,
-                        iconColor: Colors.teal,
-                      ),
-                      const SizedBox(width: 30),
-                      SummaryWidget(
-                        title: "Guards",
-                        value: users
-                            .where((u) => u.role == "Guard")
-                            .length
-                            .toString(),
-                        subtitle: "System Administrators",
-                        icon: Icons.admin_panel_settings,
-                        iconColor: const Color.fromARGB(255, 101, 54, 250),
+                        iconColor: Colors.green,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText:
-                                  'Search by student name, student ID, or violation...',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onChanged: (value) {},
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(
-                    width: 1900,
-                    height: 650,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: DataTable(
                         columns: const [
                           DataColumn(
-                            label: Text(
-                              'Name',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                            label: SizedBox(
+                              width: 280,
+                              child: Text(
+                                'Name',
+                                style: TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                           DataColumn(
-                            label: Text(
-                              'Email',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                            label: SizedBox(
+                              width: 280,
+                              child: Text(
+                                'Email',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                ),
                               ),
                             ),
                           ),
                           DataColumn(
-                            label: Text(
-                              'Office',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                            label: SizedBox(
+                              width: 280,
+                              child: Text(
+                                'Office',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                ),
                               ),
                             ),
                           ),
                           DataColumn(
-                            label: Text(
-                              'Role',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                            label: SizedBox(
+                              width: 280,
+                              child: Text(
+                                'Role',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                ),
                               ),
                             ),
                           ),
                           DataColumn(
-                            label: Text(
-                              'Status',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                            label: SizedBox(
+                              width: 280,
+                              child: Text(
+                                'Status',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                ),
                               ),
                             ),
                           ),
                           DataColumn(
-                            label: Text(
-                              'Actions',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
+                            label: SizedBox(
+                              width: 280,
+                              child: Text(
+                                'Actions',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                ),
                               ),
                             ),
                           ),
@@ -729,14 +623,7 @@ class _UserManagementPageState extends State<UserMgt> {
                               DataCell(
                                 Row(
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: Colors.blue,
-                                        size: 25,
-                                      ),
-                                      onPressed: () => _editUser(index),
-                                    ),
+                                    const SizedBox(width: 20),
                                     IconButton(
                                       icon: const Icon(
                                         Icons.delete,

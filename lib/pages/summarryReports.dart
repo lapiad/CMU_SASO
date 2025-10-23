@@ -1,6 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/components/summaryWidget.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
@@ -223,10 +222,11 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                         height: 100,
                         child: Image.asset(
                           'images/logos.png',
+                          height: 80,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 10),
                       const Text(
                         "  CMU_SASO DRMS",
                         style: TextStyle(
@@ -235,7 +235,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 30),
+
                       const Divider(color: Colors.white),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -248,7 +248,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+
                       ListTile(
                         leading: const Icon(
                           Icons.home,
@@ -268,7 +268,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           );
                         },
                       ),
-                      const SizedBox(height: 10),
+
                       ListTile(
                         leading: const Icon(
                           Icons.list_alt,
@@ -288,7 +288,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           );
                         },
                       ),
-                      const SizedBox(height: 10),
+
                       ListTile(
                         leading: const Icon(
                           Icons.pie_chart,
@@ -308,7 +308,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           );
                         },
                       ),
-                      const SizedBox(height: 20),
+
                       const Divider(color: Colors.white),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -321,7 +321,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+
                       ListTile(
                         leading: const Icon(
                           Icons.person,
@@ -348,44 +348,6 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    Row(
-                      children: [
-                        const SizedBox(width: 30.0),
-                        SummaryWidget(
-                          title: "This Week",
-                          value: cases.length.toString(),
-                          subtitle: "Total Violations",
-                          icon: Icons.next_week_outlined,
-                          iconColor: const Color.fromARGB(255, 240, 48, 48),
-                        ),
-                        const SizedBox(width: 30.0),
-                        SummaryWidget(
-                          title: "Resolved",
-                          value: countByStatus('Under Review').toString(),
-                          subtitle: "Case Closed",
-                          icon: Icons.done,
-                          iconColor: const Color.fromARGB(255, 52, 96, 241),
-                        ),
-                        const SizedBox(width: 30.0),
-                        SummaryWidget(
-                          title: "Pending",
-                          value: countByStatus('Scheduled Hearing').toString(),
-                          subtitle: "Awaiting Review",
-                          icon: Icons.pending,
-                          iconColor: const Color.fromARGB(255, 13, 200, 224),
-                        ),
-                        const SizedBox(width: 30.0),
-                        SummaryWidget(
-                          title: "Referred",
-                          value: countByStatus('Pending').toString(),
-                          subtitle: "To Council",
-                          icon: Icons.move_down_outlined,
-                          iconColor: const Color.fromARGB(255, 232, 235, 19),
-                        ),
-                        const SizedBox(width: 30.0),
-                      ],
-                    ),
-
                     const SizedBox(height: 20),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,

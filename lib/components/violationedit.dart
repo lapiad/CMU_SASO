@@ -406,7 +406,11 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                       _dateTimeController,
                       readOnly: true,
                     ),
-                    _buildEditableField("Role", _roleController),
+                    _buildEditableField(
+                      "Role",
+                      _roleController,
+                      readOnly: true,
+                    ),
                     _buildStyledDropdown(
                       label: "Offense Level",
                       selectedValue: _selectedOffenseLevel,

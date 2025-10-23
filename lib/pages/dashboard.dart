@@ -263,10 +263,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         height: 100,
                         child: Image.asset(
                           'images/logos.png',
+                          height: 80,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 10),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(
@@ -278,7 +279,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 30),
+
                       const Divider(color: Colors.white),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -291,7 +292,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+
                       ListTile(
                         leading: const Icon(
                           Icons.home,
@@ -343,7 +344,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+
                       const Divider(color: Colors.white),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
