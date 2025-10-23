@@ -138,22 +138,30 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       items: [
         const PopupMenuItem(
           value: 'profile',
-          child: Row(
-            children: [
-              Icon(Icons.person, size: 30),
-              SizedBox(width: 16),
-              Text('Profile Settings', style: TextStyle(fontSize: 20)),
-            ],
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         const PopupMenuItem(
           value: 'signout',
-          child: Row(
-            children: [
-              Icon(Icons.logout, size: 30),
-              SizedBox(width: 16),
-              Text("Sign Out", style: TextStyle(fontSize: 20)),
-            ],
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
       ],
@@ -162,12 +170,16 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     if (result == 'profile') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ProfileSettingsPage()),
+        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
       );
-    } else if (result == 'signout') {
+    }
+
+    if (result == 'signout') {
+      final box = GetStorage();
+      box.erase();
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const Login()),
+        MaterialPageRoute(builder: (context) => Login()),
       );
     }
   }
@@ -184,7 +196,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           'Summary of Reports',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
@@ -214,7 +226,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                       icon: const Icon(
                         Icons.person,
                         size: 25,
-                        color: Color.fromARGB(255, 10, 44, 158),
+                        color: Color.fromARGB(255, 68, 110, 173),
                       ),
                       onPressed: () => _showAdminMenu(context),
                     ),
@@ -273,10 +285,16 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _generatePdfAndSave,
-        icon: const Icon(Icons.picture_as_pdf),
-        label: const Text("Export PDF"),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.redAccent,
+        icon: const Icon(Icons.picture_as_pdf, size: 20, color: Colors.white),
+        label: const Text(
+          "Export PDF",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
       ),
     );
   }
@@ -284,7 +302,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
-      color: Colors.blue[900],
+      color: const Color.fromARGB(255, 68, 110, 173),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

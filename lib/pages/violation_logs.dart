@@ -256,7 +256,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           'Violation Logs',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
@@ -286,7 +286,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                       icon: const Icon(
                         Icons.person,
                         size: 25,
-                        color: Color.fromARGB(255, 10, 44, 158),
+                        color: Color.fromARGB(255, 68, 110, 173),
                       ),
                       onPressed: () {},
                     ),
@@ -381,132 +381,197 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   // ------------------ FILTER DRAWER -------------------
   Widget _buildFilterDrawer() {
     return Material(
-      elevation: 8,
+      elevation: 10,
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Filters",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => setState(() => showFilters = false),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _buildFilterSection("Priority", [
-              _buildCheckbox(
-                "First Offense",
-                filterFirstOffense,
-                (val) => setState(() => filterFirstOffense = val!),
-              ),
-              _buildCheckbox(
-                "Second Offense",
-                filterSecondOffense,
-                (val) => setState(() => filterSecondOffense = val!),
-              ),
-              _buildCheckbox(
-                "Third Offense",
-                filterThirdOffense,
-                (val) => setState(() => filterThirdOffense = val!),
-              ),
-            ]),
-            const Divider(),
-            _buildFilterSection("Report Status", [
-              _buildCheckbox(
-                "Pending",
-                filterPending,
-                (val) => setState(() => filterPending = val!),
-              ),
-              _buildCheckbox(
-                "Under Review",
-                filterUnderReview,
-                (val) => setState(() => filterUnderReview = val!),
-              ),
-              _buildCheckbox(
-                "Reviewed",
-                filterReviewed,
-                (val) => setState(() => filterReviewed = val!),
-              ),
-            ]),
-            const Divider(),
-            _buildFilterSection("Violation Type", [
-              _buildCheckbox(
-                "Improper Uniform",
-                filterImproperUniform,
-                (val) => setState(() => filterImproperUniform = val!),
-              ),
-              _buildCheckbox(
-                "Late Attendance",
-                filterLateAttendance,
-                (val) => setState(() => filterLateAttendance = val!),
-              ),
-              _buildCheckbox(
-                "Serious Misconduct",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-            ]),
-            const Divider(),
-            _buildFilterSection("Department", [
-              _buildCheckbox(
-                "CAS",
-                filterCAS,
-                (val) => setState(() => filterCAS = val!),
-              ),
-              _buildCheckbox(
-                "CBA",
-                filterCBA,
-                (val) => setState(() => filterCBA = val!),
-              ),
-              _buildCheckbox(
-                "CCS",
-                filterCCS,
-                (val) => setState(() => filterCCS = val!),
-              ),
-              _buildCheckbox(
-                "CTE",
-                filterCTE,
-                (val) => setState(() => filterCTE = val!),
-              ),
-              _buildCheckbox(
-                "CCJE",
-                filterCCJE,
-                (val) => setState(() => filterCCJE = val!),
-              ),
-            ]),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: _clearFilters,
-                  child: const Text(
-                    "Clear",
-                    style: TextStyle(color: Colors.blueAccent),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical, // Explicit vertical scrolling
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with title and close button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Filters",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => showFilters = false),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Priority section
+              _buildFilterSection("Priority", [
+                _buildCheckbox(
+                  "First Offense",
+                  filterFirstOffense,
+                  (val) => setState(() => filterFirstOffense = val!),
                 ),
-                ElevatedButton(
-                  onPressed: _applyFilters,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[800],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                _buildCheckbox(
+                  "Second Offense",
+                  filterSecondOffense,
+                  (val) => setState(() => filterSecondOffense = val!),
+                ),
+                _buildCheckbox(
+                  "Third Offense",
+                  filterThirdOffense,
+                  (val) => setState(() => filterThirdOffense = val!),
+                ),
+              ]),
+              const Divider(),
+
+              // Report Status section
+              _buildFilterSection("Report Status", [
+                _buildCheckbox(
+                  "Pending",
+                  filterPending,
+                  (val) => setState(() => filterPending = val!),
+                ),
+                _buildCheckbox(
+                  "In Progress",
+                  filterUnderReview,
+                  (val) => setState(() => filterUnderReview = val!),
+                ),
+                _buildCheckbox(
+                  "Reviewed",
+                  filterReviewed,
+                  (val) => setState(() => filterReviewed = val!),
+                ),
+                _buildCheckbox(
+                  "Referred",
+                  filterReviewed,
+                  (val) => setState(() => filterReviewed = val!),
+                ),
+              ]),
+              const Divider(),
+
+              // Violation Type section
+              _buildFilterSection("Violation Type", [
+                _buildCheckbox(
+                  "Dress Code",
+                  filterImproperUniform,
+                  (val) => setState(() => filterImproperUniform = val!),
+                ),
+                _buildCheckbox(
+                  "Behavioral Misconduct",
+                  filterLateAttendance,
+                  (val) => setState(() => filterLateAttendance = val!),
+                ),
+                _buildCheckbox(
+                  "Unauthorized Entry of Outsider",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "Bringing Deadly Weapons",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "Cheating exam",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "Vandalism",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "NO ID",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "Not Using Lanyard of CMU",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "Vape",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+                _buildCheckbox(
+                  "Bullying",
+                  filterSeriousMisconduct,
+                  (val) => setState(() => filterSeriousMisconduct = val!),
+                ),
+              ]),
+              const Divider(),
+
+              // Department section
+              _buildFilterSection("Department", [
+                _buildCheckbox(
+                  "CAS",
+                  filterCAS,
+                  (val) => setState(() => filterCAS = val!),
+                ),
+                _buildCheckbox(
+                  "CBA",
+                  filterCBA,
+                  (val) => setState(() => filterCBA = val!),
+                ),
+                _buildCheckbox(
+                  "CCS",
+                  filterCCS,
+                  (val) => setState(() => filterCCS = val!),
+                ),
+                _buildCheckbox(
+                  "CTE",
+                  filterCTE,
+                  (val) => setState(() => filterCTE = val!),
+                ),
+                _buildCheckbox(
+                  "CCJE",
+                  filterCCJE,
+                  (val) => setState(() => filterCCJE = val!),
+                ),
+              ]),
+              const SizedBox(height: 20),
+
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: _clearFilters,
+                    child: const Text(
+                      "Clear",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  child: const Text("Apply"),
-                ),
-              ],
-            ),
-          ],
+                  ElevatedButton(
+                    onPressed: _applyFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[800],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      "Apply",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -545,7 +610,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
-      color: Colors.blue[900],
+      color: const Color.fromARGB(255, 68, 110, 173),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

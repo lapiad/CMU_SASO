@@ -93,7 +93,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('My Profile', style: TextStyle(fontSize: 22)),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -128,7 +128,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           children: [
             CircleAvatar(
               radius: 130,
-              backgroundColor: Colors.blue[700],
+              backgroundColor: const Color.fromARGB(255, 68, 110, 173),
               child: Text(
                 userInitials,
                 style: const TextStyle(

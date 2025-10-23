@@ -267,22 +267,30 @@ class _UserManagementPageState extends State<UserMgt> {
       items: [
         const PopupMenuItem(
           value: 'profile',
-          child: Row(
-            children: [
-              Icon(Icons.person),
-              SizedBox(width: 16),
-              Text('Profile Settings'),
-            ],
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.person, size: 30),
+                SizedBox(width: 16),
+                Text('Profile Settings', style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
         const PopupMenuItem(
           value: 'signout',
-          child: Row(
-            children: [
-              Icon(Icons.logout),
-              SizedBox(width: 16),
-              Text('Sign Out'),
-            ],
+          child: SizedBox(
+            width: 300,
+            height: 70,
+            child: Row(
+              children: [
+                Icon(Icons.logout, size: 30),
+                SizedBox(width: 16),
+                Text("Sign Out", style: TextStyle(fontSize: 20)),
+              ],
+            ),
           ),
         ),
       ],
@@ -293,7 +301,11 @@ class _UserManagementPageState extends State<UserMgt> {
         context,
         MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
       );
-    } else if (result == 'signout') {
+    }
+
+    if (result == 'signout') {
+      final box = GetStorage();
+      box.erase();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Login()),
@@ -309,7 +321,7 @@ class _UserManagementPageState extends State<UserMgt> {
           'User Management',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.white, size: 40),
           onPressed: () =>
@@ -329,7 +341,10 @@ class _UserManagementPageState extends State<UserMgt> {
               CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: const Icon(Icons.person, color: Color(0xFF0A2C9E)),
+                  icon: const Icon(
+                    Icons.person,
+                    color: Color.fromARGB(255, 68, 110, 173),
+                  ),
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
@@ -345,7 +360,9 @@ class _UserManagementPageState extends State<UserMgt> {
               width: sideMenuSize,
               height: 900,
               child: Container(
-                decoration: BoxDecoration(color: Colors.blue[900]),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 68, 110, 173),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
