@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/Integrations.dart';
@@ -20,14 +21,14 @@ class ViolationLogsPage extends StatefulWidget {
 }
 
 class _ViolationLogsPageState extends State<ViolationLogsPage> {
-  List<ViolationRecord> allRecords = [];
+  ValueNotifier<List<ViolationRecord>> allRecordsNotifier = ValueNotifier([]);
   double sideMenuSize = 0.0;
   bool showFilters = false;
 
   DateTime? startDate;
   DateTime? endDate;
 
-  // filter states
+  // Filter states
   bool filterFirstOffense = false;
   bool filterSecondOffense = false;
   bool filterThirdOffense = false;
@@ -47,6 +48,58 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   bool filterReviewed = false;
 
   String searchQuery = "";
+
+  DateTime? lastUpdated;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchViolations();
+
+    // Automatically refresh every 10 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _fetchViolations();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchViolations() async {
+    final data = await Integration().fetchViolations();
+    if (data != null) {
+      final records = data
+          .map(
+            (item) => ViolationRecord(
+              studentName: item['student_name'] ?? '',
+              studentId: item['student_id'] ?? '',
+              violation: item['violation_type'] ?? '',
+              status: item['status'] ?? '',
+              role: item['role'] ?? '',
+              reportedBy: item['reported_by'] ?? '',
+              dateTime: item['date_of_incident'] ?? '',
+              department: item['student_department'] ?? '',
+              base64Imagestring: item['photo_evidence'] ?? '',
+              offenseLevel: item['offense_level'] ?? '',
+              violationId: item['id'] ?? '',
+            ),
+          )
+          .toList();
+
+      // Sort oldest → latest
+      records.sort(
+        (a, b) =>
+            DateTime.parse(a.dateTime).compareTo(DateTime.parse(b.dateTime)),
+      );
+
+      allRecordsNotifier.value = records;
+      setState(() => lastUpdated = DateTime.now());
+    }
+  }
 
   Future<String> getName() async {
     try {
@@ -78,7 +131,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
   }
 
   List<ViolationRecord> get filteredRecords {
-    return allRecords.where((record) {
+    return allRecordsNotifier.value.where((record) {
       final query = searchQuery.toLowerCase();
       final matchesSearch =
           query.isEmpty ||
@@ -155,7 +208,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     }
   }
 
-  Color getoffenseColor(String status) {
+  Color getOffenseColor(String status) {
     switch (status.toLowerCase()) {
       case 'first offense':
         return Colors.yellowAccent;
@@ -166,34 +219,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
       default:
         return Colors.grey;
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    Integration().fetchViolations().then((data) {
-      if (data != null) {
-        setState(() {
-          allRecords = data
-              .map(
-                (item) => ViolationRecord(
-                  studentName: item['student_name'] ?? '',
-                  studentId: item['student_id'] ?? '',
-                  violation: item['violation_type'] ?? '',
-                  status: item['status'] ?? '',
-                  role: item['role'] ?? '',
-                  reportedBy: item['reported_by'] ?? '',
-                  dateTime: item['date_of_incident'] ?? '',
-                  department: item['student_department'] ?? '',
-                  base64Imagestring: item['photo_evidence'] ?? '',
-                  offenseLevel: item['offense_level'] ?? '',
-                  violationId: item['id'] ?? '',
-                ),
-              )
-              .toList();
-        });
-      }
-    });
   }
 
   void _clearFilters() {
@@ -223,7 +248,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     });
   }
 
-  // ---------------- UI -----------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -232,7 +256,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
           'Violation Logs',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
+        backgroundColor: Colors.blue[900],
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
@@ -262,7 +286,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                       icon: const Icon(
                         Icons.person,
                         size: 25,
-                        color: Color.fromARGB(255, 68, 110, 173),
+                        color: Color.fromARGB(255, 10, 44, 158),
                       ),
                       onPressed: () {},
                     ),
@@ -285,6 +309,17 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                   child: Column(
                     children: [
                       _buildSearchAndFilterRow(),
+                      if (lastUpdated != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, bottom: 4),
+                          child: Text(
+                            'Last updated: ${DateFormat('hh:mm:ss a').format(lastUpdated!)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 10),
                       Expanded(child: _buildDataTable()),
                     ],
@@ -293,8 +328,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ),
             ],
           ),
-
-          // Background overlay
           if (showFilters)
             GestureDetector(
               onTap: () => setState(() => showFilters = false),
@@ -304,8 +337,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
                 child: Container(color: Colors.black),
               ),
             ),
-
-          // Filter Drawer
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             right: showFilters ? 0 : -320,
@@ -319,6 +350,35 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
+  Widget _buildSearchAndFilterRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              onChanged: (val) => setState(() => searchQuery = val),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: 'Search student name, ID, or violation...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: () => setState(() => showFilters = !showFilters),
+            icon: const Icon(Icons.filter_list),
+            label: const Text("Filters"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------ FILTER DRAWER -------------------
   Widget _buildFilterDrawer() {
     return Material(
       elevation: 8,
@@ -328,7 +388,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -343,7 +402,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ],
             ),
             const SizedBox(height: 10),
-
             _buildFilterSection("Priority", [
               _buildCheckbox(
                 "First Offense",
@@ -362,7 +420,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ),
             ]),
             const Divider(),
-
             _buildFilterSection("Report Status", [
               _buildCheckbox(
                 "Pending",
@@ -381,7 +438,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ),
             ]),
             const Divider(),
-
             _buildFilterSection("Violation Type", [
               _buildCheckbox(
                 "Improper Uniform",
@@ -400,7 +456,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ),
             ]),
             const Divider(),
-
             _buildFilterSection("Department", [
               _buildCheckbox(
                 "CAS",
@@ -429,7 +484,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               ),
             ]),
             const Spacer(),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -487,10 +541,11 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
+  // ------------------- SIDE MENU ---------------------
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
-      color: const Color.fromARGB(255, 68, 110, 173),
+      color: Colors.blue[900],
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -504,7 +559,6 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
               color: Colors.white,
             ),
           ),
-
           const Divider(color: Colors.white),
           const Text(
             'GENERAL',
@@ -557,242 +611,220 @@ class _ViolationLogsPageState extends State<ViolationLogsPage> {
     );
   }
 
+  // ------------------- DATA TABLE -------------------
   Widget _buildDataTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: DataTable(
-        columns: const [
-          DataColumn(
-            label: SizedBox(
-              width: 190,
-              child: Text(
-                'Student Name',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Student ID',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Department',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Violation',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Status',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Offense Level',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Reported By',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 190,
-              child: Text(
-                'Date & Time',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          DataColumn(
-            label: SizedBox(
-              width: 150,
-              child: Text(
-                'Actions',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
-        rows: filteredRecords.map((record) {
-          return DataRow(
-            cells: [
-              DataCell(
-                Text(
-                  record.studentName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Text(
-                  record.studentId,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Text(
-                  record.department,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Text(
-                  record.violation,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: getStatusColor(record.status),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
+    return ValueListenableBuilder<List<ViolationRecord>>(
+      valueListenable: allRecordsNotifier,
+      builder: (context, records, _) {
+        final filtered = filteredRecords;
+        return SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: DataTable(
+            columns: const [
+              DataColumn(
+                label: SizedBox(
+                  width: 190,
                   child: Text(
-                    record.status,
-                    style: const TextStyle(fontSize: 20),
+                    'Student Name',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              DataCell(
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: getoffenseColor(record.offenseLevel),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
                   child: Text(
-                    record.offenseLevel,
-                    style: const TextStyle(fontSize: 17),
+                    'Student ID',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              DataCell(
-                Text(
-                  record.reportedBy,
-                  style: const TextStyle(fontSize: 21, color: Colors.black),
-                ),
-              ),
-              DataCell(
-                Text(
-                  formatDateTime(record.dateTime), // ✅ formatted here
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
+                  child: Text(
+                    'Department',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              DataCell(
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.remove_red_eye,
-                        color: Colors.blue,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ViolationFormPage(record: record),
-                          ),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.green),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                EditableViolationFormPage(record: record),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
+                  child: Text(
+                    'Violation',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
+                  child: Text(
+                    'Status',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
+                  child: Text(
+                    'Offense Level',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
+                  child: Text(
+                    'Reported By',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: SizedBox(
+                  width: 190,
+                  child: Text(
+                    'Date & Time',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: SizedBox(
+                  width: 150,
+                  child: Text(
+                    'Actions',
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildSearchAndFilterRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              onChanged: (val) => setState(() => searchQuery = val),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search student name, ID, or violation...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+            rows: filtered.map((record) {
+              return DataRow(
+                cells: [
+                  DataCell(
+                    Text(
+                      record.studentName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      record.studentId,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      record.department,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      record.violation,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: getStatusColor(record.status),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        record.status,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: getOffenseColor(record.offenseLevel),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        record.offenseLevel,
+                        style: const TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      record.reportedBy,
+                      style: const TextStyle(fontSize: 21),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      formatDateTime(record.dateTime),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.remove_red_eye,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ViolationFormPage(record: record),
+                              ),
+                            );
+                            _fetchViolations();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.green),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EditableViolationFormPage(record: record),
+                              ),
+                            );
+                            _fetchViolations();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
-          const SizedBox(width: 12),
-          ElevatedButton.icon(
-            onPressed: () => setState(() => showFilters = !showFilters),
-            icon: const Icon(Icons.filter_list),
-            label: const Text("Filters"),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

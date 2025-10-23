@@ -259,8 +259,9 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                                   fit: BoxFit.cover,
                                   loadingBuilder:
                                       (context, child, loadingProgress) {
-                                        if (loadingProgress == null)
+                                        if (loadingProgress == null) {
                                           return child;
+                                        }
                                         return const Center(
                                           child: CircularProgressIndicator(),
                                         );

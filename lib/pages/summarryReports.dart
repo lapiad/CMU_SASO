@@ -184,7 +184,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           'Summary of Reports',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
+        backgroundColor: Colors.blue[900],
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 40, color: Colors.white),
           onPressed: () {
@@ -214,7 +214,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                       icon: const Icon(
                         Icons.person,
                         size: 25,
-                        color: Color.fromARGB(255, 68, 110, 173),
+                        color: Color.fromARGB(255, 10, 44, 158),
                       ),
                       onPressed: () => _showAdminMenu(context),
                     ),
@@ -275,6 +275,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
         onPressed: _generatePdfAndSave,
         icon: const Icon(Icons.picture_as_pdf),
         label: const Text("Export PDF"),
+        foregroundColor: Colors.white,
         backgroundColor: Colors.redAccent,
       ),
     );
@@ -283,7 +284,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
-      color: const Color.fromARGB(255, 68, 110, 173),
+      color: Colors.blue[900],
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -461,7 +462,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
               padding: const pw.EdgeInsets.all(8),
               child: pw.Text(
                 "As of ${DateFormat('MMMM yyyy').format(now)}, the Student Affairs and Services Office recorded a total of $totalViolations student violation cases. "
-                "The most common violation is '${topType}', with the highest number of incidents reported from the '${topDept}' department. "
+                "The most common violation is '$topType', with the highest number of incidents reported from the '$topDept' department. "
                 "This report summarizes department-wise, type-wise, and weekly violation trends to support informed decision-making.",
                 style: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
                 textAlign: pw.TextAlign.justify,
