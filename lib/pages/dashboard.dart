@@ -542,5 +542,5 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 }
 
 extension on Shader {
-  get transform => null;
+  Null get transform => null;
 }

@@ -691,7 +691,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
 class _ScanHistoryModal extends StatelessWidget {
   final List<ViolationRecord> scanData;
 
-  const _ScanHistoryModal({required this.scanData, super.key});
+  const _ScanHistoryModal({required this.scanData});
 
   @override
   Widget build(BuildContext context) {

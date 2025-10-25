@@ -809,9 +809,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
               child: DataTable(
                 headingRowHeight: 56,
                 dataRowHeight: 68,
-                headingRowColor: MaterialStateProperty.all(
-                  Colors.grey.shade100,
-                ),
+                headingRowColor: WidgetStateProperty.all(Colors.grey.shade100),
                 columns: const [
                   DataColumn(
                     label: SizedBox(

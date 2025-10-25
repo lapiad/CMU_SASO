@@ -755,5 +755,5 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
 }
 
 extension on Shader {
-  get transform => null;
+  Null get transform => null;
 }

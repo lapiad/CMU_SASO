@@ -474,7 +474,7 @@ class _UserManagementPageState extends State<UserMgt> {
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
-                            headingRowColor: MaterialStateProperty.all(
+                            headingRowColor: WidgetStateProperty.all(
                               Colors.grey.shade100,
                             ),
                             columns: const [

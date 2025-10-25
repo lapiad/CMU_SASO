@@ -221,11 +221,13 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                         keyboardType: TextInputType.emailAddress,
                         onSaved: (val) => _emailAddress = val,
                         validator: (val) {
-                          if (val == null || val.isEmpty)
+                          if (val == null || val.isEmpty) {
                             return 'Enter email address';
+                          }
                           final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                          if (!emailRegex.hasMatch(val))
+                          if (!emailRegex.hasMatch(val)) {
                             return 'Enter a valid email';
+                          }
                           return null;
                         },
                       ),

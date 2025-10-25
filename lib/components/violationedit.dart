@@ -218,8 +218,9 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   }
 
   Widget _buildImageGrid() {
-    if (_isLoadingImages)
+    if (_isLoadingImages) {
       return const Center(child: CircularProgressIndicator());
+    }
 
     if (imageUrls.isEmpty) {
       return const Center(

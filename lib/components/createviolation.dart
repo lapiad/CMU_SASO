@@ -447,13 +447,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                             ? "First Offense"
                             : (count == 1)
                             ? "Second Offense"
-                            : "Third Offense";
+                            : (count == 2)
+                            ? "Third Offense"
+                            : "Repeat Offense";
                       });
                     },
                   ),
 
                   const SizedBox(height: 15),
-
                   _buildTextField(studentIdController, "Student ID"),
                   const SizedBox(height: 15),
                   _buildTextField(studentNameController, "Student Name"),
@@ -496,7 +497,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
 
                   const SizedBox(height: 15),
-
                   _buildReadOnlyField(offenseLevel, "Offense Level"),
                   const SizedBox(height: 15),
                   _buildReadOnlyField(statusValue, "Status"),
