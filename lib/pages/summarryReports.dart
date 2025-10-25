@@ -136,52 +136,36 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       context: context,
       position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
-        const PopupMenuItem(
-          value: 'profile',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.person, size: 30),
-                SizedBox(width: 16),
-                Text('Profile Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'signout',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 30),
-                SizedBox(width: 16),
-                Text("Sign Out", style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
+        _popupItem(Icons.person, 'Profile Settings', 'profile'),
+        _popupItem(Icons.logout, 'Sign Out', 'signout'),
       ],
     );
-
     if (result == 'profile') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+        MaterialPageRoute(builder: (_) => ProfileSettingsPage()),
       );
-    }
-
-    if (result == 'signout') {
+    } else if (result == 'signout') {
       final box = GetStorage();
       box.erase();
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (_) => Login()),
       );
     }
+  }
+
+  PopupMenuItem<String> _popupItem(IconData icon, String label, String value) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 26, color: const Color(0xFF446EAD)),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontSize: 18)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -191,18 +175,27 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
     final weeklyData = getWeeklyViolationCounts();
 
     return Scaffold(
+      backgroundColor:
+          const LinearGradient(
+                colors: [Color(0xFFe3eeff), Color(0xFFf5f9ff)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(Rect.fromLTWH(0, 0, 400, 800)).transform !=
+              null
+          ? null
+          : null,
       appBar: AppBar(
         title: const Text(
           'Summary of Reports',
           style: TextStyle(color: Colors.white, fontSize: 30),
         ),
-        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
+        elevation: 8,
+        shadowColor: Colors.black26,
+        backgroundColor: const Color(0xFF446EAD),
         leading: IconButton(
-          icon: const Icon(Icons.menu, size: 40, color: Colors.white),
+          icon: const Icon(Icons.menu, size: 36, color: Colors.white),
           onPressed: () {
-            setState(() {
-              sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0;
-            });
+            setState(() => sideMenuSize = sideMenuSize == 0.0 ? 320.0 : 0.0);
           },
         ),
         actions: [
@@ -672,7 +665,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       "Weekly Violation Reports",
       LineChart(
         LineChartData(
-          gridData: FlGridData(show: true, drawVerticalLine: false),
+          gridData: FlGridData(show: true),
           titlesData: FlTitlesData(
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
@@ -683,25 +676,38 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                       DateFormat(
                         'E',
                       ).format(DateTime.parse(dates[value.toInt()])),
-                      style: const TextStyle(fontSize: 12),
                     );
                   }
                   return const SizedBox();
                 },
               ),
             ),
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
           ),
           lineBarsData: [
             LineChartBarData(
               isCurved: true,
-              color: Colors.blueAccent,
+              gradient: const LinearGradient(
+                colors: [Colors.indigo, Colors.blueAccent],
+              ),
               spots: List.generate(
                 dates.length,
                 (i) => FlSpot(i.toDouble(), counts[i].toDouble()),
               ),
-              barWidth: 3,
+              barWidth: 4,
               isStrokeCapRound: true,
               dotData: FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.blueAccent.withOpacity(0.2),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
             ),
           ],
         ),
@@ -722,7 +728,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Color(0xFF1E88E5),
+              color: Color(0xFF446EAD),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -746,4 +752,8 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       ),
     );
   }
+}
+
+extension on Shader {
+  get transform => null;
 }

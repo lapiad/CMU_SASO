@@ -40,8 +40,8 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   }
 
   Future<void> _initCamera() async {
-    await Permission.camera.request();
-    if (await Permission.camera.isGranted) {
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
       try {
         final backCamera = (await availableCameras()).firstWhere(
           (c) => c.lensDirection == CameraLensDirection.back,
@@ -64,19 +64,21 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   }
 
   Future<void> _scanID({int attempt = 1}) async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+    if (!mounted ||
+        _cameraController == null ||
+        !_cameraController!.value.isInitialized) {
       return;
     }
 
     try {
       setState(() => _isProcessing = true);
-
       final picture = await _cameraController!.takePicture();
       _capturedImage = File(picture.path);
       setState(() {});
-      await Future.delayed(const Duration(milliseconds: 500));
 
+      await Future.delayed(const Duration(milliseconds: 500));
       final scannedText = await _extractTextFromFile(_capturedImage!);
+
       final nameReg = RegExp(
         r'([A-Z][a-zA-Z]+,\s+(?:[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)(?:\s+[A-Z]\.?)?)',
       );
@@ -112,14 +114,15 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              ViolationScreen(name: name, studentNo: studentNo, course: course),
+          builder: (_) => ViolationScreen(studentNo: studentNo),
         ),
       ).then((_) {
-        setState(() {
-          _capturedImage = null;
-          _isProcessing = false;
-        });
+        if (mounted) {
+          setState(() {
+            _capturedImage = null;
+            _isProcessing = false;
+          });
+        }
       });
     } catch (e) {
       debugPrint("❌ Scan error: $e");
@@ -193,30 +196,26 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
               ? const Center(child: CircularProgressIndicator())
               : LayoutBuilder(
                   builder: (context, constraints) {
+                    final size = _cameraController!.value.previewSize!;
                     return SizedBox.expand(
                       child: FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
-                          width: _cameraController!.value.previewSize!.height,
-                          height: _cameraController!.value.previewSize!.width,
+                          width: size.height,
+                          height: size.width,
                           child: CameraPreview(_cameraController!),
                         ),
                       ),
                     );
                   },
                 ),
-
-          // Scanner frame overlay
           Positioned.fill(child: CustomPaint(painter: ScannerOverlay())),
-
-          // Back button (top-left)
           Positioned(
             top: 40,
             left: 20,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
               onPressed: () {
-                // Navigate back to school guard dashboard/home
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (_) => const SchoolGuardHome()),
@@ -224,8 +223,6 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
               },
             ),
           ),
-
-          // Flash button (moved to top-right)
           Positioned(
             top: 40,
             right: 20,
@@ -238,8 +235,6 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
               onPressed: _toggleFlash,
             ),
           ),
-
-          // Capture button (bottom center)
           if (!_isProcessing)
             Positioned(
               bottom: MediaQuery.of(context).padding.bottom + 30,
@@ -267,8 +262,6 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
                 ),
               ),
             ),
-
-          // Processing overlay
           if (_isProcessing)
             Container(
               color: Colors.black45,
@@ -302,7 +295,6 @@ class ScannerOverlay extends CustomPainter {
       ..color = Colors.blue
       ..strokeWidth = 6
       ..style = PaintingStyle.stroke;
-
     const padding = 10.0;
     final rectWidth = size.width - (padding * 5);
     final rectHeight = rectWidth / 0.625;
@@ -312,7 +304,6 @@ class ScannerOverlay extends CustomPainter {
     final bottom = top + rectHeight;
     const cornerSize = 40.0;
 
-    // Corner lines
     canvas.drawLine(Offset(left, top), Offset(left + cornerSize, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerSize), paint);
     canvas.drawLine(Offset(right, top), Offset(right - cornerSize, top), paint);

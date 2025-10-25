@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/addNewuser.dart';
 import 'package:flutter_application_1/components/summaryWidget.dart';
@@ -9,7 +10,6 @@ import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 Future<String> getName() async {
   final box = GetStorage();
@@ -44,6 +44,7 @@ class User {
 
 class UserMgt extends StatefulWidget {
   const UserMgt({super.key});
+
   @override
   _UserManagementPageState createState() => _UserManagementPageState();
 }
@@ -62,9 +63,7 @@ class _UserManagementPageState extends State<UserMgt> {
     try {
       final box = GetStorage();
       final userId = box.read('user_id');
-      if (userId == null) {
-        throw Exception("User ID not found in local storage.");
-      }
+      if (userId == null) throw Exception("User ID not found.");
 
       final serverUrl = GlobalConfiguration().getValue("server_url");
       if (serverUrl == null || serverUrl.isEmpty) {
@@ -265,67 +264,56 @@ class _UserManagementPageState extends State<UserMgt> {
       context: context,
       position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
       items: [
-        const PopupMenuItem(
-          value: 'profile',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.person, size: 30),
-                SizedBox(width: 16),
-                Text('Profile Settings', style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'signout',
-          child: SizedBox(
-            width: 300,
-            height: 70,
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 30),
-                SizedBox(width: 16),
-                Text("Sign Out", style: TextStyle(fontSize: 20)),
-              ],
-            ),
-          ),
-        ),
+        _popupItem(Icons.person, 'Profile Settings', 'profile'),
+        _popupItem(Icons.logout, 'Sign Out', 'signout'),
       ],
     );
-
     if (result == 'profile') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+        MaterialPageRoute(builder: (_) => ProfileSettingsPage()),
       );
-    }
-
-    if (result == 'signout') {
+    } else if (result == 'signout') {
       final box = GetStorage();
       box.erase();
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (_) => Login()),
       );
     }
+  }
+
+  PopupMenuItem<String> _popupItem(IconData icon, String label, String value) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 26, color: const Color(0xFF446EAD)),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontSize: 18)),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFf5f9ff),
       appBar: AppBar(
         title: const Text(
           'User Management',
-          style: TextStyle(color: Colors.white, fontSize: 30),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
+        backgroundColor: const Color(0xFF446EAD),
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white, size: 40),
+          icon: const Icon(Icons.menu, color: Colors.white, size: 32),
           onPressed: () =>
-              setState(() => sideMenuSize = sideMenuSize == 0.0 ? 350.0 : 0.0),
+              setState(() => sideMenuSize = sideMenuSize == 0.0 ? 320.0 : 0.0),
         ),
         actions: [
           Row(
@@ -341,10 +329,7 @@ class _UserManagementPageState extends State<UserMgt> {
               CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.person,
-                    color: Color.fromARGB(255, 68, 110, 173),
-                  ),
+                  icon: const Icon(Icons.person, color: Color(0xFF446EAD)),
                   onPressed: () => _showAdminMenu(context),
                 ),
               ),
@@ -355,142 +340,7 @@ class _UserManagementPageState extends State<UserMgt> {
       ),
       body: Row(
         children: [
-          if (sideMenuSize != 0.0)
-            SizedBox(
-              width: sideMenuSize,
-              height: 900,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 68, 110, 173),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: Image.asset(
-                        'images/logos.png',
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "  CMU_SASO DRMS",
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-
-                    const Divider(color: Colors.white),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'GENERAL',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-
-                    ListTile(
-                      leading: const Icon(
-                        Icons.home,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Dashboard',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Dashboard(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    ListTile(
-                      leading: const Icon(
-                        Icons.list_alt,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Violation Logs',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ViolationLogsPage(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    ListTile(
-                      leading: const Icon(
-                        Icons.pie_chart,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'Summary of Reports',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SummaryReportsPage(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const Divider(color: Colors.white),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'ADMINISTRATION',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-
-                    ListTile(
-                      leading: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      title: const Text(
-                        'User management',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => UserMgt()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          if (sideMenuSize != 0.0) _buildSideMenu(context),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -522,139 +372,145 @@ class _UserManagementPageState extends State<UserMgt> {
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
-                      child: DataTable(
-                        columns: const [
-                          DataColumn(
-                            label: SizedBox(
-                              width: 280,
-                              child: Text(
-                                'Name',
-                                style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.bold,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowColor: MaterialStateProperty.all(
+                            Colors.grey.shade100,
+                          ),
+                          columns: const [
+                            DataColumn(
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Name',
+                                  style: TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 280,
-                              child: Text(
-                                'Email',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                            DataColumn(
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Email',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 280,
-                              child: Text(
-                                'Office',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                            DataColumn(
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Office',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 280,
-                              child: Text(
-                                'Role',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                            DataColumn(
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Role',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 280,
-                              child: Text(
-                                'Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                            DataColumn(
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: SizedBox(
-                              width: 280,
-                              child: Text(
-                                'Actions',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                            DataColumn(
+                              label: SizedBox(
+                                width: 280,
+                                child: Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                        rows: users.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final user = entry.value;
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                Text(
-                                  user.name,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  user.email,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  user.office,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  user.role,
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                              ),
-                              DataCell(
-                                Chip(
-                                  label: Text(
-                                    user.status,
+                          ],
+                          rows: users.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final user = entry.value;
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    user.name,
                                     style: const TextStyle(fontSize: 20),
                                   ),
-                                  backgroundColor: user.status == "Active"
-                                      ? Colors.green
-                                      : Colors.red,
                                 ),
-                              ),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    const SizedBox(width: 20),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                        size: 25,
-                                      ),
-                                      onPressed: () => _deleteUser(index),
+                                DataCell(
+                                  Text(
+                                    user.email,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    user.office,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    user.role,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                DataCell(
+                                  Chip(
+                                    label: Text(
+                                      user.status,
+                                      style: const TextStyle(fontSize: 20),
                                     ),
-                                  ],
+                                    backgroundColor: user.status == "Active"
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                                DataCell(
+                                  Row(
+                                    children: [
+                                      const SizedBox(width: 20),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                          size: 25,
+                                        ),
+                                        onPressed: () => _deleteUser(index),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),
@@ -664,28 +520,108 @@ class _UserManagementPageState extends State<UserMgt> {
           ),
         ],
       ),
-      floatingActionButton: SizedBox(
-        width: 150,
-        height: 50,
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => const AddNewUserDialog(),
-            );
-          },
-          icon: const Icon(Icons.add, color: Colors.white, size: 30),
-          label: const Text(
-            "Add User",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: Colors.blue[900],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showDialog(
+          context: context,
+          builder: (_) => const AddNewUserDialog(),
         ),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          "Add User",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF446EAD),
       ),
     );
   }
+
+  Widget _buildSideMenu(BuildContext context) {
+    return Container(
+      width: sideMenuSize,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF446EAD), Color(0xFF5F8EDC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        children: [
+          const SizedBox(height: 20),
+          Center(
+            child: CircleAvatar(
+              radius: 45,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              child: Image.asset(
+                'images/logos.png',
+                height: 70,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Center(
+            child: Text(
+              "CMU_SASO DRMS",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const Divider(color: Colors.white54),
+          _menuHeader("GENERAL"),
+          _menuItem(Icons.home, "Dashboard", () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const Dashboard()),
+            );
+          }),
+          _menuItem(Icons.list_alt, "Violation Logs", () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ViolationLogsPage()),
+            );
+          }),
+          _menuItem(Icons.pie_chart, "Summary of Reports", () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SummaryReportsPage()),
+            );
+          }),
+          const Divider(color: Colors.white54),
+          _menuHeader("ADMINISTRATION"),
+          _menuItem(Icons.person, "User Management", () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const UserMgt()),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuHeader(String title) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+    child: Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white70,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
+
+  Widget _menuItem(IconData icon, String label, VoidCallback onTap) => ListTile(
+    leading: Icon(icon, color: Colors.white, size: 26),
+    title: Text(
+      label,
+      style: const TextStyle(color: Colors.white, fontSize: 18),
+    ),
+    hoverColor: Colors.white10,
+    onTap: onTap,
+  );
 }

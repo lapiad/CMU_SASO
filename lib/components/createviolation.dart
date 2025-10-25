@@ -200,10 +200,10 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
       fillColor: Colors.grey[50],
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -231,7 +231,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     return GestureDetector(
       onTap: _openFullScreenImage,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 200),
           child: Stack(
@@ -315,38 +315,81 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     }
   }
 
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: _fieldDecoration(label, "").copyWith(
+        prefixIcon: const Icon(Icons.text_fields, color: Colors.blueAccent),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(String? value, String label) {
+    return TextFormField(
+      readOnly: true,
+      initialValue: value,
+      decoration: _fieldDecoration(label, ""),
+    );
+  }
+
+  Widget _buildReadOnlyFieldController(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
+    return TextFormField(
+      readOnly: true,
+      controller: controller,
+      decoration: _fieldDecoration(
+        label,
+        "",
+      ).copyWith(prefixIcon: Icon(icon, color: Colors.blueAccent)),
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         "Create New Violation Report",
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent,
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, size: 30),
+                        icon: const Icon(
+                          Icons.close,
+                          size: 28,
+                          color: Colors.grey,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
+
+                  // Student Dropdown
                   DropdownSearch<Student>(
                     asyncItems: (filter) => fetchStudents(filter),
                     itemAsString: (Student s) =>
@@ -356,14 +399,21 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       searchFieldProps: TextFieldProps(
                         decoration: InputDecoration(
                           hintText: "Search student...",
+                          prefixIcon: Icon(Icons.search),
                         ),
                       ),
                     ),
                     dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: _fieldDecoration(
-                        "Search Student",
-                        "Select student by ID or name",
-                      ),
+                      dropdownSearchDecoration:
+                          _fieldDecoration(
+                            "Search Student",
+                            "Select student by ID or name",
+                          ).copyWith(
+                            prefixIcon: const Icon(
+                              Icons.person_search,
+                              color: Colors.blue,
+                            ),
+                          ),
                     ),
                     selectedItem:
                         (studentIdController.text.isNotEmpty &&
@@ -404,29 +454,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  TextFormField(
-                    controller: studentIdController,
-                    readOnly: true,
-                    decoration: _fieldDecoration("Student ID", ""),
-                  ),
-
+                  _buildTextField(studentIdController, "Student ID"),
+                  const SizedBox(height: 15),
+                  _buildTextField(studentNameController, "Student Name"),
+                  const SizedBox(height: 15),
+                  _buildTextField(departmentController, "Department"),
                   const SizedBox(height: 15),
 
-                  TextFormField(
-                    controller: studentNameController,
-                    readOnly: true,
-                    decoration: _fieldDecoration("Student Name", ""),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  TextFormField(
-                    controller: departmentController,
-                    readOnly: true,
-                    decoration: _fieldDecoration("Department", ""),
-                  ),
-
-                  const SizedBox(height: 15),
+                  // Violation Type Dropdown
                   DropdownSearch<String>(
                     asyncItems: (filter) => fetchViolationTypes(filter),
                     selectedItem: violationTypeController.text.isEmpty
@@ -437,14 +472,21 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       searchFieldProps: TextFieldProps(
                         decoration: InputDecoration(
                           hintText: "Search violation type...",
+                          prefixIcon: Icon(Icons.search),
                         ),
                       ),
                     ),
                     dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: _fieldDecoration(
-                        "Violation Type",
-                        "Select violation type",
-                      ),
+                      dropdownSearchDecoration:
+                          _fieldDecoration(
+                            "Violation Type",
+                            "Select violation type",
+                          ).copyWith(
+                            prefixIcon: const Icon(
+                              Icons.report,
+                              color: Colors.redAccent,
+                            ),
+                          ),
                     ),
                     onChanged: (value) {
                       setState(
@@ -455,32 +497,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 15),
 
-                  TextFormField(
-                    readOnly: true,
-                    initialValue: offenseLevel,
-                    decoration: _fieldDecoration(
-                      "Offense Level",
-                      "Auto-detected offense level",
-                    ),
-                  ),
-
+                  _buildReadOnlyField(offenseLevel, "Offense Level"),
                   const SizedBox(height: 15),
-
-                  TextFormField(
-                    readOnly: true,
-                    initialValue: statusValue,
-                    decoration: _fieldDecoration("Status", ""),
-                  ),
-
+                  _buildReadOnlyField(statusValue, "Status"),
                   const SizedBox(height: 15),
-
-                  TextFormField(
-                    readOnly: true,
-                    controller: incidentDateController,
-                    decoration: _fieldDecoration(
-                      "Date & Time of Incident",
-                      "Pick date and time",
-                    ).copyWith(prefixIcon: const Icon(Icons.calendar_today)),
+                  _buildReadOnlyFieldController(
+                    incidentDateController,
+                    "Date & Time of Incident",
+                    Icons.calendar_today,
                     onTap: () async {
                       final pickedDate = await showDatePicker(
                         context: context,
@@ -512,25 +536,13 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       }
                     },
                   ),
-
+                  const SizedBox(height: 15),
+                  _buildTextField(reportedByController, "Reported By"),
+                  const SizedBox(height: 15),
+                  _buildTextField(roleController, "Role"),
                   const SizedBox(height: 15),
 
-                  TextFormField(
-                    controller: reportedByController,
-                    readOnly: true,
-                    decoration: _fieldDecoration("Reported By", ""),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  TextFormField(
-                    controller: roleController,
-                    readOnly: true,
-                    decoration: _fieldDecoration("Role", ""),
-                  ),
-
-                  const SizedBox(height: 15),
-
+                  // Photo Preview
                   InkWell(
                     onTap:
                         _photoEvidenceFile == null &&
@@ -539,16 +551,24 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         : _openFullScreenImage,
                     child: Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey[50],
+                        border: Border.all(color: Colors.blueAccent),
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.blueGrey[50],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: _buildPhotoPreview(),
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
+                  // Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -556,29 +576,30 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         child: const Text(
                           "Cancel",
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: Colors.black54,
                           ),
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 16),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[800],
+                          backgroundColor: Colors.blueAccent,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 26,
+                            horizontal: 28,
                             vertical: 14,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          elevation: 4,
                         ),
                         child: const Text(
                           "Submit Report",
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),

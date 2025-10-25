@@ -12,14 +12,14 @@ class AddNewUserDialog extends StatefulWidget {
 
 class _AddNewUserDialogState extends State<AddNewUserDialog> {
   final _formKey = GlobalKey<FormState>();
-  String? _username;
-  String? _middleName;
-  String? _password;
-  String? _firstName;
-  String? _lastName;
-  String? _emailAddress;
-  String? _selectedRole;
-  String? _selectedDepartment;
+  String? _username,
+      _middleName,
+      _password,
+      _firstName,
+      _lastName,
+      _emailAddress,
+      _selectedRole,
+      _selectedDepartment;
 
   final List<String> _roles = ['admin', 'guard'];
   final List<String> _departments = [
@@ -32,7 +32,6 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     final url = Uri.parse(
       '${GlobalConfiguration().getValue("server_url")}/users',
     );
-
     final Map<String, dynamic> payload = {
       "username": _username,
       "password": _password,
@@ -74,7 +73,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: screenWidth < 700 ? screenWidth * 0.95 : 600,
@@ -90,34 +89,51 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                 // Header
                 Row(
                   children: [
-                    const Icon(Icons.person_add, color: Colors.black, size: 30),
+                    const Icon(
+                      Icons.person_add,
+                      color: Color(0xFF0033A0),
+                      size: 30,
+                    ),
                     const SizedBox(width: 8),
                     const Text(
                       "Add New User",
                       style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF0033A0),
                       ),
                     ),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(
                         Icons.close,
-                        color: Colors.black,
-                        size: 25,
+                        color: Colors.grey,
+                        size: 28,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
-                const Divider(),
+                const Divider(thickness: 1.2),
+                const SizedBox(height: 16),
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 20),
-                  width: 150,
-                  height: 150,
-                  decoration: const BoxDecoration(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFF3F51B5),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF3F51B5), Color(0xFF5C6BC0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Text(
@@ -126,13 +142,15 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                           ? "${_firstName![0]}${_lastName![0]}".toUpperCase()
                           : "NEW",
                       style: const TextStyle(
-                        fontSize: 35,
+                        fontSize: 36,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                // Form fields
                 Row(
                   children: [
                     Expanded(
@@ -203,13 +221,11 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                         keyboardType: TextInputType.emailAddress,
                         onSaved: (val) => _emailAddress = val,
                         validator: (val) {
-                          if (val == null || val.isEmpty) {
+                          if (val == null || val.isEmpty)
                             return 'Enter email address';
-                          }
                           final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                          if (!emailRegex.hasMatch(val)) {
-                            return 'Enter a valid email address';
-                          }
+                          if (!emailRegex.hasMatch(val))
+                            return 'Enter a valid email';
                           return null;
                         },
                       ),
@@ -222,7 +238,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                     Expanded(
                       child: _buildDropdownField(
                         labelText: "Role",
-                        hintText: "Select user role",
+                        hintText: "Select role",
                         value: _selectedRole,
                         items: _roles,
                         onChanged: (val) => setState(() => _selectedRole = val),
@@ -256,8 +272,8 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                         "Cancel",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Colors.black,
+                          fontSize: 18,
+                          color: Colors.black54,
                         ),
                       ),
                     ),
@@ -265,6 +281,13 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0033A0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
@@ -272,12 +295,11 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
                           createUser();
                         }
                       },
-
                       child: const Text(
                         "Add User",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 20,
+                          fontSize: 18,
                           color: Colors.white,
                         ),
                       ),
@@ -298,12 +320,27 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     TextInputType keyboardType = TextInputType.text,
     required FormFieldSetter<String> onSaved,
     required FormFieldValidator<String> validator,
+    bool obscureText = false,
   }) {
     return TextFormField(
-      decoration: InputDecoration(labelText: labelText, hintText: hintText),
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        filled: true,
+        fillColor: Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
+      ),
       keyboardType: keyboardType,
       onSaved: onSaved,
       validator: validator,
+      obscureText: obscureText,
     );
   }
 
@@ -316,7 +353,20 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
     required FormFieldValidator<String?> validator,
   }) {
     return DropdownButtonFormField<String>(
-      decoration: InputDecoration(labelText: labelText, hintText: hintText),
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        filled: true,
+        fillColor: Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
+      ),
       value: value,
       onChanged: onChanged,
       validator: validator,

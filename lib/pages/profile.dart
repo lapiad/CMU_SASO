@@ -12,20 +12,26 @@ class ProfileSettingsPage extends StatefulWidget {
   _ProfileSettingsPageState createState() => _ProfileSettingsPageState();
 }
 
-class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
+class _ProfileSettingsPageState extends State<ProfileSettingsPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
 
   bool isEditable = false;
-
   String userFirstName = "Loading...";
   String userInitials = "AD";
   String userRole = "ADMIN";
 
+  late AnimationController _glowController;
+
   @override
   void initState() {
     super.initState();
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
     fetchUserData();
   }
 
@@ -81,6 +87,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   void dispose() {
+    _glowController.dispose();
     firstNameController.dispose();
     lastNameController.dispose();
     emailController.dispose();
@@ -90,14 +97,22 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const LinearGradient(
+        colors: [Color(0xFFe3eeff), Color(0xFFf6f9ff)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).colors.first,
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontSize: 22)),
-        backgroundColor: const Color.fromARGB(255, 68, 110, 173),
+        title: const Text(
+          'My Profile',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFF446EAD),
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 8,
+        shadowColor: Colors.black45,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 26),
           onPressed: () => Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const Dashboard()),
@@ -105,7 +120,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             _buildProfileHeader(),
@@ -118,26 +133,58 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   Widget _buildProfileHeader() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF446EAD), Color(0xFF5F8EDC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 130,
-              backgroundColor: const Color.fromARGB(255, 68, 110, 173),
-              child: Text(
-                userInitials,
-                style: const TextStyle(
-                  fontSize: 80,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+            AnimatedBuilder(
+              animation: _glowController,
+              builder: (context, child) {
+                return Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(
+                          0.5 * (0.5 + _glowController.value / 2),
+                        ),
+                        blurRadius: 30,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 70,
+                    backgroundColor: Colors.white.withOpacity(0.15),
+                    child: Text(
+                      userInitials,
+                      style: const TextStyle(
+                        fontSize: 60,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 25),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,17 +192,29 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   Text(
                     "$userFirstName ${lastNameController.text}",
                     style: const TextStyle(
-                      fontSize: 35,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    userRole,
-                    style: const TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blueAccent,
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      userRole,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -168,11 +227,20 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   Widget _buildProfileDetails() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withOpacity(0.9),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueGrey.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             Row(
@@ -184,7 +252,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     readOnly: !isEditable,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Expanded(
                   child: buildLabeledField(
                     "Last Name",
@@ -199,7 +267,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               "Email Address",
               emailController,
               readOnly: !isEditable,
-              icon: Icons.email,
+              icon: Icons.email_outlined,
             ),
           ],
         ),
@@ -220,47 +288,37 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         Text(
           label,
           style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 25,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
             color: Colors.black87,
           ),
         ),
         const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: TextFormField(
-            controller: controller,
-            readOnly: readOnly,
-            obscureText: obscureText,
-            style: const TextStyle(fontSize: 23),
-            decoration: InputDecoration(
-              prefixIcon: icon != null
-                  ? Icon(icon, color: Colors.blue[700])
-                  : null,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
+        TextFormField(
+          controller: controller,
+          readOnly: readOnly,
+          obscureText: obscureText,
+          style: const TextStyle(fontSize: 18),
+          decoration: InputDecoration(
+            prefixIcon: icon != null
+                ? Icon(icon, color: Colors.blue[700])
+                : null,
+            filled: true,
+            fillColor: Colors.grey[50],
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFF446EAD), width: 2),
             ),
           ),
         ),
-        const SizedBox(height: 20),
       ],
     );
   }

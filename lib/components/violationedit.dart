@@ -30,7 +30,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     'Reviewed',
     'Referred',
   ];
-
   final List<String> offenseLevels = [
     'First Offense',
     'Second Offense',
@@ -148,14 +147,15 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         child: TextField(
           controller: controller,
           readOnly: readOnly,
+          style: const TextStyle(color: Colors.black87, fontSize: 14),
           decoration: InputDecoration(
             labelText: label,
             filled: true,
-            fillColor: Colors.white,
-            border: const OutlineInputBorder(),
+            fillColor: Colors.grey[100],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+              horizontal: 14,
+              vertical: 12,
             ),
           ),
         ),
@@ -172,7 +172,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     final safeValue = (selectedValue != null && options.contains(selectedValue))
         ? selectedValue
         : null;
-
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(6.0),
@@ -181,11 +180,11 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
           decoration: InputDecoration(
             labelText: label,
             filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            fillColor: Colors.grey[100],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+              horizontal: 14,
+              vertical: 12,
             ),
           ),
           items: options
@@ -204,19 +203,23 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     return TextField(
       controller: _remarksController,
       maxLines: 4,
+      style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey[100],
         hintText: "Enter remarks here...",
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
       ),
     );
   }
 
   Widget _buildImageGrid() {
-    if (_isLoadingImages) {
+    if (_isLoadingImages)
       return const Center(child: CircularProgressIndicator());
-    }
 
     if (imageUrls.isEmpty) {
       return const Center(
@@ -241,7 +244,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
         return GestureDetector(
           onTap: () => _showZoomableImage(url),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: Image.network(
               url,
               fit: BoxFit.cover,
@@ -310,16 +313,30 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       appBar: AppBar(
         title: const Text(
           "Edit Violation Details",
-          style: TextStyle(fontSize: 25, color: Colors.white),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: const Color(0xFF0033A0),
+        backgroundColor: const Color(0xFF446EAD),
+        elevation: 4,
+        shadowColor: Colors.black45,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.black26),
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+            border: Border.all(color: Colors.black12),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           padding: const EdgeInsets.all(16),
           child: SingleChildScrollView(
@@ -355,8 +372,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                       label: "Status",
                       selectedValue: _selectedStatus,
                       options: violationStatus,
-                      onChanged: (value) =>
-                          setState(() => _selectedStatus = value),
+                      onChanged: (v) => setState(() => _selectedStatus = v),
                     ),
                   ],
                 ),
@@ -381,12 +397,12 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                       label: "Offense Level",
                       selectedValue: _selectedOffenseLevel,
                       options: offenseLevels,
-                      onChanged: (value) =>
-                          setState(() => _selectedOffenseLevel = value),
+                      onChanged: (v) =>
+                          setState(() => _selectedOffenseLevel = v),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const Text(
                   "Remarks",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -400,7 +416,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                 ),
                 const SizedBox(height: 10),
                 _buildImageGrid(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -408,10 +424,18 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                       icon: const Icon(Icons.cancel, color: Colors.red),
                       label: const Text(
                         "Cancel",
-                        style: TextStyle(fontSize: 20, color: Colors.black),
+                        style: TextStyle(fontSize: 16, color: Colors.black),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: _cancelChanges,
                     ),
@@ -430,12 +454,20 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                           : const Text(
                               "Save",
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 16,
                                 color: Colors.white,
                               ),
                             ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
+                        elevation: 4,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: _isSaving ? null : _saveChanges,
                     ),

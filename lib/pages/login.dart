@@ -60,8 +60,16 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[900],
-      body: LoginPage(title: 'Login Page'),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0033A0), Color(0xFF005BBB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: LoginPage(title: 'Login Page'),
+      ),
     );
   }
 }
@@ -87,21 +95,32 @@ class _LoginPage extends State<LoginPage> {
           margin: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
           width: 500,
           height: 600,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               Image.asset('images/logos.png', height: 100.0, width: 100.0),
               const SizedBox(height: 16),
               const Text(
                 'CMU SASO',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0033A0),
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text(
                 'Disciplinary Records Management System',
                 style: TextStyle(fontSize: 14, color: Colors.black54),
@@ -114,8 +133,11 @@ class _LoginPage extends State<LoginPage> {
                   prefixIcon: const Icon(Icons.person_outline),
                   labelText: 'Username',
                   hintText: 'Enter your username',
+                  filled: true,
+                  fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
@@ -127,8 +149,11 @@ class _LoginPage extends State<LoginPage> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   labelText: 'Password',
                   hintText: 'Enter your password',
+                  filled: true,
+                  fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
@@ -137,11 +162,11 @@ class _LoginPage extends State<LoginPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[900],
+                    backgroundColor: const Color(0xFF0033A0),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   onPressed: () async {
                     final username = usernameController.text;
@@ -175,15 +200,22 @@ class _LoginPage extends State<LoginPage> {
                     }
                   },
                   child: !isloading
-                      ? Text(
+                      ? const Text(
                           'Sign In',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         )
-                      : Center(child: CircularProgressIndicator()),
+                      : const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        ),
                 ),
               ),
             ],

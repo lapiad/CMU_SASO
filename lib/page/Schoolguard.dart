@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/Integrations.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
@@ -5,6 +6,9 @@ import 'package:flutter_application_1/page/IDScanner.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:global_configuration/global_configuration.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class SchoolGuardHome extends StatefulWidget {
   const SchoolGuardHome({super.key});
@@ -16,24 +20,57 @@ class SchoolGuardHome extends StatefulWidget {
 class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   List<ViolationRecord> scanData = [];
   String searchQuery = "";
+  bool _isFetching = true;
 
   @override
   void initState() {
     super.initState();
-    Integration().fetchViolations().then((data) {
-      if (data != null) {
-        setState(() {
-          scanData = data
-              .map((item) => ViolationRecord.fromJson(item))
-              .toList();
-        });
-      }
-    });
+    _fetchViolations();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final filteredData = scanData
+  Future<void> _fetchViolations() async {
+    setState(() => _isFetching = true);
+    try {
+      final data = await Integration().fetchViolations();
+      if (data != null) {
+        final records = data
+            .map(
+              (item) => ViolationRecord(
+                studentName: item['student_name'] ?? '',
+                studentId: item['student_id'] ?? '',
+                violation: item['violation_type'] ?? '',
+                status: item['status'] ?? '',
+                role: item['role'] ?? '',
+                reportedBy: item['reported_by'] ?? '',
+                dateTime: item['date_of_incident'] ?? '',
+                department: item['student_department'] ?? '',
+                base64Imagestring: item['photo_evidence'] ?? '',
+                offenseLevel: item['offense_level'] ?? '',
+                violationId: item['id'] ?? '',
+              ),
+            )
+            .where(
+              (record) =>
+                  record.department.isNotEmpty &&
+                  record.department.toLowerCase() != 'n/a' &&
+                  record.offenseLevel.isNotEmpty &&
+                  record.offenseLevel.toLowerCase() != 'n/a',
+            )
+            .toList();
+
+        setState(() {
+          scanData = records;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching violations: $e');
+    } finally {
+      setState(() => _isFetching = false);
+    }
+  }
+
+  List<ViolationRecord> get filteredData {
+    return scanData
         .where(
           (scan) =>
               scan.studentId.contains(searchQuery) ||
@@ -41,41 +78,46 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                 searchQuery.toLowerCase(),
               ),
         )
-        .toList();
+        .toList()
+      ..sort((a, b) {
+        final dateA = DateTime.tryParse(a.dateTime) ?? DateTime(2000);
+        final dateB = DateTime.tryParse(b.dateTime) ?? DateTime(2000);
+        return dateB.compareTo(dateA);
+      });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              _buildScannerCard(),
-              const SizedBox(height: 20),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: "Search student ID or name...",
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() => searchQuery = value);
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildRecentScans(filteredData),
-              const SizedBox(height: 16),
-              _buildViewAllButton(context),
-            ],
+        child: RefreshIndicator(
+          onRefresh: _fetchViolations,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 20),
+                _buildScannerCard(context),
+                const SizedBox(height: 20),
+                _buildSearchBar(),
+                const SizedBox(height: 20),
+                if (_isFetching)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: CircularProgressIndicator(color: Colors.indigo),
+                    ),
+                  )
+                else
+                  _buildRecentScans(filteredData),
+                const SizedBox(height: 16),
+                _buildViewAllButton(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -83,25 +125,30 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
   }
 
   Widget _buildHeader() {
-    final todayStr = DateTime.now().toIso8601String().split('T')[0];
-    final violationsToday = scanData
-        .where((s) => s.dateTime.contains(todayStr))
-        .length;
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final violationsToday = scanData.where((s) {
+      try {
+        final recordDate = DateTime.parse(s.dateTime);
+        return DateFormat('yyyy-MM-dd').format(recordDate) == todayStr;
+      } catch (_) {
+        return false;
+      }
+    }).length;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.indigo.shade700, Colors.indigo.shade500],
+          colors: [Colors.indigo.shade800, Colors.deepPurple.shade700],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.indigo.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
+            color: Colors.indigo.withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -109,27 +156,27 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
         children: [
           Row(
             children: [
-              const Image(
-                image: AssetImage('images/logos.png'),
+              Image.asset(
+                'images/logos.png',
                 color: Colors.white,
                 width: 40,
                 height: 40,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  "Safety and Security Office\nCMU - DRMS",
+                  "CMU Safety and Security",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 18,
                   ),
                 ),
               ),
               CircleAvatar(
                 backgroundColor: Colors.white24,
                 child: IconButton(
-                  icon: const Icon(Icons.person, color: Colors.white),
+                  icon: const Icon(Icons.person_outline, color: Colors.white),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -142,13 +189,13 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statBox(scanData.length.toString(), "Students Scanned"),
-              Container(height: 40, width: 1, color: Colors.white24),
-              _statBox(violationsToday.toString(), "Violations Today"),
+              _statBox(scanData.length.toString(), "Total Records"),
+              Container(height: 40, width: 1, color: Colors.white38),
+              _statBox(violationsToday.toString(), "Today's Incidents"),
             ],
           ),
         ],
@@ -162,8 +209,8 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
         Text(
           number,
           style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+            fontSize: 30,
+            fontWeight: FontWeight.w900,
             color: Colors.white,
           ),
         ),
@@ -172,578 +219,320 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  Widget _buildScannerCard() {
+  Widget _buildSearchBar() {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: "Search student ID or name...",
+        prefixIcon: const Icon(Icons.search, color: Colors.indigo),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+        ),
+      ),
+      onChanged: (value) => setState(() => searchQuery = value),
+    );
+  }
+
+  Widget _buildScannerCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         children: [
-          Icon(Icons.camera_alt, size: 50, color: Colors.indigo.shade600),
+          Icon(Icons.badge, size: 50, color: Colors.indigo.shade600),
           const SizedBox(height: 12),
           const Text(
-            "Ready to Scan",
+            "Ready to Scan ID",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const Text(
-            "Position the student ID card in front of the camera",
+            "Scan the student ID card or use manual entry.",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.black54),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StudentIDScannerApp(),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StudentIDScannerApp(),
+                      ),
+                    );
+                    if (result != null && result is ViolationRecord) {
+                      if (result.department.isNotEmpty &&
+                          result.department.toLowerCase() != 'n/a' &&
+                          result.offenseLevel.isNotEmpty &&
+                          result.offenseLevel.toLowerCase() != 'n/a') {
+                        setState(() => scanData.insert(0, result));
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text("Scan ID"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
-              );
-              if (result != null && result is ViolationRecord) {
-                setState(() => scanData.insert(0, result));
-              }
-            },
-            icon: const Icon(Icons.qr_code_scanner),
-            label: const Text("Start Scan"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo.shade600,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ViolationScreen(name: "", course: "", studentNo: ""),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _showManualEntryDialog(context),
+                  icon: const Icon(Icons.edit_note),
+                  label: const Text("Manual"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade50,
+                    foregroundColor: Colors.indigo.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(color: Colors.indigo.shade200, width: 1),
+                    ),
+                  ),
                 ),
-              );
-              if (result != null && result is ViolationRecord) {
-                setState(() => scanData.insert(0, result));
-              }
-            },
-            icon: const Icon(Icons.edit, color: Colors.indigo),
-            label: const Text(
-              "Manual Entry",
-              style: TextStyle(color: Colors.indigo),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.indigo,
-              side: const BorderSide(color: Colors.indigo, width: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
               ),
-            ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentScans(List<ViolationRecord> data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Recent Scans",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        ...data.take(3).map((scan) => _scanTile(scan)),
-      ],
-    );
-  }
+  // ------------------ MANUAL ENTRY ------------------
+  void _showManualEntryDialog(BuildContext context) {
+    final TextEditingController studentNoController = TextEditingController();
+    bool isLoading = false;
+    Map<String, dynamic>? studentInfo;
+    String? errorMessage;
 
-  Widget _scanTile(ViolationRecord scan) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 10,
-        ),
-        leading: CircleAvatar(
-          backgroundColor: Colors.indigo.shade100,
-          child: const Icon(Icons.person, color: Colors.indigo),
-        ),
-        title: Text(
-          scan.studentName ?? "",
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          "${scan.studentId ?? ""}\n• ${scan.violation ?? ""}\n${scan.department ?? ""}",
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.black54,
-            height: 1.4,
-          ),
-        ),
-        trailing: _offenseBadge(scan.offenseLevel ?? "", scan.dateTime ?? ""),
-      ),
-    );
-  }
+    Future<void> fetchStudent(StateSetter setModalState) async {
+      setModalState(() {
+        isLoading = true;
+        errorMessage = null;
+        studentInfo = null;
+      });
 
-  Widget _offenseBadge(String offense, String? time) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          decoration: BoxDecoration(
-            color: offense == "1st"
-                ? Colors.yellow.shade700
-                : offense == "2nd"
-                ? Colors.orange
-                : Colors.red,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            "$offense Offense",
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        if (time != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(time, style: const TextStyle(fontSize: 12)),
-          ),
-      ],
-    );
-  }
+      final studentId = studentNoController.text.trim();
+      if (studentId.isEmpty) {
+        setModalState(() {
+          errorMessage = "Please enter a Student ID.";
+          isLoading = false;
+        });
+        return;
+      }
 
-  Widget _buildViewAllButton(BuildContext context) {
-    return Center(
-      child: TextButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: SizedBox(
-                height: 550,
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: _ScanHistoryModal(scanData: scanData),
-              ),
-            ),
-          );
-        },
-        child: const Text(
-          "View All Scan History",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-}
+      try {
+        final url = Uri.parse(
+          '${GlobalConfiguration().getValue("server_url")}/students/student-info/$studentId',
+        );
+        final response = await http.get(url);
 
-class _ScanHistoryModal extends StatefulWidget {
-  final List<ViolationRecord> scanData;
-  const _ScanHistoryModal({required this.scanData});
+        if (response.statusCode == 200) {
+          final decoded = json.decode(response.body);
+          if (decoded != null && decoded['student'] != null) {
+            setModalState(() {
+              studentInfo = Map<String, dynamic>.from(decoded['student']);
+            });
+          } else {
+            setModalState(() {
+              errorMessage = "Student not found.";
+            });
+          }
+        } else {
+          setModalState(() {
+            errorMessage = "Lookup failed. Status: ${response.statusCode}";
+          });
+        }
+      } catch (e) {
+        setModalState(() {
+          errorMessage = "Error connecting to server.";
+        });
+      } finally {
+        setModalState(() => isLoading = false);
+      }
+    }
 
-  @override
-  State<_ScanHistoryModal> createState() => _ScanHistoryModalState();
-}
-
-class _ScanHistoryModalState extends State<_ScanHistoryModal> {
-  String searchQuery = "";
-  List<String> selectedStatuses = [];
-  List<String> selectedViolations = [];
-  List<String> selectedDepartments = [];
-  DateTime? startDate;
-  DateTime? endDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredData = widget.scanData.where((scan) {
-      final matchesSearch =
-          scan.studentName.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          scan.studentId.contains(searchQuery);
-      final matchesStatus =
-          selectedStatuses.isEmpty ||
-          selectedStatuses.contains(scan.offenseLevel);
-      final matchesViolation =
-          selectedViolations.isEmpty ||
-          selectedViolations.contains(scan.violation);
-      final matchesDepartment =
-          selectedDepartments.isEmpty ||
-          selectedDepartments.contains(scan.department);
-
-      final scanTime = DateTime.tryParse(scan.dateTime ?? "");
-      final matchesDate =
-          (startDate == null ||
-              (scanTime != null &&
-                  scanTime.isAfter(
-                    startDate!.subtract(const Duration(days: 1)),
-                  ))) &&
-          (endDate == null ||
-              (scanTime != null &&
-                  scanTime.isBefore(endDate!.add(const Duration(days: 1)))));
-
-      return matchesSearch &&
-          matchesStatus &&
-          matchesViolation &&
-          matchesDepartment &&
-          matchesDate;
-    }).toList();
-
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        const Text(
-          "Scan History",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: "Search by name or student ID",
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.filter_list, color: Colors.indigo),
-                onPressed: () => _showFilterOptions(context),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade100,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            onChanged: (value) => setState(() => searchQuery = value),
-          ),
-        ),
-        if (selectedStatuses.isNotEmpty ||
-            selectedViolations.isNotEmpty ||
-            selectedDepartments.isNotEmpty ||
-            startDate != null ||
-            endDate != null)
-          Wrap(
-            spacing: 6,
-            children: [
-              ...selectedStatuses.map((s) => _buildChip(s, Colors.orange)),
-              ...selectedViolations.map((v) => _buildChip(v, Colors.blue)),
-              ...selectedDepartments.map((d) => _buildChip(d, Colors.green)),
-              if (startDate != null)
-                _buildChip(
-                  "From: ${startDate!.toLocal().toIso8601String().split('T')[0]}",
-                  Colors.purple,
-                ),
-              if (endDate != null)
-                _buildChip(
-                  "To: ${endDate!.toLocal().toIso8601String().split('T')[0]}",
-                  Colors.purple,
-                ),
-            ],
-          ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: filteredData.isEmpty
-              ? const Center(
-                  child: Text(
-                    "No results found",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: filteredData.length,
-                  itemBuilder: (context, index) => Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.indigo.shade100,
-                        child: const Icon(Icons.person, color: Colors.indigo),
-                      ),
-                      title: Text(
-                        filteredData[index].studentName ?? "",
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        "${filteredData[index].studentId} • ${filteredData[index].violation}\n${filteredData[index].department}",
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      trailing: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: filteredData[index].offenseLevel == "1st"
-                                  ? Colors.yellow.shade700
-                                  : filteredData[index].offenseLevel == "2nd"
-                                  ? Colors.orange
-                                  : Colors.red,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              "${filteredData[index].offenseLevel} Offense",
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            filteredData[index].dateTime ?? "",
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-        ),
-        const SizedBox(height: 10),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Close"),
-        ),
-      ],
-    );
-  }
-
-  void _showFilterOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: const EdgeInsets.all(20),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Filter Options",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        "Manual Student Lookup",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    const Text(
-                      "Status",
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      children: ["1st", "2nd", "3rd"].map((status) {
-                        final isSelected = selectedStatuses.contains(status);
-                        return ChoiceChip(
-                          label: Text(status),
-                          selected: isSelected,
-                          selectedColor: Colors.orange.shade300,
-                          onSelected: (val) {
-                            setModalState(() {
-                              val
-                                  ? selectedStatuses.add(status)
-                                  : selectedStatuses.remove(status);
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Violation",
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          [
-                            "Academic Dishonesty",
-                            "Improper Uniform",
-                            "Late Attendance",
-                            "Serious Misconduct",
-                            "Improper Conduct",
-                          ].map((violation) {
-                            final isSelected = selectedViolations.contains(
-                              violation,
-                            );
-                            return ChoiceChip(
-                              label: Text(violation),
-                              selected: isSelected,
-                              selectedColor: Colors.blue.shade300,
-                              onSelected: (val) {
-                                setModalState(() {
-                                  val
-                                      ? selectedViolations.add(violation)
-                                      : selectedViolations.remove(violation);
-                                });
-                              },
-                            );
-                          }).toList(),
-                    ),
-
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Department",
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          [
-                            "College of Arts & Sciences",
-                            "College of Computer Studies",
-                            "College of Education",
-                            "College of Criminology",
-                            "College of Business Administration",
-                          ].map((dept) {
-                            final isSelected = selectedDepartments.contains(
-                              dept,
-                            );
-                            return ChoiceChip(
-                              label: Text(dept),
-                              selected: isSelected,
-                              selectedColor: Colors.green.shade300,
-                              onSelected: (val) {
-                                setModalState(() {
-                                  val
-                                      ? selectedDepartments.add(dept)
-                                      : selectedDepartments.remove(dept);
-                                });
-                              },
-                            );
-                          }).toList(),
-                    ),
-
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Date Range",
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: startDate ?? DateTime.now(),
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
-                              );
-                              if (picked != null) {
-                                setModalState(() => startDate = picked);
-                              }
-                            },
-                            child: Text(
-                              startDate == null
-                                  ? "Start Date"
-                                  : startDate!
-                                        .toLocal()
-                                        .toIso8601String()
-                                        .split('T')[0],
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: studentNoController,
+                        decoration: InputDecoration(
+                          labelText: "Enter Student ID Number",
+                          prefixIcon: const Icon(
+                            Icons.badge_outlined,
+                            color: Colors.indigo,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: isLoading
+                            ? null
+                            : () => fetchStudent(setModalState),
+                        icon: isLoading
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.search),
+                        label: Text(
+                          isLoading ? "Searching..." : "Lookup Student",
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      if (errorMessage != null)
+                        Center(
+                          child: Text(
+                            "🚨 $errorMessage",
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        )
+                      else if (studentInfo != null)
+                        Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  studentInfo!['student_name'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.indigo.shade700,
+                                  ),
+                                ),
+                                const Divider(height: 16, color: Colors.grey),
+                                _buildInfoRow(
+                                  Icons.person_outline,
+                                  "ID:",
+                                  studentInfo!['student_no'] ?? '',
+                                ),
+                                _buildInfoRow(
+                                  Icons.business_outlined,
+                                  "Dept:",
+                                  studentInfo!['department'] ?? '',
+                                ),
+                                _buildInfoRow(
+                                  Icons.school_outlined,
+                                  "Course:",
+                                  studentInfo!['course'] ?? '',
+                                ),
+                                const SizedBox(height: 20),
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.arrow_forward),
+                                  label: const Text("Record Violation"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green.shade600,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ViolationScreen(
+                                          studentNo: studentInfo!['student_no'],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: endDate ?? DateTime.now(),
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
-                              );
-                              if (picked != null) {
-                                setModalState(() => endDate = picked);
-                              }
-                            },
-                            child: Text(
-                              endDate == null
-                                  ? "End Date"
-                                  : endDate!.toLocal().toIso8601String().split(
-                                      'T',
-                                    )[0],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              selectedStatuses.clear();
-                              selectedViolations.clear();
-                              selectedDepartments.clear();
-                              startDate = null;
-                              endDate = null;
-                            });
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Clear All"),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.indigo,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            setState(() {});
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Apply"),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -753,20 +542,278 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
     );
   }
 
-  Widget _buildChip(String label, Color color) {
-    return Chip(
-      label: Text(label, style: const TextStyle(color: Colors.white)),
-      backgroundColor: color,
-      deleteIcon: const Icon(Icons.close, color: Colors.white, size: 18),
-      onDeleted: () {
-        setState(() {
-          selectedStatuses.remove(label);
-          selectedViolations.remove(label);
-          selectedDepartments.remove(label);
-          if (label.startsWith("From:")) startDate = null;
-          if (label.startsWith("To:")) endDate = null;
-        });
-      },
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.indigo.shade400),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  // ------------------ RECENT SCANS ------------------
+  Widget _buildRecentScans(List<ViolationRecord> data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Recent Incident Logs",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        if (data.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(
+              child: Text(
+                "No records found.",
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ),
+          ),
+        ...data.take(5).map((scan) => _scanTile(scan)),
+      ],
+    );
+  }
+
+  Widget _scanTile(ViolationRecord scan) {
+    String formattedTime = '';
+    try {
+      final dateTime = DateTime.parse(scan.dateTime);
+      formattedTime = DateFormat('MMM dd, hh:mm a').format(dateTime.toLocal());
+    } catch (_) {
+      formattedTime = scan.dateTime;
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: Colors.indigo.shade50,
+          child: const Icon(Icons.person_2_outlined, color: Colors.indigo),
+        ),
+        title: Text(
+          scan.studentName,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "ID: ${scan.studentId}",
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Violation: ${scan.violation}",
+              style: const TextStyle(color: Colors.black54),
+            ),
+            Text(
+              "Department: ${scan.department}",
+              style: const TextStyle(color: Colors.black54),
+            ),
+          ],
+        ),
+        isThreeLine: true,
+        trailing: _offenseBadge(scan.offenseLevel, formattedTime),
+      ),
+    );
+  }
+
+  Widget _offenseBadge(String offense, String time) {
+    final mapping = {
+      "1st": ["1st Offense", Colors.green.shade600],
+      "2nd": ["2nd Offense", Colors.amber.shade700],
+      "3rd": ["3rd/Major", Colors.red.shade600],
+    };
+    final info =
+        mapping[offense.toLowerCase()] ?? ["Unknown", Colors.grey.shade600];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+          decoration: BoxDecoration(
+            color: info[1] as Color,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            info[0] as String,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(time, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+      ],
+    );
+  }
+
+  Widget _buildViewAllButton(BuildContext context) {
+    return Center(
+      child: TextButton.icon(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            builder: (context) => SizedBox(
+              height: MediaQuery.of(context).size.height * 0.85,
+              child: _ScanHistoryModal(scanData: scanData),
+            ),
+          );
+        },
+        icon: const Icon(Icons.list_alt_outlined),
+        label: const Text("View All Records"),
+      ),
+    );
+  }
+}
+
+// ------------------ VIEW ALL MODAL ------------------
+class _ScanHistoryModal extends StatelessWidget {
+  final List<ViolationRecord> scanData;
+
+  const _ScanHistoryModal({required this.scanData, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedData = List<ViolationRecord>.from(scanData)
+      ..sort((a, b) {
+        final dateA = DateTime.tryParse(a.dateTime) ?? DateTime(2000);
+        final dateB = DateTime.tryParse(b.dateTime) ?? DateTime(2000);
+        return dateB.compareTo(dateA);
+      });
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Container(
+            width: 60,
+            height: 6,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+        ),
+        const Text(
+          "All Violation Records",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: sortedData.length,
+            itemBuilder: (context, index) {
+              final scan = sortedData[index];
+              String formattedTime = '';
+              try {
+                final dateTime = DateTime.parse(scan.dateTime);
+                formattedTime = DateFormat(
+                  'MMM dd, yyyy hh:mm a',
+                ).format(dateTime.toLocal());
+              } catch (_) {
+                formattedTime = scan.dateTime;
+              }
+
+              return Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.indigo.shade50,
+                    child: const Icon(
+                      Icons.person_2_outlined,
+                      color: Colors.indigo,
+                    ),
+                  ),
+                  title: Text(
+                    scan.studentName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("ID: ${scan.studentId}"),
+                      Text("Violation: ${scan.violation}"),
+                      Text("Department: ${scan.department}"),
+                    ],
+                  ),
+                  trailing: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _offenseBadge(scan.offenseLevel),
+                      const SizedBox(height: 4),
+                      Text(
+                        formattedTime,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  isThreeLine: true,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _offenseBadge(String offense) {
+    final mapping = {
+      "1st": ["1st Offense", Colors.green.shade600],
+      "2nd": ["2nd Offense", Colors.amber.shade700],
+      "3rd": ["3rd/Major", Colors.red.shade600],
+    };
+    final info =
+        mapping[offense.toLowerCase()] ?? ["Unknown", Colors.grey.shade600];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      decoration: BoxDecoration(
+        color: info[1] as Color,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        info[0] as String,
+        style: const TextStyle(
+          fontSize: 12,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
@@ -774,6 +821,7 @@ class _ScanHistoryModalState extends State<_ScanHistoryModal> {
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  // --- Logout Confirmation Dialog ---
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -814,8 +862,8 @@ class ProfileScreen extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Clear stored user details
-                        GetStorage().erase();
+                        final box = GetStorage();
+                        box.erase(); // clear all saved user data
 
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (_) => const Login()),
@@ -825,6 +873,7 @@ class ProfileScreen extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: const Text("Logout"),
                     ),
@@ -846,23 +895,29 @@ class ProfileScreen extends StatelessWidget {
     final firstName = user['first_name'] ?? '';
     final lastName = user['last_name'] ?? '';
     final email = user['email'] ?? 'N/A';
+    final department = user['department'] ?? 'Safety and Security Office';
+
+    // Generate initials for avatar
+    final initials =
+        (firstName.isNotEmpty ? firstName[0] : '') +
+        (lastName.isNotEmpty ? lastName[0] : '');
+    final displayInitials = initials.isNotEmpty ? initials.toUpperCase() : 'U';
 
     return Scaffold(
       backgroundColor: Colors.blue.shade900,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
+              // Profile Header
               CircleAvatar(
-                radius: 40,
+                radius: 45,
                 backgroundColor: Colors.white24,
                 child: Text(
-                  firstName.isNotEmpty
-                      ? firstName[0] + (lastName.isNotEmpty ? lastName[0] : '')
-                      : 'U',
+                  displayInitials,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -870,45 +925,78 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                "$firstName $lastName".trim(),
+                "$firstName $lastName".trim().isEmpty
+                    ? "Unknown User"
+                    : "$firstName $lastName".trim(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 20),
+              Text(
+                email,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Info Fields
               _buildInfoField(
-                label: "Your Email",
+                label: "Email Address",
                 value: email,
                 icon: Icons.email_outlined,
               ),
               const SizedBox(height: 16),
               _buildInfoField(
-                label: "Password",
-                value: "********",
-                icon: Icons.visibility_off,
+                label: "First Name",
+                value: firstName,
+                icon: Icons.person_outline,
               ),
               const SizedBox(height: 16),
               _buildInfoField(
-                label: "Department",
-                value: "Safety and Security Office",
+                label: "Last Name",
+                value: lastName,
+                icon: Icons.badge_outlined,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Department / Office",
+                value: department,
                 icon: Icons.business_outlined,
               ),
-              const Spacer(),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Account Status",
+                value: "Active",
+                icon: Icons.verified_user_outlined,
+              ),
+              const SizedBox(height: 40),
+
+              // Logout Button
               ElevatedButton.icon(
                 onPressed: () => _showLogoutDialog(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                   padding: const EdgeInsets.symmetric(
-                    vertical: 20,
+                    vertical: 18,
                     horizontal: 40,
                   ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  minimumSize: const Size(double.infinity, 56),
                 ),
                 icon: const Icon(Icons.logout, color: Colors.white),
                 label: const Text(
                   "Logout",
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -918,6 +1006,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  // --- Info Field Builder ---
   Widget _buildInfoField({
     required String label,
     required String value,
@@ -928,9 +1017,18 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          Icon(icon, color: Colors.blue.shade700),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -941,7 +1039,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  value,
+                  value.isEmpty ? 'N/A' : value,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -951,7 +1049,6 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          Icon(icon, color: Colors.grey.shade600),
         ],
       ),
     );

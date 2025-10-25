@@ -54,7 +54,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
       DateTime dt = DateTime.parse(dateTimeStr).toLocal();
       return DateFormat('MMM dd, yyyy hh:mm a').format(dt);
     } catch (e) {
-      debugPrint('Date format error: $e');
       return dateTimeStr;
     }
   }
@@ -68,9 +67,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
       final imageBaseUrl = GlobalConfiguration().getValue("image_base_url");
-
       final url = Uri.parse('$baseUrl/violations/image');
-      debugPrint("📡 Fetching all images from: $url");
 
       final response = await http.get(url);
 
@@ -159,14 +156,15 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
         child: TextField(
           controller: controller,
           readOnly: true,
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
           decoration: InputDecoration(
             labelText: label,
             filled: true,
-            fillColor: Colors.white,
-            border: const OutlineInputBorder(),
+            fillColor: Colors.grey[100],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+              horizontal: 14,
+              vertical: 12,
             ),
           ),
         ),
@@ -177,11 +175,18 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   Widget _buildReadOnlyRemarks() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.black26),
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         _remarksController.text.isEmpty
@@ -193,19 +198,13 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   }
 
   Widget _buildImageGrid() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (imageUrls.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final labels = ["1st Offense", "2nd Offense", "3rd Offense"];
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (imageUrls.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 20),
         const Text(
           "Photo Evidence",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -215,75 +214,53 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(3, (index) {
             final imageUrl = index < imageUrls.length ? imageUrls[index] : null;
-            final label = labels[index];
-
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                child: Column(
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                child: Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: imageUrl != null
-                          ? () => _showZoomableNetworkImage(imageUrl)
-                          : null,
-                      child: Container(
-                        height: 400,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: imageUrl != null
-                              ? Image.network(
-                                  imageUrl,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                        if (loadingProgress == null) {
-                                          return child;
-                                        }
-                                        return const Center(
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: imageUrl != null
+                        ? GestureDetector(
+                            onTap: () => _showZoomableNetworkImage(imageUrl),
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) =>
+                                      loadingProgress == null
+                                      ? child
+                                      : const Center(
                                           child: CircularProgressIndicator(),
-                                        );
-                                      },
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 40,
-                                          color: Colors.grey,
                                         ),
-                                      ),
-                                )
-                              : const Center(
-                                  child: Text(
-                                    "No Image",
-                                    style: TextStyle(
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
                                       color: Colors.grey,
-                                      fontSize: 13,
                                     ),
                                   ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ],
+                            ),
+                          )
+                        : const Center(
+                            child: Text(
+                              "No Image",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                  ),
                 ),
               ),
             );
@@ -301,12 +278,25 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
           "View Violation Details",
           style: TextStyle(fontSize: 25, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF0033A0),
+        backgroundColor: const Color(0xFF446EAD),
+        elevation: 4,
+        shadowColor: Colors.black45,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
-          decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           padding: const EdgeInsets.all(16),
           child: SingleChildScrollView(
             child: Column(
@@ -339,14 +329,13 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const Text(
                   "Remarks",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 6),
                 _buildReadOnlyRemarks(),
-                const SizedBox(height: 20),
                 _buildImageGrid(),
               ],
             ),
