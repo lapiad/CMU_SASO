@@ -296,245 +296,6 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFf5f9ff),
-      appBar: AppBar(
-        title: const Text(
-          'User Management',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: const Color(0xFF446EAD),
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white, size: 32),
-          onPressed: () =>
-              setState(() => sideMenuSize = sideMenuSize == 0.0 ? 320.0 : 0.0),
-        ),
-        actions: [
-          Row(
-            children: [
-              FutureBuilder<String>(
-                future: getName(),
-                builder: (context, snapshot) => Text(
-                  snapshot.data ?? "Loading...",
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              CircleAvatar(
-                backgroundColor: Colors.white,
-                child: IconButton(
-                  icon: const Icon(Icons.person, color: Color(0xFF446EAD)),
-                  onPressed: () => _showAdminMenu(context),
-                ),
-              ),
-              const SizedBox(width: 40),
-            ],
-          ),
-        ],
-      ),
-      body: Row(
-        children: [
-          if (sideMenuSize != 0.0) _buildSideMenu(context),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      SummaryWidget(
-                        title: "Total Users",
-                        value: users.length.toString(),
-                        subtitle: "Registered Users",
-                        icon: Icons.supervised_user_circle_outlined,
-                        iconColor: Colors.blue,
-                      ),
-                      const SizedBox(width: 30),
-                      SummaryWidget(
-                        title: "Active Users",
-                        value: users
-                            .where((u) => u.status == "Active")
-                            .length
-                            .toString(),
-                        subtitle: "Currently Active",
-                        icon: Icons.online_prediction,
-                        iconColor: Colors.green,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(
-                            Colors.grey.shade100,
-                          ),
-                          columns: const [
-                            DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Name',
-                                  style: TextStyle(
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Email',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Office',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Role',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Status',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: SizedBox(
-                                width: 280,
-                                child: Text(
-                                  'Actions',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          rows: users.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final user = entry.value;
-                            return DataRow(
-                              cells: [
-                                DataCell(
-                                  Text(
-                                    user.name,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    user.email,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    user.office,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    user.role,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                DataCell(
-                                  Chip(
-                                    label: Text(
-                                      user.status,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                    backgroundColor: user.status == "Active"
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                                DataCell(
-                                  Row(
-                                    children: [
-                                      const SizedBox(width: 20),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                          size: 25,
-                                        ),
-                                        onPressed: () => _deleteUser(index),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showDialog(
-          context: context,
-          builder: (_) => const AddNewUserDialog(),
-        ),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          "Add User",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        backgroundColor: const Color(0xFF446EAD),
-      ),
-    );
-  }
-
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
@@ -624,4 +385,253 @@ class _UserManagementPageState extends State<UserMgt> {
     hoverColor: Colors.white10,
     onTap: onTap,
   );
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFf5f9ff),
+      appBar: AppBar(
+        title: const Text(
+          'User Management',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: const Color(0xFF446EAD),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white, size: 32),
+          onPressed: () =>
+              setState(() => sideMenuSize = sideMenuSize == 0.0 ? 320.0 : 0.0),
+        ),
+        actions: [
+          Row(
+            children: [
+              FutureBuilder<String>(
+                future: getName(),
+                builder: (context, snapshot) => Text(
+                  snapshot.data ?? "Loading...",
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 16),
+              CircleAvatar(
+                backgroundColor: Colors.white,
+                child: IconButton(
+                  icon: const Icon(Icons.person, color: Color(0xFF446EAD)),
+                  onPressed: () => _showAdminMenu(context),
+                ),
+              ),
+              const SizedBox(width: 40),
+            ],
+          ),
+        ],
+      ),
+      body: Row(
+        children: [
+          if (sideMenuSize != 0.0) _buildSideMenu(context),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      SummaryWidget(
+                        title: "Total Users",
+                        value: users.length.toString(),
+                        subtitle: "Registered Users",
+                        icon: Icons.supervised_user_circle_outlined,
+                        iconColor: Colors.blue,
+                      ),
+                      const SizedBox(width: 30),
+                      SummaryWidget(
+                        title: "Active Users",
+                        value: users
+                            .where((u) => u.status == "Active")
+                            .length
+                            .toString(),
+                        subtitle: "Currently Active",
+                        icon: Icons.online_prediction,
+                        iconColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black12, blurRadius: 10),
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            headingRowColor: MaterialStateProperty.all(
+                              Colors.grey.shade100,
+                            ),
+                            columns: const [
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 280,
+                                  child: Text(
+                                    'Name',
+                                    style: TextStyle(
+                                      fontSize: 23,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 280,
+                                  child: Text(
+                                    'Email',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 280,
+                                  child: Text(
+                                    'Office',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 280,
+                                  child: Text(
+                                    'Role',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 280,
+                                  child: Text(
+                                    'Status',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: SizedBox(
+                                  width: 280,
+                                  child: Text(
+                                    'Actions',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            rows: users.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final user = entry.value;
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(
+                                      user.name,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      user.email,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      user.office,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      user.role,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Chip(
+                                      label: Text(
+                                        user.status,
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
+                                      backgroundColor: user.status == "Active"
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Row(
+                                      children: [
+                                        const SizedBox(width: 20),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                            size: 25,
+                                          ),
+                                          onPressed: () => _deleteUser(index),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showDialog(
+          context: context,
+          builder: (_) => const AddNewUserDialog(),
+        ),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          "Add User",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF446EAD),
+      ),
+    );
+  }
 }
