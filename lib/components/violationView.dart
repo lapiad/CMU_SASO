@@ -66,38 +66,25 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
 
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final imageBaseUrl = GlobalConfiguration().getValue("image_base_url");
-      final url = Uri.parse('$baseUrl/violations/image');
+      final violation_id = widget.record.violationId;
+      final url = Uri.parse('$baseUrl/violations/images/$violation_id');
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final images = data['images'] as List?;
+        final List<dynamic> images = data['images'];
 
-        if (images != null && images.isNotEmpty) {
-          final filteredImages = images.where((img) {
-            final imgViolationId = img['violation_id']?.toString() ?? "";
-            return imgViolationId == widget.record.violationId;
-          }).toList();
-
+        if (images.isNotEmpty) {
+          final List<String> filteredImages = [];
+          for (var img in images) {
+            if (img['image_path'] != null &&
+                img['image_path'].toString().isNotEmpty) {
+              filteredImages.add(img['image_path'].toString());
+            }
+          }
           setState(() {
-            imageUrls = filteredImages
-                .where(
-                  (img) =>
-                      img['image_path'] != null &&
-                      img['image_path'].toString().isNotEmpty,
-                )
-                .map((img) {
-                  String path = img['image_path'];
-                  if (!path.startsWith('http')) {
-                    if (!path.startsWith('/')) path = '/$path';
-                    path = '$imageBaseUrl$path';
-                  }
-                  return path;
-                })
-                .toList();
-
+            imageUrls = filteredImages;
             _isLoading = false;
           });
         } else {
@@ -114,6 +101,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
         });
       }
     } catch (e) {
+      print(e);
       setState(() {
         _errorMessage = "Error loading images: $e";
         _isLoading = false;
@@ -129,12 +117,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
         insetPadding: EdgeInsets.zero,
         child: Stack(
           children: [
-            PhotoView(
-              imageProvider: NetworkImage(imageUrl),
-              backgroundDecoration: const BoxDecoration(color: Colors.black),
-              minScale: PhotoViewComputedScale.contained,
-              maxScale: PhotoViewComputedScale.covered * 3,
-            ),
+            Image.memory(base64Decode(imageUrl)),
             Positioned(
               top: 40,
               right: 20,
@@ -197,6 +180,16 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     );
   }
 
+  String addBase64Padding(String base64String) {
+    if (base64String.length % 4 > 0) {
+      base64String += '=' * (4 - base64String.length % 4);
+      debugPrint('Padded Base64 String: $base64String');
+      return base64String;
+    }
+    debugPrint('unPadded Base64 String: $base64String');
+    return base64String;
+  }
+
   Widget _buildImageGrid() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (imageUrls.isEmpty) return const SizedBox.shrink();
@@ -212,7 +205,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(3, (index) {
+          children: List.generate(imageUrls.length, (index) {
             final imageUrl = index < imageUrls.length ? imageUrls[index] : null;
             return Expanded(
               child: Padding(
@@ -235,23 +228,9 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
                     child: imageUrl != null
                         ? GestureDetector(
                             onTap: () => _showZoomableNetworkImage(imageUrl),
-                            child: Image.network(
-                              imageUrl,
+                            child: Image.memory(
+                              base64Decode(addBase64Padding(imageUrl)),
                               fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) =>
-                                      loadingProgress == null
-                                      ? child
-                                      : const Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Center(
-                                    child: Icon(
-                                      Icons.broken_image,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
                             ),
                           )
                         : const Center(

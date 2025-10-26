@@ -48,8 +48,8 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   String statusValue = "Pending";
   DateTime? incidentDate;
 
-  File? _photoEvidenceFile;
-  Uint8List? _photoEvidenceBytes;
+  List<File>? _photoEvidenceFile = [];
+  List<Uint8List>? _photoEvidenceBytesList = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -142,32 +142,46 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+    final pickedFile = await _picker.pickMultiImage();
+    if (pickedFile.length > 0) {
       if (kIsWeb) {
-        final bytes = await pickedFile.readAsBytes();
+        List<Uint8List> photo_bytes = [];
+        for (var photo in pickedFile) {
+          final bytes = await photo.readAsBytes();
+          photo_bytes.add(bytes);
+        }
         setState(() {
-          _photoEvidenceBytes = bytes;
-          _photoEvidenceFile = null;
+          _photoEvidenceBytesList = photo_bytes;
+          _photoEvidenceFile = [];
         });
       } else {
+        List<File> photo_bytes = [];
+        for (var photo in pickedFile) {
+          final bytes = File(photo.path);
+          photo_bytes.add(bytes);
+        }
         setState(() {
-          _photoEvidenceFile = File(pickedFile.path);
-          _photoEvidenceBytes = null;
+          _photoEvidenceFile = photo_bytes;
+          _photoEvidenceBytesList = [];
         });
       }
     }
   }
 
-  void _removeImage() {
-    setState(() {
-      _photoEvidenceFile = null;
-      _photoEvidenceBytes = null;
-    });
+  void _removeImage(int index) {
+    if (kIsWeb) {
+      setState(() {
+        _photoEvidenceBytesList!.removeAt(index);
+      });
+    } else {
+      setState(() {
+        _photoEvidenceFile!.removeAt(index);
+      });
+    }
   }
 
-  void _openFullScreenImage() {
-    if (_photoEvidenceFile == null && _photoEvidenceBytes == null) return;
+  void _openFullScreenImage(int index) {
+    if (_photoEvidenceFile!.isEmpty && _photoEvidenceBytesList!.isEmpty) return;
 
     showDialog(
       context: context,
@@ -178,8 +192,8 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
           children: [
             PhotoView(
               imageProvider: kIsWeb
-                  ? MemoryImage(_photoEvidenceBytes!)
-                  : FileImage(_photoEvidenceFile!) as ImageProvider,
+                  ? MemoryImage(_photoEvidenceBytesList![index])
+                  : FileImage(_photoEvidenceFile![index]) as ImageProvider,
               backgroundDecoration: const BoxDecoration(color: Colors.black),
             ),
             Positioned(
@@ -208,7 +222,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   }
 
   Widget _buildPhotoPreview() {
-    if (_photoEvidenceFile == null && _photoEvidenceBytes == null) {
+    if (_photoEvidenceFile!.isEmpty && _photoEvidenceBytesList!.isEmpty) {
       return const SizedBox(
         height: 80,
         child: Center(
@@ -223,40 +237,59 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         ),
       );
     }
-
-    final imageWidget = kIsWeb
-        ? Image.memory(_photoEvidenceBytes!, fit: BoxFit.cover)
-        : Image.file(_photoEvidenceFile!, fit: BoxFit.cover);
+    List<Widget> imageWidgets = [];
+    List<Widget> stackWidgets = [];
+    if (kIsWeb) {
+      for (var bytes in _photoEvidenceBytesList!) {
+        imageWidgets.add(
+          GestureDetector(
+            onTap: () {
+              if (_photoEvidenceFile!.isEmpty &&
+                  _photoEvidenceBytesList!.isEmpty) {
+                _pickImage;
+              } else {
+                _openFullScreenImage(_photoEvidenceBytesList!.indexOf(bytes));
+              }
+            },
+            child: Image.memory(bytes, fit: BoxFit.cover),
+          ),
+        );
+        imageWidgets.add(
+          Positioned(
+            top: 6,
+            right: 6,
+            child: GestureDetector(
+              onTap: () {
+                _removeImage(_photoEvidenceBytesList!.indexOf(bytes));
+              },
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(4),
+                child: const Icon(Icons.close, color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+        );
+        stackWidgets.add(Stack(children: imageWidgets));
+        imageWidgets = [];
+      }
+    }
 
     return GestureDetector(
-      onTap: _openFullScreenImage,
+      // onTap: _openFullScreenImage,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 200),
-          child: Stack(
-            children: [
-              imageWidget,
-              Positioned(
-                top: 6,
-                right: 6,
-                child: GestureDetector(
-                  onTap: _removeImage,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          child: GridView.count(
+            crossAxisCount: 3,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+            shrinkWrap: true,
+            children: stackWidgets,
           ),
         ),
       ),
@@ -283,15 +316,24 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       'date_of_incident': incidentDate!.toIso8601String(),
     };
 
-    if (_photoEvidenceFile != null) {
-      final bytes = await _photoEvidenceFile!.readAsBytes();
-      violationData['photo_evidence'] = base64Encode(bytes);
-    } else if (_photoEvidenceBytes != null) {
-      violationData['photo_evidence'] = base64Encode(_photoEvidenceBytes!);
+    if (_photoEvidenceFile!.isNotEmpty) {
+      List<String> photo_base64 = [];
+      for (var photo in _photoEvidenceFile!) {
+        final bytes = await photo.readAsBytes();
+        photo_base64.add(base64Encode(bytes));
+      }
+      violationData['photo_evidence'] = photo_base64;
+    } else if (_photoEvidenceBytesList!.isNotEmpty) {
+      List<String> photo_base64 = [];
+      for (var photo in _photoEvidenceBytesList!) {
+        photo_base64.add(base64Encode(photo));
+      }
+      violationData['photo_evidence'] = photo_base64;
     }
 
     try {
       final url = '${GlobalConfiguration().getValue("server_url")}/violations';
+      print(jsonEncode(violationData));
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
@@ -309,6 +351,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         );
       }
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -544,11 +587,11 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   // Photo Preview
                   InkWell(
-                    onTap:
-                        _photoEvidenceFile == null &&
-                            _photoEvidenceBytes == null
-                        ? _pickImage
-                        : _openFullScreenImage,
+                    onTap: (){
+                      if (_photoEvidenceFile!.isEmpty &&
+                          _photoEvidenceBytesList!.isEmpty) {
+                        _pickImage();
+                    }},
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.blueAccent),
