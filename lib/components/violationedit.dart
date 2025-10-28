@@ -321,14 +321,55 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
           onTap: () => _showZoomableImage(url),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.memory(
-              base64Decode(url),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.grey.shade300,
-                child: const Icon(Icons.broken_image, color: Colors.grey),
-              ),
-            ),
+            child: index + 1 > fromDBImagesCount
+                ? Stack(
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(width: 4),
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.black54,
+                            size: 16,
+                          ),
+                          Text("Click 'Save' to save this image."),
+                        ],
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black12, width: 20),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Image.memory(
+                          base64Decode(url),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: Colors.grey.shade300,
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Image.memory(
+                    base64Decode(url),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
           ),
         );
       },

@@ -29,7 +29,6 @@ class SummaryReportsPage extends StatefulWidget {
 class _SummaryReportsPageState extends State<SummaryReportsPage> {
   List<ViolationRecord> allRecords = [];
   double sideMenuSize = 0.0;
-  String? role;
 
   final ScreenshotController _pieController = ScreenshotController();
   final ScreenshotController _barController = ScreenshotController();
@@ -329,20 +328,19 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
           }),
           _menuItem(Icons.pie_chart, 'Summary of Reports', () {}),
           const Divider(color: Colors.white54, indent: 16, endIndent: 16),
-          role == 'admin'
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _menuHeader("ADMINISTRATION"),
-                    _menuItem(Icons.person, "User Management", () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => UserMgt()),
-                      );
-                    }),
-                  ],
-                )
-              : SizedBox(),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _menuHeader("ADMINISTRATION"),
+              _menuItem(Icons.person, "User Management", () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => UserMgt()),
+                );
+              }),
+            ],
+          ),
         ],
       ),
     );

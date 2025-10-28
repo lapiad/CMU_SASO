@@ -11,6 +11,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 
+/// Fetch the name of the current logged-in user
 Future<String> getName() async {
   final box = GetStorage();
   final url = Uri.parse(
@@ -20,13 +21,15 @@ Future<String> getName() async {
 
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
-    return data['first_name'];
+    return data['first_name'] ?? "Unknown";
   } else {
     return "Unknown";
   }
 }
 
+/// User model
 class User {
+  final String id;
   final String name;
   final String email;
   final String office;
@@ -34,6 +37,7 @@ class User {
   final String status;
 
   User({
+    required this.id,
     required this.name,
     required this.email,
     required this.office,
@@ -43,7 +47,8 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      name: json['first_name'] ?? '',
+      id: (json['id'] ?? json['_id'] ?? json['user_id'] ?? '').toString(),
+      name: json['first_name'] ?? json['username'] ?? '',
       email: json['email'] ?? '',
       office: json['department'] ?? '',
       role: json['role'] ?? '',
@@ -52,6 +57,7 @@ class User {
   }
 }
 
+/// User Management Page
 class UserMgt extends StatefulWidget {
   const UserMgt({super.key});
 
@@ -62,24 +68,19 @@ class UserMgt extends StatefulWidget {
 class _UserManagementPageState extends State<UserMgt> {
   double sideMenuSize = 0.0;
   List<User> users = [];
+  bool isLoading = false; // ✅ Loading state
 
   @override
   void initState() {
     super.initState();
-    fetchUser();
+    fetchUsers();
   }
 
-  Future<void> fetchUser() async {
+  /// ✅ Fetch users from backend
+  Future<void> fetchUsers() async {
+    setState(() => isLoading = true);
     try {
-      final box = GetStorage();
-      final userId = box.read('user_id');
-      if (userId == null) throw Exception("User ID not found.");
-
       final serverUrl = GlobalConfiguration().getValue("server_url");
-      if (serverUrl == null || serverUrl.isEmpty) {
-        throw Exception("Server URL is not configured.");
-      }
-
       final url = Uri.parse('$serverUrl/users-details');
       final response = await http.get(
         url,
@@ -87,188 +88,91 @@ class _UserManagementPageState extends State<UserMgt> {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          users = [
-            User(
-              name: data['first_name']?.toString() ?? '',
-              email: data['email']?.toString() ?? '',
-              office: data['department']?.toString() ?? '',
-              role: data['role']?.toString() ?? '',
-              status: data['status']?.toString() ?? 'Active',
-            ),
-          ];
-        });
+        final Map<String, dynamic> jsonBody = json.decode(response.body);
+        if (jsonBody.containsKey('users')) {
+          final List<dynamic> userList = jsonBody['users'];
+          setState(() {
+            users = userList.map((u) => User.fromJson(u)).toList();
+          });
+        }
       } else {
-        debugPrint("Failed to fetch user: ${response.statusCode}");
+        debugPrint("Failed to fetch users: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      debugPrint("Error fetching users: $e");
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
-  void _editUser(int index) {
+  /// ✅ Delete user and auto-refresh
+  Future<void> _deleteUser(int index) async {
     final user = users[index];
-    final nameController = TextEditingController(text: user.name);
-    final emailController = TextEditingController(text: user.email);
-    final officeController = TextEditingController(text: user.office);
-    String roleValue = user.role;
-    String statusValue = user.status;
-
-    showDialog(
+    final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.edit, color: Colors.blue, size: 30),
-            SizedBox(width: 8),
-            Text(
-              "Edit User",
-              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-            ),
-          ],
+        title: const Text(
+          'Delete User',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: SingleChildScrollView(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    _buildTextField("Name", nameController),
-                    _buildTextField("Email", emailController),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  children: [
-                    _buildTextField("Office", officeController),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: roleValue,
-                      decoration: _inputDecoration("Role"),
-                      items: ["SASO Officer", "School Guard"]
-                          .map(
-                            (r) => DropdownMenuItem(value: r, child: Text(r)),
-                          )
-                          .toList(),
-                      onChanged: (value) => roleValue = value ?? roleValue,
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: statusValue,
-                      decoration: _inputDecoration("Status"),
-                      items: ["Active", "Inactive"]
-                          .map(
-                            (s) => DropdownMenuItem(value: s, child: Text(s)),
-                          )
-                          .toList(),
-                      onChanged: (value) => statusValue = value ?? statusValue,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        content: Text("Are you sure you want to delete '${user.name}'?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "Cancel",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
           ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[900],
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              setState(() {
-                users[index] = User(
-                  name: nameController.text,
-                  email: emailController.text,
-                  office: officeController.text,
-                  role: roleValue,
-                  status: statusValue,
-                );
-              });
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.save, size: 20),
-            label: const Text(
-              "Save",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _deleteUser(int index) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: Colors.red, size: 30),
-            SizedBox(width: 8),
-            Text(
-              "Delete User",
-              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: Text(
-          "Are you sure you want to delete '${users[index].name}'?",
-          style: const TextStyle(fontSize: 18),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "Cancel",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-          ElevatedButton.icon(
+          ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              setState(() => users.removeAt(index));
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.delete, color: Colors.white),
-            label: const Text(
-              "Delete",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
-  }
 
-  InputDecoration _inputDecoration(String label) => InputDecoration(
-    labelText: label,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    filled: true,
-    fillColor: Colors.grey[100],
-  );
+    if (confirm != true) return;
 
-  Widget _buildTextField(String label, TextEditingController controller) =>
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: TextField(
-          controller: controller,
-          decoration: _inputDecoration(label),
-        ),
+    try {
+      final serverUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$serverUrl/users/${user.id}');
+      final resp = await http.delete(
+        url,
+        headers: {'Content-Type': 'application/json'},
       );
 
+      if (resp.statusCode == 200 || resp.statusCode == 204) {
+        setState(() => users.removeAt(index));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${user.name} deleted')));
+        await fetchUsers(); // ✅ Refresh table after delete
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete user: ${resp.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  /// ✅ Function to open Add User dialog and refresh after close
+  void _openAddUserDialog() async {
+    final result = await showDialog(
+      context: context,
+      builder: (_) => const AddNewUserDialog(),
+    );
+
+    // If dialog returns success, refresh table automatically
+    if (result == true) {
+      await fetchUsers(); // ✅ Re-fetch new data from backend
+    }
+  }
+
+  /// Admin dropdown menu
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
@@ -306,6 +210,7 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
+  /// Sidebar builder
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
@@ -396,6 +301,7 @@ class _UserManagementPageState extends State<UserMgt> {
     onTap: onTap,
   );
 
+  /// Main UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -470,159 +376,171 @@ class _UserManagementPageState extends State<UserMgt> {
                   ),
                   const SizedBox(height: 20),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black12, blurRadius: 10),
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            headingRowColor: WidgetStateProperty.all(
-                              Colors.grey.shade100,
+                    child: isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          ) // ✅ Loading indicator
+                        : Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
-                            columns: const [
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 280,
-                                  child: Text(
-                                    'Name',
-                                    style: TextStyle(
-                                      fontSize: 23,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  headingRowColor: WidgetStateProperty.all(
+                                    Colors.grey.shade100,
                                   ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 280,
-                                  child: Text(
-                                    'Email',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 280,
-                                  child: Text(
-                                    'Office',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 280,
-                                  child: Text(
-                                    'Role',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 280,
-                                  child: Text(
-                                    'Status',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: SizedBox(
-                                  width: 280,
-                                  child: Text(
-                                    'Actions',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            rows: users.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final user = entry.value;
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    Text(
-                                      user.name,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      user.email,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      user.office,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      user.role,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Chip(
-                                      label: Text(
-                                        user.status,
-                                        style: const TextStyle(fontSize: 20),
-                                      ),
-                                      backgroundColor: user.status == "Active"
-                                          ? Colors.green
-                                          : Colors.red,
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        const SizedBox(width: 20),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                            size: 25,
+                                  columns: const [
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: 280,
+                                        child: Text(
+                                          'Name',
+                                          style: TextStyle(
+                                            fontSize: 23,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          onPressed: () => _deleteUser(index),
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: 280,
+                                        child: Text(
+                                          'Email',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: 280,
+                                        child: Text(
+                                          'Office',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: 280,
+                                        child: Text(
+                                          'Role',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: 280,
+                                        child: Text(
+                                          'Status',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          'Actions',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  rows: users.asMap().entries.map((entry) {
+                                    final index = entry.key;
+                                    final user = entry.value;
+                                    return DataRow(
+                                      cells: [
+                                        DataCell(
+                                          Text(
+                                            user.name,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            user.email,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            user.office,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            user.role,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Chip(
+                                            label: Text(
+                                              user.status,
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                            backgroundColor:
+                                                user.status == "Active"
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
+                                        ),
+                                        DataCell(
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
+                                            ),
+                                            onPressed: () => _deleteUser(index),
+                                          ),
                                         ),
                                       ],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -631,10 +549,7 @@ class _UserManagementPageState extends State<UserMgt> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showDialog(
-          context: context,
-          builder: (_) => const AddNewUserDialog(),
-        ),
+        onPressed: _openAddUserDialog, // ✅ Dynamic refresh after add
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           "Add User",

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/GenerateReport.dart';
@@ -28,19 +29,39 @@ class AdminDashboardPage extends StatefulWidget {
   _AdminDashboardPageState createState() => _AdminDashboardPageState();
 }
 
-class _AdminDashboardPageState extends State<AdminDashboardPage>
-    with SingleTickerProviderStateMixin {
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
   List<dynamic> recentViolations = [];
   String? userName;
   String? role;
+
+  Map<String, dynamic> summaryData = {
+    "totalCases": "0",
+    "pending": "0",
+    "inProgress": "0",
+    "reviewed": "0",
+  };
+
+  Timer? refreshTimer;
 
   @override
   void initState() {
     super.initState();
     fetchUserName();
-    fetchRecentViolations();
+    fetchViolations();
+
+    // Periodic refresh every 30 seconds
+    refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      fetchViolations();
+    });
   }
 
+  @override
+  void dispose() {
+    refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  // ===================== USER INFO =====================
   Future<void> fetchUserName() async {
     try {
       final box = GetStorage();
@@ -55,36 +76,82 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           role = data['role'];
         });
       } else {
-        userName = "Unknown";
+        setState(() => userName = "Unknown");
       }
     } catch (e) {
       setState(() => userName = "Unknown");
     }
   }
 
-  Future<void> fetchRecentViolations() async {
+  // ===================== VIOLATIONS =====================
+  Future<void> fetchViolations() async {
     try {
       final url = Uri.parse(
-        '${GlobalConfiguration().getValue("server_url")}/violations/recent',
+        '${GlobalConfiguration().getValue("server_url")}/violations',
       );
       final response = await http.get(url);
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<dynamic> violationsList = [];
+
         if (data is List) {
           violationsList = data;
         } else if (data is Map<String, dynamic> &&
             data.containsKey('violations')) {
           violationsList = data['violations'] as List<dynamic>;
         }
-        setState(() => recentViolations = violationsList);
+
+        // Sort by newest first
+        violationsList.sort((a, b) {
+          final dateA =
+              DateTime.tryParse(a['created_at'] ?? '') ?? DateTime(2000);
+          final dateB =
+              DateTime.tryParse(b['created_at'] ?? '') ?? DateTime(2000);
+          return dateB.compareTo(dateA);
+        });
+
+        setState(() {
+          recentViolations = violationsList;
+        });
+        computeSummary();
       }
     } catch (e) {
       print("Error fetching violations: $e");
-      setState(() => recentViolations = []);
+      setState(() {
+        recentViolations = [];
+        computeSummary();
+      });
     }
   }
 
+  void computeSummary() {
+    int total = recentViolations.length;
+    int pending = 0;
+    int inProgress = 0;
+    int reviewed = 0;
+
+    for (var v in recentViolations) {
+      String status = (v['status'] ?? '').toString().toLowerCase();
+      if (status == 'pending')
+        pending++;
+      else if (status == 'in progress' || status == 'under review')
+        inProgress++;
+      else if (status == 'reviewed' || status == 'referred')
+        reviewed++;
+    }
+
+    setState(() {
+      summaryData = {
+        "totalCases": total.toString(),
+        "pending": pending.toString(),
+        "inProgress": inProgress.toString(),
+        "reviewed": reviewed.toString(),
+      };
+    });
+  }
+
+  // ===================== ADMIN MENU =====================
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
@@ -94,6 +161,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
         _popupItem(Icons.logout, 'Sign Out', 'signout'),
       ],
     );
+
     if (result == 'profile') {
       Navigator.pushReplacement(
         context,
@@ -159,18 +227,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     return Colors.grey;
   }
 
+  // ===================== BUILD =====================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const LinearGradient(
-                colors: [Color(0xFFe3eeff), Color(0xFFf5f9ff)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(Rect.fromLTWH(0, 0, 400, 800)).transform !=
-              null
-          ? null
-          : null,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text(
           'CMU-SASO DASHBOARD',
@@ -204,10 +265,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               InkWell(
                 borderRadius: BorderRadius.circular(50),
                 onTap: () => _showAdminMenu(context),
-                child: CircleAvatar(
+                child: const CircleAvatar(
                   radius: 22,
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.person, color: Color(0xFF446EAD)),
+                  child: Icon(Icons.person, color: Color(0xFF446EAD)),
                 ),
               ),
               const SizedBox(width: 40),
@@ -217,7 +278,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       ),
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        padding: EdgeInsets.zero,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFFf7faff), Color(0xFFdce6ff)],
@@ -262,6 +322,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
+  // ===================== SIDE MENU =====================
   Widget _buildSideMenu(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,26 +371,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           );
         }),
         const Divider(color: Colors.white54, indent: 16, endIndent: 16),
-        role == 'admin'
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _menuHeader("ADMINISTRATION"),
-                  _menuItem(Icons.person, "User Management", () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => UserMgt()),
-                    );
-                  }),
-                ],
-              )
-            : SizedBox(),
+        if (role == 'admin') ...[
+          _menuHeader("ADMINISTRATION"),
+          _menuItem(Icons.person, "User Management", () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => UserMgt()),
+            );
+          }),
+        ],
       ],
     );
   }
 
   Widget _menuHeader(String title) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
     child: Text(
       title,
       style: const TextStyle(
@@ -350,13 +406,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     onTap: onTap,
   );
 
+  // ===================== SUMMARY SECTION =====================
   Widget _buildSummarySection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.7),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       child: MediaQuery.of(context).size.width > 770
           ? Row(
@@ -364,31 +421,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               children: [
                 SummaryWidget(
                   title: "Total Cases",
-                  value: "3",
-                  subtitle: "Active Referrals",
+                  value: summaryData["totalCases"] ?? "0",
+                  subtitle: "All Recorded Cases",
                   icon: Icons.cases_outlined,
-                  iconColor: Colors.red,
-                ),
-                SummaryWidget(
-                  title: "Under Review",
-                  value: "0",
-                  subtitle: "Being Evaluated",
-                  icon: Icons.reviews,
-                  iconColor: Colors.blue,
-                ),
-                SummaryWidget(
-                  title: "Scheduled",
-                  value: "0",
-                  subtitle: "Hearings Set",
-                  icon: Icons.schedule,
-                  iconColor: Colors.teal,
+                  iconColor: Colors.indigo,
                 ),
                 SummaryWidget(
                   title: "Pending",
-                  value: "0",
-                  subtitle: "Awaiting Decision",
-                  icon: Icons.pending,
-                  iconColor: Colors.yellow,
+                  value: summaryData["pending"] ?? "0",
+                  subtitle: "Awaiting Action",
+                  icon: Icons.hourglass_bottom,
+                  iconColor: Colors.orange,
+                ),
+                SummaryWidget(
+                  title: "In Progress",
+                  value: summaryData["inProgress"] ?? "0",
+                  subtitle: "Currently Handled",
+                  icon: Icons.autorenew,
+                  iconColor: Colors.blueAccent,
+                ),
+                SummaryWidget(
+                  title: "Reviewed",
+                  value: summaryData["reviewed"] ?? "0",
+                  subtitle: "Completed Cases",
+                  icon: Icons.verified,
+                  iconColor: Colors.green,
                 ),
               ],
             )
@@ -398,37 +455,38 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               children: [
                 SummaryWidget(
                   title: "Total Cases",
-                  value: "3",
-                  subtitle: "Active Referrals",
+                  value: summaryData["totalCases"] ?? "0",
+                  subtitle: "All Recorded Cases",
                   icon: Icons.cases_outlined,
-                  iconColor: Colors.red,
-                ),
-                SummaryWidget(
-                  title: "Under Review",
-                  value: "0",
-                  subtitle: "Being Evaluated",
-                  icon: Icons.reviews,
-                  iconColor: Colors.blue,
-                ),
-                SummaryWidget(
-                  title: "Scheduled",
-                  value: "0",
-                  subtitle: "Hearings Set",
-                  icon: Icons.schedule,
-                  iconColor: Colors.teal,
+                  iconColor: Colors.indigo,
                 ),
                 SummaryWidget(
                   title: "Pending",
-                  value: "0",
-                  subtitle: "Awaiting Decision",
-                  icon: Icons.pending,
-                  iconColor: Colors.yellow,
+                  value: summaryData["pending"] ?? "0",
+                  subtitle: "Awaiting Action",
+                  icon: Icons.hourglass_bottom,
+                  iconColor: Colors.orange,
+                ),
+                SummaryWidget(
+                  title: "In Progress",
+                  value: summaryData["inProgress"] ?? "0",
+                  subtitle: "Currently Handled",
+                  icon: Icons.autorenew,
+                  iconColor: Colors.blueAccent,
+                ),
+                SummaryWidget(
+                  title: "Reviewed",
+                  value: summaryData["reviewed"] ?? "0",
+                  subtitle: "Completed Cases",
+                  icon: Icons.verified,
+                  iconColor: Colors.green,
                 ),
               ],
             ),
     );
   }
 
+  // ===================== BOTTOM SECTION =====================
   Widget _buildBottomSection(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,25 +496,30 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             title: 'Recent Violations',
             child: recentViolations.isEmpty
                 ? const Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(3),
                     child: Text(
                       "No recent violations",
                       style: TextStyle(fontSize: 18, color: Colors.black54),
                     ),
                   )
-                : Column(
-                    children: recentViolations.map((v) {
-                      return ViolationEntry(
-                        name: v['student_name'] ?? "",
-                        violationtype: v['violation_type'] ?? "",
-                        offenselevel: v['offense_level'] ?? "Unknown",
-                        offenseColor: getOffenseColor(
-                          v['offense_level'] ??
-                              v['violation_type'] ??
-                              "Unknown",
-                        ),
-                      );
-                    }).toList(),
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await fetchViolations();
+                    },
+                    child: Column(
+                      children: recentViolations.take(3).map((v) {
+                        return ViolationEntry(
+                          name: v['student_name'] ?? "",
+                          violationtype: v['violation_type'] ?? "",
+                          offenselevel: v['offense_level'] ?? "Unknown",
+                          offenseColor: getOffenseColor(
+                            v['offense_level'] ??
+                                v['violation_type'] ??
+                                "Unknown",
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
           ),
         ),
@@ -478,7 +541,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         context: context,
                         builder: (_) => const CreateViolationDialog(),
                       );
-                      fetchRecentViolations(); // Refresh after creating
+                      fetchViolations();
                     },
                   ),
                 ),
@@ -488,11 +551,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   child: buildActionButton(
                     Icons.article_outlined,
                     "View Pending Reports",
-                    () {
-                      showDialog(
+                    () async {
+                      await showDialog(
                         context: context,
                         builder: (_) => PendingReportsDialog(),
                       );
+                      fetchViolations();
                     },
                   ),
                 ),
@@ -502,11 +566,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   child: buildActionButton(
                     Icons.bar_chart,
                     "Generate Report",
-                    () {
-                      showDialog(
+                    () async {
+                      await showDialog(
                         context: context,
                         builder: (_) => ReportDialog(),
                       );
+                      fetchViolations();
                     },
                   ),
                 ),
@@ -525,7 +590,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 10,
@@ -550,8 +615,4 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       ),
     );
   }
-}
-
-extension on Shader {
-  Null get transform => null;
 }
