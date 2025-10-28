@@ -10,6 +10,7 @@ class ViolationRecord {
   final String status;
   final String base64Imagestring;
   final String offenseLevel;
+  String? remarks;
 
   var reportStatus;
 
@@ -25,6 +26,8 @@ class ViolationRecord {
     required this.status,
     required this.base64Imagestring,
     required this.offenseLevel,
+    this.remarks,
+
   });
 
   factory ViolationRecord.fromJson(Map<String, dynamic> json) {
@@ -40,10 +43,10 @@ class ViolationRecord {
       status: json['status'] ?? '',
       base64Imagestring: json['photo_evidence'] ?? '',
       offenseLevel: json['offense_level'] ?? '',
+      remarks: json['remarks'] ?? '',
     );
   }
 
-  Null get remarks => null;
 
   Null get photoEvidence => null;
 }

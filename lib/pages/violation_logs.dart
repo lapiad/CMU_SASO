@@ -815,6 +815,18 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                     label: SizedBox(
                       width: 190,
                       child: Text(
+                        'Violation Id',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: SizedBox(
+                      width: 190,
+                      child: Text(
                         'Student Name',
                         style: TextStyle(
                           fontSize: 18,
@@ -925,6 +937,15 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                     cells: [
                       DataCell(
                         Text(
+                          record.violationId,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
                           record.studentName,
                           style: const TextStyle(
                             fontSize: 15,
@@ -1033,7 +1054,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => EditableViolationFormPage(
-                                      record: record,
+                                      violationId: record.violationId,
                                     ),
                                   ),
                                 );
