@@ -1,11 +1,11 @@
 import 'dart:typed_data';
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/classes/Integrations.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class ReportDialog extends StatefulWidget {
   const ReportDialog({super.key});
@@ -334,35 +334,44 @@ class _ReportDialogState extends State<ReportDialog> {
 
   // ===================== SAVE PDF =====================
   Future<void> _savePdfToDevice(Uint8List pdfBytes) async {
-    try {
-      final blob = html.Blob([pdfBytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-
-      final anchor = html.AnchorElement(href: url)
-        ..download =
-            "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf"
-        ..target = "blank";
-
-      html.document.body!.append(anchor);
-      anchor.click();
-      anchor.remove();
-      html.Url.revokeObjectUrl(url);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("✅ PDF report downloaded successfully!"),
-          backgroundColor: Colors.green,
-        ),
+  final now = DateTime.now();
+   await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename:
+            "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf",
       );
-    } catch (e) {
-      debugPrint("PDF Download Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("❌ Failed to download report: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  //   try {
+  //     final jsfile =pdfBytes.toJS;
+  //     final jsBlobParts = <JSAny>[jsfile].toJS;
+  //     final blob = html.Blob(jsBlobParts, html.BlobPropertyBag(type: 'application/pdf'));
+  //     final url = html.URL.createObjectURL(blob);
+
+  //     final anchor = html.document.createElement('a') as html.HTMLAnchorElement
+  //       ..href = url
+  //       ..download =
+  //           "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf"
+  //       ..target = "blank";
+
+  //     html.document.body!.append(anchor);
+  //     anchor.click();
+  //     anchor.remove();
+  //     html.URL.revokeObjectURL(url);
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text("✅ PDF report downloaded successfully!"),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     debugPrint("PDF Download Error: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text("❌ Failed to download report: $e"),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
   }
 
   // ===================== UI BUILD =====================
