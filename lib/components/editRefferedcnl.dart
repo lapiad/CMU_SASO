@@ -61,7 +61,7 @@ class _EditCaseDialogState extends State<EditCaseDialog> {
             children: [
               SizedBox(height: 30),
               DropdownButtonFormField<String>(
-                value: priority,
+                initialValue: priority,
                 items: ['High Priority', 'Medium Priority', 'Low Priority']
                     .map(
                       (label) =>
@@ -79,7 +79,7 @@ class _EditCaseDialogState extends State<EditCaseDialog> {
               ),
               SizedBox(height: 30),
               DropdownButtonFormField<String>(
-                value: status,
+                initialValue: status,
                 items: ['Under Review', 'Resolved', 'Pending']
                     .map(
                       (label) =>

@@ -66,8 +66,8 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
 
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final violation_id = widget.record.violationId;
-      final url = Uri.parse('$baseUrl/violations/images/$violation_id');
+      final violationId = widget.record.violationId;
+      final url = Uri.parse('$baseUrl/violations/images/$violationId');
 
       final response = await http.get(url);
 

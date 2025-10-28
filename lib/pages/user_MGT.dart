@@ -137,7 +137,7 @@ class _UserManagementPageState extends State<UserMgt> {
                     _buildTextField("Office", officeController),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: roleValue,
+                      initialValue: roleValue,
                       decoration: _inputDecoration("Role"),
                       items: ["SASO Officer", "School Guard"]
                           .map(
@@ -148,7 +148,7 @@ class _UserManagementPageState extends State<UserMgt> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: statusValue,
+                      initialValue: statusValue,
                       decoration: _inputDecoration("Status"),
                       items: ["Active", "Inactive"]
                           .map(

@@ -17,9 +17,22 @@ class ReportDialog extends StatefulWidget {
 class _ReportDialogState extends State<ReportDialog> {
   DateTime? startDate;
   DateTime? endDate;
+  String? selectedDepartment;
+
   List<ViolationRecord> allRecords = [];
   final _dateFormat = DateFormat('yyyy-MM-dd');
 
+  // Example list of departments — you can replace or load dynamically
+  final List<String> departments = [
+    'All Departments',
+    'COA',
+    'CTE',
+    'CCJE',
+    'CAS',
+    'CCS',
+  ];
+
+  // ===================== DATE PICKER =====================
   Future<void> _pickDate(BuildContext context, bool isStartDate) async {
     final picked = await showDatePicker(
       context: context,
@@ -39,6 +52,7 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
+  // ===================== FETCH VIOLATIONS =====================
   Future<void> _fetchViolations() async {
     final data = await Integration().fetchViolations();
     if (data != null) {
@@ -62,21 +76,30 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
+  // ===================== FILTER RECORDS =====================
   List<ViolationRecord> _filterRecords() {
     if (startDate == null || endDate == null) return [];
+
     return allRecords.where((record) {
       try {
         final recordDate = DateTime.parse(record.dateTime);
-        return recordDate.isAfter(
-              startDate!.subtract(const Duration(days: 1)),
-            ) &&
+        final withinRange =
+            recordDate.isAfter(startDate!.subtract(const Duration(days: 1))) &&
             recordDate.isBefore(endDate!.add(const Duration(days: 1)));
+
+        final matchesDepartment =
+            selectedDepartment == null ||
+            selectedDepartment == 'All Departments' ||
+            record.department == selectedDepartment;
+
+        return withinRange && matchesDepartment;
       } catch (_) {
         return false;
       }
     }).toList();
   }
 
+  // ===================== GENERATE PDF =====================
   Future<void> _generatePdfReport() async {
     if (startDate == null || endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +114,7 @@ class _ReportDialogState extends State<ReportDialog> {
     if (records.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("No records found for the selected date range."),
+          content: Text("No records found for the selected filters."),
         ),
       );
       return;
@@ -99,6 +122,7 @@ class _ReportDialogState extends State<ReportDialog> {
 
     final pdf = pw.Document();
 
+    // ===== Cover Page =====
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -124,6 +148,11 @@ class _ReportDialogState extends State<ReportDialog> {
               ),
               pw.SizedBox(height: 20),
               pw.Text(
+                'Department: ${selectedDepartment ?? "All Departments"}',
+                style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700),
+              ),
+              pw.SizedBox(height: 8),
+              pw.Text(
                 'From ${_dateFormat.format(startDate!)} to ${_dateFormat.format(endDate!)}',
                 style: pw.TextStyle(fontSize: 16, color: PdfColors.grey700),
               ),
@@ -138,6 +167,7 @@ class _ReportDialogState extends State<ReportDialog> {
       ),
     );
 
+    // ===== Data Table Page =====
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -156,6 +186,7 @@ class _ReportDialogState extends State<ReportDialog> {
     await _savePdfToDevice(pdfBytes);
   }
 
+  // ===================== PDF BUILDERS =====================
   pw.Widget _buildPdfHeader() {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -169,6 +200,10 @@ class _ReportDialogState extends State<ReportDialog> {
           ),
         ),
         pw.SizedBox(height: 8),
+        pw.Text(
+          'Department: ${selectedDepartment ?? "All Departments"}',
+          style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+        ),
         pw.Text(
           'Date Range: ${_dateFormat.format(startDate!)} → ${_dateFormat.format(endDate!)}',
           style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
@@ -297,6 +332,7 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
+  // ===================== SAVE PDF =====================
   Future<void> _savePdfToDevice(Uint8List pdfBytes) async {
     try {
       final blob = html.Blob([pdfBytes], 'application/pdf');
@@ -329,6 +365,7 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
+  // ===================== UI BUILD =====================
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -366,7 +403,21 @@ class _ReportDialogState extends State<ReportDialog> {
             ),
             const SizedBox(height: 30),
 
-            // ===== Date Fields =====
+            // ===== Department Dropdown =====
+            _buildDropdownField(
+              label: 'Department',
+              icon: Icons.apartment_outlined,
+              items: departments,
+              selectedValue: selectedDepartment,
+              onChanged: (value) {
+                setState(() {
+                  selectedDepartment = value;
+                });
+              },
+            ),
+            const SizedBox(height: 18),
+
+            // ===== Start and End Dates =====
             _buildDateField(
               label: 'Start Date',
               icon: Icons.calendar_today_outlined,
@@ -411,6 +462,7 @@ class _ReportDialogState extends State<ReportDialog> {
     );
   }
 
+  // ===================== FORM WIDGETS =====================
   Widget _buildDateField({
     required String label,
     required IconData icon,
@@ -432,20 +484,41 @@ class _ReportDialogState extends State<ReportDialog> {
           horizontal: 16,
           vertical: 14,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blueAccent, width: 1.2),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       style: const TextStyle(fontSize: 16),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required IconData icon,
+    required List<String> items,
+    required String? selectedValue,
+    required void Function(String?) onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: selectedValue,
+      items: items
+          .map(
+            (dept) => DropdownMenuItem(
+              value: dept,
+              child: Text(dept, style: const TextStyle(fontSize: 16)),
+            ),
+          )
+          .toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.blueAccent),
+        filled: true,
+        fillColor: Colors.grey[100],
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 }

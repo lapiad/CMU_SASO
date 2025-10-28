@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/page/Schoolguard.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
@@ -43,10 +44,18 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
     final status = await Permission.camera.request();
     if (status.isGranted) {
       try {
-        final backCamera = (await availableCameras()).firstWhere(
-          (c) => c.lensDirection == CameraLensDirection.back,
-        );
-        _cameraController = CameraController(backCamera, ResolutionPreset.high);
+        CameraDescription camera;
+        if (kIsWeb) {
+          camera = (await availableCameras()).firstWhere(
+            (c) => c.lensDirection == CameraLensDirection.front,
+          );
+        } else {
+          camera = (await availableCameras()).firstWhere(
+            (c) => c.lensDirection == CameraLensDirection.back,
+          );
+        }
+
+        _cameraController = CameraController(camera, ResolutionPreset.high);
         await _cameraController!.initialize();
         if (mounted) setState(() {});
       } catch (e) {
