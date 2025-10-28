@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
+import 'package:intl/intl.dart'; // ✅ Added for date formatting
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
 class EditableViolationFormPage extends StatefulWidget {
@@ -58,8 +57,16 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   void initState() {
     super.initState();
     _fetchViolationFromBackend();
-
     _fetchImagesFromBackend();
+  }
+
+  String _formatDateTime(String dateTimeStr) {
+    try {
+      DateTime dt = DateTime.parse(dateTimeStr).toLocal();
+      return DateFormat('MMM dd, yyyy hh:mm a').format(dt);
+    } catch (e) {
+      return dateTimeStr;
+    }
   }
 
   void _initializeControllers() {
@@ -67,9 +74,12 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     _studentNameController.text = violationRecord.studentName;
     _departmentController.text = violationRecord.department;
     _reportedByController.text = violationRecord.reportedBy;
-    _dateTimeController.text = violationRecord.dateTime;
     _roleController.text = violationRecord.role;
     _remarksController.text = violationRecord.remarks ?? '';
+    final rawDateTime = violationRecord.dateTime;
+    _dateTimeController.text = rawDateTime.isNotEmpty
+        ? _formatDateTime(rawDateTime)
+        : '';
 
     _selectedStatus = violationStatus.contains(violationRecord.status)
         ? violationRecord.status
@@ -99,7 +109,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       }
     } catch (e) {
       _showSnackBar("Error fetching violation details: $e", color: Colors.red);
-    } finally {}
+    }
   }
 
   Future<void> _fetchImagesFromBackend() async {
@@ -240,7 +250,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       child: Padding(
         padding: const EdgeInsets.all(6.0),
         child: DropdownButtonFormField<String>(
-          initialValue: safeValue,
+          value: safeValue,
           decoration: InputDecoration(
             labelText: label,
             filled: true,
@@ -311,55 +321,14 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
           onTap: () => _showZoomableImage(url),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: index +1 > fromDBImagesCount
-                ? Stack(
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(width: 4),
-                          Icon(
-                            Icons.info_outline_rounded,
-                            color: Colors.black54,
-                            size: 16,
-                          ),
-                          Text("Click 'Save' to save this image."),
-                        ],
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black12, width: 20),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Image.memory(
-                          base64Decode(url),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                color: Colors.grey.shade300,
-                                child: const Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Image.memory(
-                    base64Decode(url),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    ),
-                  ),
+            child: Image.memory(
+              base64Decode(url),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
           ),
         );
       },
@@ -378,6 +347,8 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       "id": violationRecord.violationId,
       "offense_level": _selectedOffenseLevel ?? '',
       "status": _selectedStatus ?? '',
+      "date_time": violationRecord.dateTime,
+      "department": _departmentController.text,
       "remarks": _remarksController.text,
       "reported_by": _reportedByController.text,
       "photo_evidence": imageUrls,
@@ -393,7 +364,6 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       if (response.statusCode == 200) {
         _showSnackBar("Changes saved successfully!", color: Colors.green);
         await Future.delayed(const Duration(seconds: 1));
-        // if (mounted) Navigator.pop(context, true);
         setState(() {
           _fetchViolationFromBackend();
           _fetchImagesFromBackend();

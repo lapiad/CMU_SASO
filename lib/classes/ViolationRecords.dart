@@ -27,26 +27,24 @@ class ViolationRecord {
     required this.base64Imagestring,
     required this.offenseLevel,
     this.remarks,
-
   });
 
   factory ViolationRecord.fromJson(Map<String, dynamic> json) {
     return ViolationRecord(
-      violationId: json['id'] ?? '', // ✅ IMPORTANT
+      violationId: json['id'] ?? '',
       studentName: json['student_name'] ?? '',
       studentId: json['student_id'] ?? '',
       role: json['role'] ?? '',
       violation: json['violation'] ?? '',
-      department: json['department'] ?? '',
+      department: json['student_department'] ?? '',
       reportedBy: json['reported_by'] ?? '',
-      dateTime: json['date_time'] ?? '',
+      dateTime: json['date_of_incident'] ?? '',
       status: json['status'] ?? '',
       base64Imagestring: json['photo_evidence'] ?? '',
       offenseLevel: json['offense_level'] ?? '',
       remarks: json['remarks'] ?? '',
     );
   }
-
 
   Null get photoEvidence => null;
 }

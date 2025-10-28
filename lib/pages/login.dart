@@ -19,12 +19,12 @@ void _onItemTapped(BuildContext context) async {
     if (data['role'] == 'guard') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => SchoolGuardHome()),
+        MaterialPageRoute(builder: (context) => const SchoolGuardHome()),
       );
     } else {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Dashboard()),
+        MaterialPageRoute(builder: (context) => const Dashboard()),
       );
     }
   }
@@ -68,7 +68,7 @@ class Login extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: LoginPage(title: 'Login Page'),
+        child: const LoginPage(title: 'Login Page'),
       ),
     );
   }
@@ -85,6 +85,38 @@ class LoginPage extends StatefulWidget {
 class _LoginPage extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  Future<void> _handleLogin() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter both username and password.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isloading = true;
+    });
+
+    final token = await loginUser(username, password);
+
+    setState(() {
+      isloading = false;
+    });
+
+    if (token != null) {
+      _onItemTapped(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login failed. Please try again.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,8 +159,10 @@ class _LoginPage extends State<LoginPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
+
               TextField(
                 controller: usernameController,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.person_outline),
                   labelText: 'Username',
@@ -145,6 +179,8 @@ class _LoginPage extends State<LoginPage> {
               TextField(
                 controller: passwordController,
                 obscureText: true,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _handleLogin(),
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.lock_outline),
                   labelText: 'Password',
@@ -168,37 +204,7 @@ class _LoginPage extends State<LoginPage> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  onPressed: () async {
-                    final username = usernameController.text;
-                    final password = passwordController.text;
-
-                    if (username.isEmpty || password.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Please enter both username and password.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-                    setState(() {
-                      isloading = true;
-                    });
-                    final token = await loginUser(username, password);
-                    setState(() {
-                      isloading = false;
-                    });
-                    if (token != null) {
-                      _onItemTapped(context);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Login failed. Please try again.'),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _handleLogin,
                   child: !isloading
                       ? const Text(
                           'Sign In',

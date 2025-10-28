@@ -40,6 +40,16 @@ class User {
     required this.role,
     required this.status,
   });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      name: json['first_name'] ?? '',
+      email: json['email'] ?? '',
+      office: json['department'] ?? '',
+      role: json['role'] ?? '',
+      status: json['status'] ?? 'Active',
+    );
+  }
 }
 
 class UserMgt extends StatefulWidget {
@@ -70,7 +80,7 @@ class _UserManagementPageState extends State<UserMgt> {
         throw Exception("Server URL is not configured.");
       }
 
-      final url = Uri.parse('$serverUrl/users/$userId');
+      final url = Uri.parse('$serverUrl/users-details');
       final response = await http.get(
         url,
         headers: {'Content-Type': 'application/json'},

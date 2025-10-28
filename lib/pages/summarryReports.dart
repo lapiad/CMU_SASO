@@ -29,6 +29,7 @@ class SummaryReportsPage extends StatefulWidget {
 class _SummaryReportsPageState extends State<SummaryReportsPage> {
   List<ViolationRecord> allRecords = [];
   double sideMenuSize = 0.0;
+  String? role;
 
   final ScreenshotController _pieController = ScreenshotController();
   final ScreenshotController _barController = ScreenshotController();
@@ -327,28 +328,37 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
             );
           }),
           _menuItem(Icons.pie_chart, 'Summary of Reports', () {}),
-          const Divider(color: Colors.white),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'ADMINISTRATION',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          _menuItem(Icons.person, 'User Management', () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const UserMgt()),
-            );
-          }),
+          const Divider(color: Colors.white54, indent: 16, endIndent: 16),
+          role == 'admin'
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _menuHeader("ADMINISTRATION"),
+                    _menuItem(Icons.person, "User Management", () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => UserMgt()),
+                      );
+                    }),
+                  ],
+                )
+              : SizedBox(),
         ],
       ),
     );
   }
+
+  Widget _menuHeader(String title) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+    child: Text(
+      title,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.white70,
+        fontSize: 14,
+      ),
+    ),
+  );
 
   Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
     return ListTile(

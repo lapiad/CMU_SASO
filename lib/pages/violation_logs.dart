@@ -25,6 +25,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
   ValueNotifier<List<ViolationRecord>> allRecordsNotifier = ValueNotifier([]);
   double sideMenuSize = 0.0;
   bool showFilters = false;
+  String? role;
 
   DateTime? startDate;
   DateTime? endDate;
@@ -749,27 +750,37 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
               MaterialPageRoute(builder: (_) => const SummaryReportsPage()),
             );
           }),
-          const Divider(color: Colors.white24),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.0),
-            child: Text(
-              'ADMINISTRATION',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white70,
-              ),
-            ),
-          ),
-          _menuItem(Icons.person, 'User Management', () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const UserMgt()),
-            );
-          }),
+          const Divider(color: Colors.white54, indent: 16, endIndent: 16),
+          role == 'admin'
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _menuHeader("ADMINISTRATION"),
+                    _menuItem(Icons.person, "User Management", () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => UserMgt()),
+                      );
+                    }),
+                  ],
+                )
+              : SizedBox(),
         ],
       ),
     );
   }
+
+  Widget _menuHeader(String title) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+    child: Text(
+      title,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.white70,
+        fontSize: 14,
+      ),
+    ),
+  );
 
   Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
@@ -1038,8 +1049,9 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        ViolationFormPage(violationId: record.violationId),
+                                    builder: (_) => ViolationFormPage(
+                                      violationId: record.violationId,
+                                    ),
                                   ),
                                 );
                                 _fetchViolations();

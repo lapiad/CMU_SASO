@@ -46,13 +46,14 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   final TextEditingController violationTypeController = TextEditingController();
   final TextEditingController offenseLevelController = TextEditingController();
   final TextEditingController statusController = TextEditingController();
-  final TextEditingController remarksController =
-      TextEditingController(); // ✅ added
+  final TextEditingController remarksController = TextEditingController();
 
   DateTime? incidentDate;
   List<File>? _photoEvidenceFile = [];
   List<Uint8List>? _photoEvidenceBytesList = [];
   final ImagePicker _picker = ImagePicker();
+
+  bool canSubmit = true;
 
   @override
   void initState() {
@@ -245,59 +246,55 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         ),
       );
     }
-    List<Widget> imageWidgets = [];
     List<Widget> stackWidgets = [];
     if (kIsWeb) {
       for (var bytes in _photoEvidenceBytesList!) {
-        imageWidgets.add(
-          GestureDetector(
-            onTap: () {
-              if (_photoEvidenceFile!.isEmpty &&
-                  _photoEvidenceBytesList!.isEmpty) {
-                _pickImage;
-              } else {
-                _openFullScreenImage(_photoEvidenceBytesList!.indexOf(bytes));
-              }
-            },
-            child: Image.memory(bytes, fit: BoxFit.cover),
-          ),
-        );
-        imageWidgets.add(
-          Positioned(
-            top: 6,
-            right: 6,
-            child: GestureDetector(
-              onTap: () {
-                _removeImage(_photoEvidenceBytesList!.indexOf(bytes));
-              },
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.black54,
-                  shape: BoxShape.circle,
+        stackWidgets.add(
+          Stack(
+            children: [
+              GestureDetector(
+                onTap: () => _openFullScreenImage(
+                  _photoEvidenceBytesList!.indexOf(bytes),
                 ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(Icons.close, color: Colors.white, size: 18),
+                child: Image.memory(bytes, fit: BoxFit.cover),
               ),
-            ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: GestureDetector(
+                  onTap: () {
+                    _removeImage(_photoEvidenceBytesList!.indexOf(bytes));
+                  },
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
-        stackWidgets.add(Stack(children: imageWidgets));
-        imageWidgets = [];
       }
     }
 
-    return GestureDetector(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: GridView.count(
-            crossAxisCount: 3,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 4,
-            shrinkWrap: true,
-            children: stackWidgets,
-          ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 200),
+        child: GridView.count(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          shrinkWrap: true,
+          children: stackWidgets,
         ),
       ),
     );
@@ -315,12 +312,12 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       'student_id': studentIdController.text.trim(),
       'student_name': studentNameController.text.trim(),
       'violation_type': violationTypeController.text.trim(),
-      'offense_level': offenseLevelController.text.trim() ?? '',
+      'offense_level': offenseLevelController.text.trim(),
       'department': departmentController.text.trim(),
       'reported_by': reportedByController.text.trim(),
-      'status': statusController.text.trim() ?? 'Pending',
+      'status': statusController.text.trim(),
       'role': roleController.text.trim(),
-      'remarks': remarksController.text.trim(), // ✅ added
+      'remarks': remarksController.text.trim(),
       'date_of_incident': incidentDate!.toIso8601String(),
     };
 
@@ -341,7 +338,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
     try {
       final url = '${GlobalConfiguration().getValue("server_url")}/violations';
-      print(jsonEncode(violationData));
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
@@ -359,7 +355,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
         );
       }
     } catch (e) {
-      print(e);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -462,14 +457,22 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         selectedStudent.id,
                       );
                       setState(() {
-                        String countToEng = (count + 1).toOrdinal();
-                        String capitalizedCount = countToEng.replaceRange(
-                          0,
-                          1,
-                          countToEng[0].toUpperCase(),
-                        );
-                        offenseLevelController.text =
-                            "$capitalizedCount Offense";
+                        String offenseLabel = "";
+                        if (count == 0) {
+                          offenseLabel = "First Offense";
+                          canSubmit = true;
+                        } else if (count == 1) {
+                          offenseLabel = "Second Offense";
+                          canSubmit = true;
+                        } else if (count == 2) {
+                          offenseLabel = "Third Offense";
+                          canSubmit = true;
+                        } else {
+                          offenseLabel = "Limit Reached (No More Violations)";
+                          canSubmit = false;
+                        }
+
+                        offenseLevelController.text = offenseLabel;
                         studentIdController.text = selectedStudent.id;
                         studentNameController.text =
                             '${selectedStudent.firstname} ${selectedStudent.lastname}';
@@ -565,24 +568,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   _buildTextField(roleController, "Role"),
                   const SizedBox(height: 15),
 
-                  // ✅ Remarks field
-                  TextFormField(
-                    controller: remarksController,
-                    maxLines: 3,
-                    decoration:
-                        _fieldDecoration(
-                          "Remarks",
-                          "Enter additional details or comments",
-                        ).copyWith(
-                          prefixIcon: const Icon(
-                            Icons.comment,
-                            color: Colors.blueAccent,
-                          ),
-                        ),
-                  ),
-
-                  const SizedBox(height: 20),
-
                   // Photo upload
                   InkWell(
                     onTap: _pickImage,
@@ -620,32 +605,43 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         onPressed: () => Navigator.pop(context),
                       ),
                       const SizedBox(width: 16),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 28,
-                            vertical: 14,
+
+                      if (canSubmit)
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 4,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          child: const Text(
+                            "Submit Report",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                          elevation: 4,
-                        ),
-                        child: const Text(
-                          "Submit Report",
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              createViolation();
+                            }
+                          },
+                        )
+                      else
+                        const Text(
+                          "⚠️ Maximum offense limit reached",
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontSize: 16,
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            createViolation();
-                          }
-                        },
-                      ),
                     ],
                   ),
                 ],

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
@@ -30,7 +29,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  
   late ViolationRecord violationRecord;
 
   @override
@@ -41,15 +39,22 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   }
 
   void _initializeControllers() {
-    _studentIdController.text = violationRecord.studentId;
-    _studentNameController.text = violationRecord.studentName;
-    _departmentController.text = violationRecord.department;
-    _reportedByController.text = violationRecord.reportedBy;
-    _roleController.text = violationRecord.role;
+    _studentIdController.text = violationRecord.studentId ?? "";
+    _studentNameController.text = violationRecord.studentName ?? "";
+    _reportedByController.text = violationRecord.reportedBy ?? "";
+    _roleController.text = violationRecord.role ?? "";
     _statusController.text = violationRecord.status ?? "";
     _offenseLevelController.text = violationRecord.offenseLevel ?? "";
-    _dateTimeController.text = _formatDateTime(violationRecord.dateTime);
     _remarksController.text = violationRecord.remarks ?? "";
+    _departmentController.text = violationRecord.department ?? "";
+
+    final rawDateFromBackend =
+        (violationRecord.dateTime != null &&
+            violationRecord.dateTime!.isNotEmpty)
+        ? violationRecord.dateTime!
+        : DateTime.now().toUtc().toIso8601String();
+
+    _dateTimeController.text = _formatDateTime(rawDateFromBackend);
   }
 
   String _formatDateTime(String dateTimeStr) {
@@ -74,6 +79,11 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
           violationRecord = ViolationRecord.fromJson(data);
           _initializeControllers();
         });
+        if ((_departmentController.text.isEmpty) &&
+            (violationRecord.studentId != null &&
+                violationRecord.studentId!.isNotEmpty)) {
+          _fetchDepartmentForStudent(violationRecord.studentId!);
+        }
       } else {
         _showSnackBar(
           "Failed to fetch violation details: ${response.statusCode}",
@@ -81,14 +91,54 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
       }
     } catch (e) {
       _showSnackBar("Error fetching violation details: $e", color: Colors.red);
-    } finally {}
+    }
   }
-    void _showSnackBar(String message, {Color color = Colors.black87}) {
+
+  /// ✅ Fully connected department fetch method
+  Future<void> _fetchDepartmentForStudent(String studentId) async {
+    if (studentId.isEmpty) return;
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/students/$studentId');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // Check multiple possible field formats
+        dynamic deptData =
+            data['department'] ??
+            data['department_name'] ??
+            data['departmentName'] ??
+            data['dept'] ??
+            data['student_department'];
+
+        // If department is an object (nested)
+        if (deptData is Map) {
+          deptData =
+              deptData['name'] ?? deptData['dept_name'] ?? deptData['title'];
+        }
+
+        if (deptData != null && deptData.toString().isNotEmpty) {
+          setState(() {
+            _departmentController.text = deptData.toString();
+          });
+        }
+      } else {
+        debugPrint(
+          'Failed to fetch student department: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error fetching student department: $e');
+    }
+  }
+
+  void _showSnackBar(String message, {Color color = Colors.black87}) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
-
 
   Future<void> _fetchImagesFromBackend() async {
     setState(() {
@@ -218,7 +268,6 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
       debugPrint('Padded Base64 String: $base64String');
       return base64String;
     }
-    debugPrint('unPadded Base64 String: $base64String');
     return base64String;
   }
 
