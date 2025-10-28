@@ -21,7 +21,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
       _selectedRole,
       _selectedDepartment;
 
-  final List<String> _roles = ['admin', 'guard'];
+  final List<String> _roles = ['admin', 'guard', 'saso-officer'];
   final List<String> _departments = [
     'Security Department',
     'Guard Department',
@@ -369,7 +369,7 @@ class _AddNewUserDialogState extends State<AddNewUserDialog> {
           vertical: 14,
         ),
       ),
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       validator: validator,
       items: items

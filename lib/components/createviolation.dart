@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:number_to_words_english/number_to_words_english.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:intl/intl.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -43,11 +44,12 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   final TextEditingController incidentDateController = TextEditingController();
   final TextEditingController departmentController = TextEditingController();
   final TextEditingController violationTypeController = TextEditingController();
+  final TextEditingController offenseLevelController = TextEditingController();
+  final TextEditingController statusController = TextEditingController();
+  final TextEditingController remarksController =
+      TextEditingController(); // ✅ added
 
-  String? offenseLevel = "First Offense";
-  String statusValue = "Pending";
   DateTime? incidentDate;
-
   List<File>? _photoEvidenceFile = [];
   List<Uint8List>? _photoEvidenceBytesList = [];
   final ImagePicker _picker = ImagePicker();
@@ -56,6 +58,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
   void initState() {
     super.initState();
 
+    statusController.text = "Pending";
     final userDetails = GetStorage().read('user_details');
     reportedByController.text = userDetails?['first_name'] ?? '';
     roleController.text = userDetails?['role'] ?? '';
@@ -127,12 +130,17 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse('$baseUrl/violations/$studentId/count');
+      final url = Uri.parse('$baseUrl/violations/student/$studentId');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['count'] ?? 0;
+        List<dynamic> violationList = [];
+
+        for (var violation in data['violations']) {
+          violationList.add(violation);
+        }
+        return violationList.length;
       }
     } catch (e) {
       print("Error fetching violation count: $e");
@@ -143,25 +151,25 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickMultiImage();
-    if (pickedFile.length > 0) {
+    if (pickedFile.isNotEmpty) {
       if (kIsWeb) {
-        List<Uint8List> photo_bytes = [];
+        List<Uint8List> photoBytes = [];
         for (var photo in pickedFile) {
           final bytes = await photo.readAsBytes();
-          photo_bytes.add(bytes);
+          photoBytes.add(bytes);
         }
         setState(() {
-          _photoEvidenceBytesList = photo_bytes;
+          _photoEvidenceBytesList = photoBytes;
           _photoEvidenceFile = [];
         });
       } else {
-        List<File> photo_bytes = [];
+        List<File> photoBytes = [];
         for (var photo in pickedFile) {
           final bytes = File(photo.path);
-          photo_bytes.add(bytes);
+          photoBytes.add(bytes);
         }
         setState(() {
-          _photoEvidenceFile = photo_bytes;
+          _photoEvidenceFile = photoBytes;
           _photoEvidenceBytesList = [];
         });
       }
@@ -279,7 +287,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     }
 
     return GestureDetector(
-      // onTap: _openFullScreenImage,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: ConstrainedBox(
@@ -308,27 +315,28 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
       'student_id': studentIdController.text.trim(),
       'student_name': studentNameController.text.trim(),
       'violation_type': violationTypeController.text.trim(),
-      'offense_level': offenseLevel ?? '',
+      'offense_level': offenseLevelController.text.trim() ?? '',
       'department': departmentController.text.trim(),
       'reported_by': reportedByController.text.trim(),
-      'status': statusValue,
+      'status': statusController.text.trim() ?? 'Pending',
       'role': roleController.text.trim(),
+      'remarks': remarksController.text.trim(), // ✅ added
       'date_of_incident': incidentDate!.toIso8601String(),
     };
 
     if (_photoEvidenceFile!.isNotEmpty) {
-      List<String> photo_base64 = [];
+      List<String> photoBase64 = [];
       for (var photo in _photoEvidenceFile!) {
         final bytes = await photo.readAsBytes();
-        photo_base64.add(base64Encode(bytes));
+        photoBase64.add(base64Encode(bytes));
       }
-      violationData['photo_evidence'] = photo_base64;
+      violationData['photo_evidence'] = photoBase64;
     } else if (_photoEvidenceBytesList!.isNotEmpty) {
-      List<String> photo_base64 = [];
+      List<String> photoBase64 = [];
       for (var photo in _photoEvidenceBytesList!) {
-        photo_base64.add(base64Encode(photo));
+        photoBase64.add(base64Encode(photo));
       }
-      violationData['photo_evidence'] = photo_base64;
+      violationData['photo_evidence'] = photoBase64;
     }
 
     try {
@@ -368,14 +376,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
     );
   }
 
-  Widget _buildReadOnlyField(String? value, String label) {
-    return TextFormField(
-      readOnly: true,
-      initialValue: value,
-      decoration: _fieldDecoration(label, ""),
-    );
-  }
-
   Widget _buildReadOnlyFieldController(
     TextEditingController controller,
     String label,
@@ -408,7 +408,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -432,7 +431,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Student Dropdown
                   DropdownSearch<Student>(
                     asyncItems: (filter) => fetchStudents(filter),
                     itemAsString: (Student s) =>
@@ -458,41 +456,24 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                             ),
                           ),
                     ),
-                    selectedItem:
-                        (studentIdController.text.isNotEmpty &&
-                            studentNameController.text.isNotEmpty)
-                        ? Student(
-                            id: studentIdController.text,
-                            firstname: studentNameController.text
-                                .split(' ')
-                                .first,
-                            lastname: studentNameController.text
-                                .split(' ')
-                                .last,
-                            department: departmentController.text,
-                          )
-                        : null,
                     onChanged: (Student? selectedStudent) async {
                       if (selectedStudent == null) return;
-
-                      setState(() {
-                        studentIdController.text = selectedStudent.id;
-                        studentNameController.text =
-                            '${selectedStudent.firstname} ${selectedStudent.lastname}';
-                        departmentController.text = selectedStudent.department;
-                      });
-
                       int count = await fetchStudentViolationCountById(
                         selectedStudent.id,
                       );
                       setState(() {
-                        offenseLevel = (count == 0)
-                            ? "First Offense"
-                            : (count == 1)
-                            ? "Second Offense"
-                            : (count == 2)
-                            ? "Third Offense"
-                            : "Repeat Offense";
+                        String countToEng = (count + 1).toOrdinal();
+                        String capitalizedCount = countToEng.replaceRange(
+                          0,
+                          1,
+                          countToEng[0].toUpperCase(),
+                        );
+                        offenseLevelController.text =
+                            "$capitalizedCount Offense";
+                        studentIdController.text = selectedStudent.id;
+                        studentNameController.text =
+                            '${selectedStudent.firstname} ${selectedStudent.lastname}';
+                        departmentController.text = selectedStudent.department;
                       });
                     },
                   ),
@@ -505,7 +486,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   _buildTextField(departmentController, "Department"),
                   const SizedBox(height: 15),
 
-                  // Violation Type Dropdown
                   DropdownSearch<String>(
                     asyncItems: (filter) => fetchViolationTypes(filter),
                     selectedItem: violationTypeController.text.isEmpty
@@ -540,9 +520,9 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   ),
 
                   const SizedBox(height: 15),
-                  _buildReadOnlyField(offenseLevel, "Offense Level"),
+                  _buildTextField(offenseLevelController, "Offense Level"),
                   const SizedBox(height: 15),
-                  _buildReadOnlyField(statusValue, "Status"),
+                  _buildTextField(statusController, "Status"),
                   const SizedBox(height: 15),
                   _buildReadOnlyFieldController(
                     incidentDateController,
@@ -585,13 +565,27 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                   _buildTextField(roleController, "Role"),
                   const SizedBox(height: 15),
 
-                  // Photo Preview
+                  // ✅ Remarks field
+                  TextFormField(
+                    controller: remarksController,
+                    maxLines: 3,
+                    decoration:
+                        _fieldDecoration(
+                          "Remarks",
+                          "Enter additional details or comments",
+                        ).copyWith(
+                          prefixIcon: const Icon(
+                            Icons.comment,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Photo upload
                   InkWell(
-                    onTap: (){
-                      if (_photoEvidenceFile!.isEmpty &&
-                          _photoEvidenceBytesList!.isEmpty) {
-                        _pickImage();
-                    }},
+                    onTap: _pickImage,
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.blueAccent),
@@ -611,7 +605,6 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
 
                   const SizedBox(height: 24),
 
-                  // Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [

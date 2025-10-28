@@ -186,7 +186,9 @@ class _EditUserFormState extends State<EditUserForms> {
         labelText: 'Role',
         border: OutlineInputBorder(),
       ),
-      value: _roles.contains(_selectedRole) ? _selectedRole : _roles.first,
+      initialValue: _roles.contains(_selectedRole)
+          ? _selectedRole
+          : _roles.first,
       items: _roles.map((role) {
         return DropdownMenuItem<String>(
           value: role,

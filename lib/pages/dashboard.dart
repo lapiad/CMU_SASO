@@ -32,6 +32,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     with SingleTickerProviderStateMixin {
   List<dynamic> recentViolations = [];
   String? userName;
+  String? role;
 
   @override
   void initState() {
@@ -49,7 +50,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        setState(() => userName = data['first_name'] ?? "Unknown");
+        setState(() {
+          userName = data['first_name'] ?? "Unknown";
+          role = data['role'];
+        });
       } else {
         userName = "Unknown";
       }
@@ -306,13 +310,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           );
         }),
         const Divider(color: Colors.white54, indent: 16, endIndent: 16),
-        _menuHeader("ADMINISTRATION"),
-        _menuItem(Icons.person, "User Management", () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => UserMgt()),
-          );
-        }),
+        role == 'admin'
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _menuHeader("ADMINISTRATION"),
+                  _menuItem(Icons.person, "User Management", () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => UserMgt()),
+                    );
+                  }),
+                ],
+              )
+            : SizedBox(),
       ],
     );
   }
@@ -490,7 +501,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   height: 80,
                   child: buildActionButton(
                     Icons.bar_chart,
-                    "Generate Weekly Report",
+                    "Generate Report",
                     () {
                       showDialog(
                         context: context,

@@ -176,7 +176,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
       child: Padding(
         padding: const EdgeInsets.all(6.0),
         child: DropdownButtonFormField<String>(
-          value: safeValue,
+          initialValue: safeValue,
           decoration: InputDecoration(
             labelText: label,
             filled: true,

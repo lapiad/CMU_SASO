@@ -359,9 +359,9 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
 
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body);
-          if (decoded != null && decoded['student'] != null) {
+          if (decoded != null && decoded['student_Info'] != null) {
             setModalState(() {
-              studentInfo = Map<String, dynamic>.from(decoded['student']);
+              studentInfo = Map<String, dynamic>.from(decoded['student_Info']);
             });
           } else {
             setModalState(() {
