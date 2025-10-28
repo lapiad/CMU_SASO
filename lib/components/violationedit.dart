@@ -6,14 +6,16 @@ import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
 class EditableViolationFormPage extends StatefulWidget {
-  final ViolationRecord record;
+  final String violationId;
 
-  const EditableViolationFormPage({super.key, required this.record});
+  const EditableViolationFormPage({super.key, required this.violationId});
 
   @override
   State<EditableViolationFormPage> createState() =>
       _EditableViolationFormPageState();
 }
+
+
 
 class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   final _studentIdController = TextEditingController();
@@ -36,6 +38,8 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
     'Third Offense',
   ];
 
+  late ViolationRecord violationRecord;
+
   String? _selectedStatus;
   String? _selectedOffenseLevel;
 
@@ -46,69 +50,93 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   @override
   void initState() {
     super.initState();
+    _fetchViolationFromBackend();
     _initializeControllers();
-    _fetchImagesFromBackend();
+    // _fetchImagesFromBackend();
   }
 
   void _initializeControllers() {
-    _studentIdController.text = widget.record.studentId;
-    _studentNameController.text = widget.record.studentName;
-    _departmentController.text = widget.record.department;
-    _reportedByController.text = widget.record.reportedBy;
-    _dateTimeController.text = widget.record.dateTime;
-    _roleController.text = widget.record.role;
-    _remarksController.text = widget.record.remarks ?? '';
+    _studentIdController.text = violationRecord.studentId;
+    _studentNameController.text = violationRecord.studentName;
+    _departmentController.text = violationRecord.department;
+    _reportedByController.text = violationRecord.reportedBy;
+    _dateTimeController.text = violationRecord.dateTime;
+    _roleController.text = violationRecord.role;
+    _remarksController.text = violationRecord.remarks ?? '';
 
-    _selectedStatus = violationStatus.contains(widget.record.status)
-        ? widget.record.status
+    _selectedStatus = violationStatus.contains(violationRecord.status)
+        ? violationRecord.status
         : violationStatus.first;
-    _selectedOffenseLevel = offenseLevels.contains(widget.record.offenseLevel)
-        ? widget.record.offenseLevel
+    _selectedOffenseLevel = offenseLevels.contains(violationRecord.offenseLevel)
+        ? violationRecord.offenseLevel
         : offenseLevels.first;
   }
 
-  Future<void> _fetchImagesFromBackend() async {
-    setState(() => _isLoadingImages = true);
+  Future<void> _fetchViolationFromBackend() async {
 
     final baseUrl = GlobalConfiguration().getValue("server_url");
-    final imageBaseUrl = GlobalConfiguration().getValue("image_base_url");
-
+    final violationId = widget.violationId;
     try {
-      final url = Uri.parse('$baseUrl/violations/image');
+      final url = Uri.parse('$baseUrl/violations/violation/$violationId');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data is Map && data["images"] is List) {
-          final List images = data["images"];
-          final filteredImages = images.where((img) {
-            return img["violation_id"].toString() ==
-                widget.record.violationId.toString();
-          }).toList();
           setState(() {
-            imageUrls = filteredImages
-                .map<String>((img) {
-                  String? path = img["image_path"];
-                  if (path == null || path.isEmpty) return "";
-                  if (!path.startsWith("http")) {
-                    if (!path.startsWith("/")) path = "/$path";
-                    path = imageBaseUrl != null ? "$imageBaseUrl$path" : path;
-                  }
-                  return path;
-                })
-                .where((path) => path.isNotEmpty)
-                .toList();
+           violationRecord = ViolationRecord.fromJson(data);
           });
         }
-      } else {
-        _showSnackBar("Failed to fetch images: ${response.statusCode}");
+       else {
+        _showSnackBar("Failed to fetch violation details: ${response.statusCode}");
       }
     } catch (e) {
-      _showSnackBar("Error fetching images: $e", color: Colors.red);
+      _showSnackBar("Error fetching violation details: $e", color: Colors.red);
     } finally {
-      setState(() => _isLoadingImages = false);
     }
   }
+
+  // Future<void> _fetchImagesFromBackend() async {
+  //   setState(() => _isLoadingImages = true);
+
+  //   final baseUrl = GlobalConfiguration().getValue("server_url");
+  //   final imageBaseUrl = GlobalConfiguration().getValue("image_base_url");
+
+  //   try {
+  //     final url = Uri.parse('$baseUrl/violations/image');
+  //     final response = await http.get(url);
+
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //       if (data is Map && data["images"] is List) {
+  //         final List images = data["images"];
+  //         final filteredImages = images.where((img) {
+  //           return img["violation_id"].toString() ==
+  //               violationRecord.violationId;
+  //         }).toList();
+  //         setState(() {
+  //           imageUrls = filteredImages
+  //               .map<String>((img) {
+  //                 String? path = img["image_path"];
+  //                 if (path == null || path.isEmpty) return "";
+  //                 if (!path.startsWith("http")) {
+  //                   if (!path.startsWith("/")) path = "/$path";
+  //                   path = imageBaseUrl != null ? "$imageBaseUrl$path" : path;
+  //                 }
+  //                 return path;
+  //               })
+  //               .where((path) => path.isNotEmpty)
+  //               .toList();
+  //         });
+  //       }
+  //     } else {
+  //       _showSnackBar("Failed to fetch images: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     _showSnackBar("Error fetching images: $e", color: Colors.red);
+  //   } finally {
+  //     setState(() => _isLoadingImages = false);
+  //   }
+  // }
 
   void _showZoomableImage(String imageUrl) {
     showDialog(
@@ -265,11 +293,11 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
 
     final baseUrl = GlobalConfiguration().getValue("server_url");
     final url = Uri.parse(
-      '$baseUrl/violations/update/${widget.record.violationId}',
+      '$baseUrl/violations/update/${violationRecord.violationId}',
     );
 
     final updatedData = {
-      "id": widget.record.violationId,
+      "id": violationRecord.violationId,
       "offense_level": _selectedOffenseLevel ?? '',
       "status": _selectedStatus ?? '',
       "remarks": _remarksController.text,
@@ -345,7 +373,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Violation ID: ${widget.record.violationId}",
+                  "Violation ID: ${violationRecord.violationId}",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
