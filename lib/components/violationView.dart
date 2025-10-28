@@ -7,9 +7,9 @@ import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 
 class ViolationFormPage extends StatefulWidget {
-  final ViolationRecord record;
+  final String violationId;
 
-  const ViolationFormPage({super.key, required this.record});
+  const ViolationFormPage({super.key, required this.violationId});
 
   @override
   State<ViolationFormPage> createState() => _ViolationFormPageState();
@@ -30,23 +30,26 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  
+  late ViolationRecord violationRecord;
+
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
+    _fetchViolationFromBackend();
     _fetchImagesFromBackend();
   }
 
   void _initializeControllers() {
-    _studentIdController.text = widget.record.studentId;
-    _studentNameController.text = widget.record.studentName;
-    _departmentController.text = widget.record.department;
-    _reportedByController.text = widget.record.reportedBy;
-    _roleController.text = widget.record.role;
-    _statusController.text = widget.record.status ?? "";
-    _offenseLevelController.text = widget.record.offenseLevel ?? "";
-    _dateTimeController.text = _formatDateTime(widget.record.dateTime);
-    _remarksController.text = widget.record.remarks ?? "";
+    _studentIdController.text = violationRecord.studentId;
+    _studentNameController.text = violationRecord.studentName;
+    _departmentController.text = violationRecord.department;
+    _reportedByController.text = violationRecord.reportedBy;
+    _roleController.text = violationRecord.role;
+    _statusController.text = violationRecord.status ?? "";
+    _offenseLevelController.text = violationRecord.offenseLevel ?? "";
+    _dateTimeController.text = _formatDateTime(violationRecord.dateTime);
+    _remarksController.text = violationRecord.remarks ?? "";
   }
 
   String _formatDateTime(String dateTimeStr) {
@@ -58,6 +61,35 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
     }
   }
 
+  Future<void> _fetchViolationFromBackend() async {
+    final baseUrl = GlobalConfiguration().getValue("server_url");
+    final violationId = widget.violationId;
+    try {
+      final url = Uri.parse('$baseUrl/violations/violation/$violationId');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          violationRecord = ViolationRecord.fromJson(data);
+          _initializeControllers();
+        });
+      } else {
+        _showSnackBar(
+          "Failed to fetch violation details: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      _showSnackBar("Error fetching violation details: $e", color: Colors.red);
+    } finally {}
+  }
+    void _showSnackBar(String message, {Color color = Colors.black87}) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
+
   Future<void> _fetchImagesFromBackend() async {
     setState(() {
       _isLoading = true;
@@ -66,7 +98,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
 
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final violationId = widget.record.violationId;
+      final violationId = widget.violationId;
       final url = Uri.parse('$baseUrl/violations/images/$violationId');
 
       final response = await http.get(url);
@@ -282,7 +314,7 @@ class _ViolationFormPageState extends State<ViolationFormPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Violation ID: ${widget.record.violationId}",
+                  "Violation ID: ${widget.violationId}",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,

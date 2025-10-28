@@ -311,7 +311,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
           onTap: () => _showZoomableImage(url),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: index + 1 > fromDBImagesCount
+            child: index +1 > fromDBImagesCount
                 ? Stack(
                     children: [
                       Row(
@@ -392,15 +392,12 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
 
       if (response.statusCode == 200) {
         _showSnackBar("Changes saved successfully!", color: Colors.green);
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  EditableViolationFormPage(violationId: widget.violationId),
-            ),
-          );
-        }
+        await Future.delayed(const Duration(seconds: 1));
+        // if (mounted) Navigator.pop(context, true);
+        setState(() {
+          _fetchViolationFromBackend();
+          _fetchImagesFromBackend();
+        });
       } else {
         _showSnackBar(
           "Failed to save changes: ${response.body}",

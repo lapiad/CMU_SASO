@@ -1039,7 +1039,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) =>
-                                        ViolationFormPage(record: record),
+                                        ViolationFormPage(violationId: record.violationId),
                                   ),
                                 );
                                 _fetchViolations();
