@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
-
-const String baseUrl = 'http://localhost:3000/api'; // Update this with your actual API base URL
-
 
 class PendingReportsDialog extends StatefulWidget {
   const PendingReportsDialog({super.key});
@@ -19,17 +17,58 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
   @override
   void initState() {
     super.initState();
-    fetchPendingReports(); 
+    fetchPendingReports();
   }
 
   Future<void> fetchPendingReports() async {
-    final apiUrl = Uri.parse('$baseUrl/violations');
+    final apiUrl = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/violations/pending',
+    );
     try {
       final response = await http.get(apiUrl);
       if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
+        var data = jsonDecode(response.body);
+        List<Report> listReport = [];
+        for (var report in data["violations"]) {
+          final getImageUrl = Uri.parse(
+            '${GlobalConfiguration().getValue("server_url")}/violations/images/${report["id"]}',
+          );
+          final response = await http.get(getImageUrl);
+          if (response.statusCode == 200) {
+            var data = jsonDecode(response.body);
+            List image = data['images'] as List;
+            if (image.isEmpty) {
+              listReport.add(
+                Report(
+                  id: report['id'],
+                  date: report['date_of_incident'],
+                  studentName: report['student_name'],
+                  studentId: report['student_id'],
+                  violation: report['violation_type'],
+                  reporter: report['reported_by'],
+                  offenseLevel: report['offense_level'],
+                ),
+              );
+            } else {
+              for (var image in data['images']) {
+                listReport.add(
+                  Report(
+                    id: report['id'],
+                    date: report['date_of_incident'],
+                    studentName: report['student_name'],
+                    studentId: report['student_id'],
+                    violation: report['violation_type'],
+                    reporter: report['reported_by'],
+                    offenseLevel: report['offense_level'],
+                    imageUrl: image['image_path'],
+                  ),
+                );
+              }
+            }
+          }
+        }
         setState(() {
-          reports = data.map((e) => Report.fromJson(e)).toList();
+          reports = listReport;
           isLoading = false;
         });
       } else {
@@ -58,9 +97,11 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
       return;
     }
 
-    final apiUrl = Uri.parse('$baseUrl/violations/approve');
+    final apiUrl = Uri.parse(
+      '${GlobalConfiguration().getValue("server_url")}/violations/bulk-approve',
+    );
     try {
-      final response = await http.put(
+      final response = await http.post(
         apiUrl,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(selectedIds),
@@ -93,6 +134,20 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
         ),
       ),
     );
+  }
+
+  String addBase64Padding(String base64String) {
+    try {
+      base64Decode(base64String);
+      if (base64String.length % 4 > 0) {
+        base64String += '=' * (4 - base64String.length % 4);
+        debugPrint('Padded Base64 String: $base64String');
+        return base64String;
+      }
+      return base64String;
+    } catch (e) {
+      return "";
+    }
   }
 
   Color getOffenseColor(String offenseLevel) {
@@ -181,8 +236,10 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
                                         report.imageUrl!.isNotEmpty
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          report.imageUrl!,
+                                        child: Image.memory(
+                                          base64Decode(
+                                            addBase64Padding(report.imageUrl!),
+                                          ),
                                           fit: BoxFit.cover,
                                           errorBuilder:
                                               (context, error, stackTrace) {

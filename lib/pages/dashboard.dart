@@ -135,7 +135,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       String status = (v['status'] ?? '').toString().toLowerCase();
       if (status == 'pending')
         pending++;
-      else if (status == 'in progress' || status == 'under review')
+      else if (status == 'in-progress' || status == 'under review')
         inProgress++;
       else if (status == 'reviewed' || status == 'referred')
         reviewed++;

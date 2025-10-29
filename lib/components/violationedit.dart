@@ -33,7 +33,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
 
   final List<String> violationStatus = [
     'Pending',
-    'In Progress',
+    'In-Progress',
     'Reviewed',
     'Referred',
   ];

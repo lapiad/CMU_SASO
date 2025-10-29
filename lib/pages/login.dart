@@ -85,37 +85,123 @@ class LoginPage extends StatefulWidget {
 class _LoginPage extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController ipConfigController = TextEditingController();
 
   Future<void> _handleLogin() async {
     final username = usernameController.text.trim();
     final password = passwordController.text.trim();
+    try {
+      if (username.isEmpty || password.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter both username and password.'),
+          ),
+        );
+        return;
+      }
 
-    if (username.isEmpty || password.isEmpty) {
+      setState(() {
+        isloading = true;
+      });
+
+      final token = await loginUser(username, password);
+
+      setState(() {
+        isloading = false;
+      });
+
+      if (token != null) {
+        _onItemTapped(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed. Please try again.')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter both username and password.'),
+         SnackBar(content: Text('$e')),
+        );
+         setState(() {
+        isloading = false;
+      });
+    }
+  }
+
+  void _showSecretSettingDialog(BuildContext context) {
+    String initialIp = GlobalConfiguration().getValue("server_url") ?? "";
+    ipConfigController.text = initialIp;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.grey,
+                child: Icon(Icons.settings, color: Colors.white, size: 34),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Server IP Configuration",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Please set your server IP address below.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "follow this format: http://<IP_ADDRESS>:<PORT>",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.black54,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextFormField(controller: ipConfigController, readOnly: false),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        GlobalConfiguration().updateValue(
+                          "server_url",
+                          ipConfigController.text,
+                        );
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text("Save"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      );
-      return;
-    }
-
-    setState(() {
-      isloading = true;
-    });
-
-    final token = await loginUser(username, password);
-
-    setState(() {
-      isloading = false;
-    });
-
-    if (token != null) {
-      _onItemTapped(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed. Please try again.')),
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -222,6 +308,19 @@ class _LoginPage extends State<LoginPage> {
                             strokeWidth: 3,
                           ),
                         ),
+                ),
+              ),
+
+              GestureDetector(
+                onTap: () {
+                  _showSecretSettingDialog(context);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Text(
+                    "Secret Settings",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ),
               ),
             ],

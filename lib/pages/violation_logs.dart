@@ -6,6 +6,8 @@ import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/components/violationView.dart';
 import 'package:flutter_application_1/components/violationedit.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
+import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/summarryReports.dart';
 import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:get_storage/get_storage.dart';
@@ -240,7 +242,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
     switch (status.toLowerCase()) {
       case 'pending':
         return Colors.orange.shade200;
-      case 'in progress':
+      case 'in-progress':
         return const Color.fromRGBO(66, 184, 66, 0.18);
       case 'reviewed':
         return Colors.lightBlue.shade100;
@@ -334,6 +336,43 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
       }
     });
   }
+  PopupMenuItem<String> _popupItem(IconData icon, String label, String value) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 26, color: const Color(0xFF446EAD)),
+          const SizedBox(width: 12),
+          Text(label, style: const TextStyle(fontSize: 18)),
+        ],
+      ),
+    );
+  }
+  
+  void _showAdminMenu(BuildContext context) async {
+    final result = await showMenu(
+      context: context,
+      position: const RelativeRect.fromLTRB(1000, 60, 0, 0),
+      items: [
+        _popupItem(Icons.person, 'Profile Settings', 'profile'),
+        _popupItem(Icons.logout, 'Sign Out', 'signout'),
+      ],
+    );
+
+    if (result == 'profile') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ProfileSettingsPage()),
+      );
+    } else if (result == 'signout') {
+      final box = GetStorage();
+      box.erase();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => Login()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +431,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                         size: 22,
                         color: Color(0xFF446EAD),
                       ),
-                      onPressed: () {},
+                      onPressed:(){ _showAdminMenu(context);},
                     ),
                   ),
                 ],
