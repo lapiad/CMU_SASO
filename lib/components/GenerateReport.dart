@@ -125,7 +125,7 @@ class _ReportDialogState extends State<ReportDialog> {
     // ===== Cover Page =====
     pdf.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat.a4,
+        pageFormat: PdfPageFormat.a4.landscape,
         build: (context) => pw.Center(
           child: pw.Column(
             mainAxisAlignment: pw.MainAxisAlignment.center,
@@ -170,7 +170,7 @@ class _ReportDialogState extends State<ReportDialog> {
     // ===== Data Table Page =====
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
+        pageFormat: PdfPageFormat.a4.landscape,
         margin: const pw.EdgeInsets.all(20),
         build: (context) => [
           _buildPdfHeader(),
@@ -334,44 +334,43 @@ class _ReportDialogState extends State<ReportDialog> {
 
   // ===================== SAVE PDF =====================
   Future<void> _savePdfToDevice(Uint8List pdfBytes) async {
-  final now = DateTime.now();
-   await Printing.sharePdf(
-        bytes: pdfBytes,
-        filename:
-            "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf",
-      );
-  //   try {
-  //     final jsfile =pdfBytes.toJS;
-  //     final jsBlobParts = <JSAny>[jsfile].toJS;
-  //     final blob = html.Blob(jsBlobParts, html.BlobPropertyBag(type: 'application/pdf'));
-  //     final url = html.URL.createObjectURL(blob);
+    final now = DateTime.now();
+    await Printing.sharePdf(
+      bytes: pdfBytes,
+      filename: "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf",
+    );
+    //   try {
+    //     final jsfile =pdfBytes.toJS;
+    //     final jsBlobParts = <JSAny>[jsfile].toJS;
+    //     final blob = html.Blob(jsBlobParts, html.BlobPropertyBag(type: 'application/pdf'));
+    //     final url = html.URL.createObjectURL(blob);
 
-  //     final anchor = html.document.createElement('a') as html.HTMLAnchorElement
-  //       ..href = url
-  //       ..download =
-  //           "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf"
-  //       ..target = "blank";
+    //     final anchor = html.document.createElement('a') as html.HTMLAnchorElement
+    //       ..href = url
+    //       ..download =
+    //           "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf"
+    //       ..target = "blank";
 
-  //     html.document.body!.append(anchor);
-  //     anchor.click();
-  //     anchor.remove();
-  //     html.URL.revokeObjectURL(url);
+    //     html.document.body!.append(anchor);
+    //     anchor.click();
+    //     anchor.remove();
+    //     html.URL.revokeObjectURL(url);
 
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text("✅ PDF report downloaded successfully!"),
-  //         backgroundColor: Colors.green,
-  //       ),
-  //     );
-  //   } catch (e) {
-  //     debugPrint("PDF Download Error: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text("❌ Failed to download report: $e"),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //   }
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(
+    //         content: Text("✅ PDF report downloaded successfully!"),
+    //         backgroundColor: Colors.green,
+    //       ),
+    //     );
+    //   } catch (e) {
+    //     debugPrint("PDF Download Error: $e");
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(
+    //         content: Text("❌ Failed to download report: $e"),
+    //         backgroundColor: Colors.red,
+    //       ),
+    //     );
+    //   }
   }
 
   // ===================== UI BUILD =====================
