@@ -59,6 +59,7 @@ class _ReportDialogState extends State<ReportDialog> {
       allRecords = data
           .map(
             (item) => ViolationRecord(
+              violationType: item['violation_type'] ?? '',
               studentName: item['student_name'] ?? '',
               studentId: item['student_id'] ?? '',
               violation: item['violation_type'] ?? '',

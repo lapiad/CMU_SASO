@@ -20,6 +20,7 @@ class EditableViolationFormPage extends StatefulWidget {
 
 class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
   final _studentIdController = TextEditingController();
+  final _violationTypeController = TextEditingController();
   final _studentNameController = TextEditingController();
   final _departmentController = TextEditingController();
   final _reportedByController = TextEditingController();
@@ -71,6 +72,7 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
 
   void _initializeControllers() {
     _studentIdController.text = violationRecord.studentId;
+    _violationTypeController.text = violationRecord.violationType;
     _studentNameController.text = violationRecord.studentName;
     _departmentController.text = violationRecord.department;
     _reportedByController.text = violationRecord.reportedBy;
@@ -474,6 +476,15 @@ class _EditableViolationFormPageState extends State<EditableViolationFormPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _buildEditableField(
+                      "Violation Type",
+                      _violationTypeController,
+                      readOnly: true,
+                    ),
+                  ],
+                ),
                 Row(
                   children: [
                     _buildEditableField(

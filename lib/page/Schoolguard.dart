@@ -52,6 +52,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
             .map(
               (item) => ViolationRecord(
                 studentName: item['student_name'] ?? '',
+                violationType: item['violation_type'] ?? '',
                 studentId: item['student_id'] ?? '',
                 violation: item['violation_type'] ?? 'Manual Entry',
                 status: item['status'] ?? '',
@@ -101,6 +102,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     final nowStr = DateTime.now().toIso8601String();
     final record = ViolationRecord(
       studentName: "${student.firstname} ${student.lastname}",
+      violationType: "",
       studentId: student.id,
       violation: "Manual Entry",
       status: "Recorded",

@@ -41,6 +41,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
   final TextEditingController studentNameController = TextEditingController();
   final TextEditingController reportedByController = TextEditingController();
   final TextEditingController roleController = TextEditingController();
+  final TextEditingController remarksController = TextEditingController();
   final TextEditingController incidentDateController = TextEditingController();
   final TextEditingController departmentController = TextEditingController();
   final TextEditingController violationTypeController = TextEditingController();
@@ -102,12 +103,14 @@ class _ViolationScreenState extends State<ViolationScreen> {
   Future<void> fetchStudents() async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse('$baseUrl/students/student-info/${widget.studentId}');
+      final url = Uri.parse(
+        '$baseUrl/students/student-info/${widget.studentId}',
+      );
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data["student_Info"] != null) {
           Student student = Student(
             id: data["student_Info"]["student_id"],
@@ -117,7 +120,8 @@ class _ViolationScreenState extends State<ViolationScreen> {
           );
           setState(() {
             studentIdController.text = student.id;
-            studentNameController.text = "${student.firstname} ${student.lastname}";
+            studentNameController.text =
+                "${student.firstname} ${student.lastname}";
             departmentController.text = student.department;
             fetchStudentViolationCountById().then((_) {
               _updateOffenseLevel(violationCount);
@@ -129,7 +133,6 @@ class _ViolationScreenState extends State<ViolationScreen> {
       debugPrint("Error fetching students: $e");
     }
   }
-  
 
   Future<List<String>> fetchViolationTypes(String filter) async {
     try {
@@ -139,9 +142,9 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-         return List<String>.from(
-            data['violation_types'].map((e) => e['type_name']),
-          );
+        return List<String>.from(
+          data['violation_types'].map((e) => e['type_name']),
+        );
       }
     } catch (e) {
       debugPrint("Error fetching violation types: $e");
@@ -159,7 +162,6 @@ class _ViolationScreenState extends State<ViolationScreen> {
         setState(() {
           violationCount = data['violations'].length;
         });
-        
       }
     } catch (e) {
       debugPrint("Error fetching violation count: $e");
@@ -310,7 +312,64 @@ class _ViolationScreenState extends State<ViolationScreen> {
   }
 
   Future<void> createViolation() async {
-    // TODO: implement your violation submission logic
+    if (incidentDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select the date of incident.")),
+      );
+      return;
+    }
+
+    Map<String, dynamic> violationData = {
+      'student_id': studentIdController.text.trim(),
+      'student_name': studentNameController.text.trim(),
+      'violation_type': violationTypeController.text.trim(),
+      'offense_level': offenseLevelController.text.trim(),
+      'department': departmentController.text.trim(),
+      'reported_by': reportedByController.text.trim(),
+      'status': statusController.text.trim(),
+      'role': roleController.text.trim(),
+      'remarks': remarksController.text.trim(),
+      'date_of_incident': incidentDate!.toIso8601String(),
+    };
+
+    if (_photoEvidenceFile!.isNotEmpty) {
+      List<String> photoBase64 = [];
+      for (var photo in _photoEvidenceFile!) {
+        final bytes = await photo.readAsBytes();
+        photoBase64.add(base64Encode(bytes));
+      }
+      violationData['photo_evidence'] = photoBase64;
+    } else if (_photoEvidenceBytesList!.isNotEmpty) {
+      List<String> photoBase64 = [];
+      for (var photo in _photoEvidenceBytesList!) {
+        photoBase64.add(base64Encode(photo));
+      }
+      violationData['photo_evidence'] = photoBase64;
+    }
+
+    try {
+      final url = '${GlobalConfiguration().getValue("server_url")}/violations';
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(violationData),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Violation report submitted.")),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Submission failed: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 
   @override
@@ -505,6 +564,27 @@ class _ViolationScreenState extends State<ViolationScreen> {
                   ),
                 ),
 
+                // Remarks Section
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: remarksController,
+                          readOnly: false,
+                          decoration: _fieldDecoration("Remarks")
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 // Photo Upload
                 InkWell(
                   onTap: _pickImage,
@@ -532,8 +612,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
                 ElevatedButton(
                   onPressed: canSubmit
                       ? () {
-                          if (_formKey.currentState!.validate())
-                            createViolation();
+                          createViolation();
                         }
                       : null,
                   style: ElevatedButton.styleFrom(

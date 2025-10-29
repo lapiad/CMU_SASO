@@ -94,6 +94,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
           .map(
             (item) => ViolationRecord(
               studentName: item['student_name'] ?? '',
+              violationType: item['violation_type'] ?? '',
               studentId: item['student_id'] ?? '',
               violation: item['violation_type'] ?? '',
               status: item['status'] ?? '',

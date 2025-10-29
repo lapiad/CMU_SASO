@@ -1,5 +1,6 @@
 class ViolationRecord {
   final String violationId;
+  final String violationType;
   final String studentName;
   final String studentId;
   final String violation;
@@ -16,6 +17,7 @@ class ViolationRecord {
 
   ViolationRecord({
     required this.violationId,
+    required this.violationType,
     required this.studentName,
     required this.studentId,
     required this.violation,
@@ -32,6 +34,7 @@ class ViolationRecord {
   factory ViolationRecord.fromJson(Map<String, dynamic> json) {
     return ViolationRecord(
       violationId: json['id'] ?? '',
+      violationType: json['violation_type'] ?? '',
       studentName: json['student_name'] ?? '',
       studentId: json['student_id'] ?? '',
       role: json['role'] ?? '',

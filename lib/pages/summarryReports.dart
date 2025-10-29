@@ -62,6 +62,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
               .map<ViolationRecord>(
                 (item) => ViolationRecord(
                   studentName: item['student_name'] ?? '',
+                  violationType: item['violation_type'] ?? '',
                   studentId: item['student_id'] ?? '',
                   violation: item['violation_type'] ?? '',
                   status: item['status'] ?? '',
