@@ -403,7 +403,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                   columns: const [
                                     DataColumn(
                                       label: SizedBox(
-                                        width: 280,
+                                        width: 320,
                                         child: Text(
                                           'Name',
                                           style: TextStyle(
@@ -415,7 +415,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                     ),
                                     DataColumn(
                                       label: SizedBox(
-                                        width: 280,
+                                        width: 320,
                                         child: Text(
                                           'Email',
                                           style: TextStyle(
@@ -427,7 +427,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                     ),
                                     DataColumn(
                                       label: SizedBox(
-                                        width: 280,
+                                        width: 300,
                                         child: Text(
                                           'Office',
                                           style: TextStyle(
@@ -439,7 +439,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                     ),
                                     DataColumn(
                                       label: SizedBox(
-                                        width: 280,
+                                        width: 300,
                                         child: Text(
                                           'Role',
                                           style: TextStyle(
@@ -451,7 +451,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                     ),
                                     DataColumn(
                                       label: SizedBox(
-                                        width: 280,
+                                        width: 300,
                                         child: Text(
                                           'Status',
                                           style: TextStyle(
@@ -463,7 +463,7 @@ class _UserManagementPageState extends State<UserMgt> {
                                     ),
                                     DataColumn(
                                       label: SizedBox(
-                                        width: 100,
+                                        width: 300,
                                         child: Text(
                                           'Actions',
                                           style: TextStyle(

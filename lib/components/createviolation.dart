@@ -479,6 +479,12 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                         departmentController.text = selectedStudent.department;
                       });
                     },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Student selection is required';
+                      }
+                      return null;
+                    },
                   ),
 
                   const SizedBox(height: 15),
@@ -519,6 +525,12 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                       setState(
                         () => violationTypeController.text = value ?? '',
                       );
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Violation type is required';
+                      }
+                      return null;
                     },
                   ),
 
