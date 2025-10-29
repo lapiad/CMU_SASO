@@ -1,13 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/Schoolguard.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
+import 'package:global_configuration/global_configuration.dart'; // <-- import your ViolationScreen
 
-List<CameraDescription>? cameras;
+void main() => runApp(const StudentIDScannerApp());
 
 class StudentIDScannerApp extends StatelessWidget {
   const StudentIDScannerApp({super.key});
@@ -37,78 +38,61 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   @override
   void initState() {
     super.initState();
-    _initCamera();
+    _initializeCamera();
   }
 
-  Future<void> _initCamera() async {
+  Future<void> _initializeCamera() async {
     final status = await Permission.camera.request();
-    if (status.isGranted) {
-      try {
-        CameraDescription camera;
-        if (kIsWeb) {
-          camera = (await availableCameras()).firstWhere(
-            (c) => c.lensDirection == CameraLensDirection.front,
-          );
-        } else {
-          camera = (await availableCameras()).firstWhere(
-            (c) => c.lensDirection == CameraLensDirection.back,
-          );
-        }
+    if (!status.isGranted) return;
 
-        _cameraController = CameraController(camera, ResolutionPreset.high);
-        await _cameraController!.initialize();
-        if (mounted) setState(() {});
-      } catch (e) {
-        debugPrint("Camera init error: $e");
-      }
+    try {
+      final cameras = await availableCameras();
+      final backCamera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+      );
+      _cameraController = CameraController(backCamera, ResolutionPreset.high);
+      await _cameraController!.initialize();
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint("Camera init error: $e");
     }
   }
 
   Future<void> _toggleFlash() async {
     if (_cameraController == null) return;
-    setState(() => _flashOn = !_flashOn);
+    _flashOn = !_flashOn;
     await _cameraController!.setFlashMode(
       _flashOn ? FlashMode.torch : FlashMode.off,
     );
+    setState(() {});
   }
 
-  Future<void> _scanID({int attempt = 1}) async {
+  Future<void> _scanStudentID({int attempt = 1}) async {
     if (!mounted ||
         _cameraController == null ||
-        !_cameraController!.value.isInitialized) {
+        !_cameraController!.value.isInitialized)
       return;
-    }
 
     try {
       setState(() => _isProcessing = true);
+
       final picture = await _cameraController!.takePicture();
       _capturedImage = File(picture.path);
       setState(() {});
 
       await Future.delayed(const Duration(milliseconds: 500));
-      final scannedText = await _extractTextFromFile(_capturedImage!);
+      final extractedText = await _extractTextFromFile(_capturedImage!);
 
-      final nameReg = RegExp(
-        r'([A-Z][a-zA-Z]+,\s+(?:[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)(?:\s+[A-Z]\.?)?)',
-      );
-      final courseReg = RegExp(
-        r'\b(?:BS|BA|B\.S\.|B\.A\.|BACHELOR(?:\s+OF)?(?:\s+[A-Z]+)*)(?:\s+IN\s+[A-Z][A-Z\s]+)?\b',
-        caseSensitive: false,
-      );
-      final studNoReg = RegExp(r'\b(20\d{6,8})\b');
+      final studNoReg = RegExp(r'\b(20\d{6,8})\b'); // adjust regex if needed
+      final studentNo = studNoReg.firstMatch(extractedText)?.group(0) ?? '';
 
-      final name = nameReg.firstMatch(scannedText)?.group(0) ?? '';
-      final course = courseReg.firstMatch(scannedText)?.group(0) ?? '';
-      final studentNo = studNoReg.firstMatch(scannedText)?.group(0) ?? '';
-
-      if ((studentNo.isEmpty || name.isEmpty || course.isEmpty) &&
-          attempt < 2) {
-        debugPrint("⚠️ OCR incomplete. Retrying...");
-        return _scanID(attempt: attempt + 1);
+      if (studentNo.isEmpty && attempt < 2) {
+        debugPrint("⚠️ No student number detected. Retrying...");
+        return _scanStudentID(attempt: attempt + 1);
       }
 
-      if (studentNo.isEmpty || name.isEmpty || course.isEmpty) {
-        _showOverlayMessage("No valid ID details detected");
+      if (studentNo.isEmpty) {
+        _showMessage("No valid student number detected");
         setState(() {
           _isProcessing = false;
           _capturedImage = null;
@@ -116,26 +100,33 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
         return;
       }
 
-      await _cameraController!.setFlashMode(FlashMode.off);
-      setState(() => _flashOn = false);
+      // Fetch students and find match
+      final students = await fetchStudents('');
+      final matchedStudent = students.firstWhere(
+        (s) => s.id == studentNo,
+        orElse: () =>
+            Student(id: '', firstname: '', lastname: '', department: ''),
+      );
 
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ViolationScreen(studentNo: studentNo),
-        ),
-      ).then((_) {
-        if (mounted) {
-          setState(() {
-            _capturedImage = null;
-            _isProcessing = false;
-          });
-        }
+      if (matchedStudent.id.isEmpty) {
+        _showMessage("Student not found in the database.");
+      } else {
+        // Navigate to ViolationScreen with studentId
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ViolationScreen(studentId: matchedStudent.id),
+          ),
+        );
+      }
+
+      setState(() {
+        _isProcessing = false;
+        _capturedImage = null;
       });
     } catch (e) {
-      debugPrint("❌ Scan error: $e");
-      _showOverlayMessage("Failed to scan ID. Try again in good lighting.");
+      debugPrint("Scan error: $e");
+      _showMessage("Failed to scan ID. Ensure good lighting.");
       setState(() {
         _isProcessing = false;
         _capturedImage = null;
@@ -151,7 +142,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
     return recognizedText.text;
   }
 
-  void _showOverlayMessage(String message) {
+  void _showMessage(String message) {
     final overlay = OverlayEntry(
       builder: (context) => Positioned(
         bottom: 80,
@@ -177,6 +168,36 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
 
     Overlay.of(context).insert(overlay);
     Future.delayed(const Duration(seconds: 2), () => overlay.remove());
+  }
+
+  Future<List<Student>> fetchStudents(String filter) async {
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/students');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data is List) {
+          return data
+              .map<Student>(
+                (e) => Student(
+                  id: e['student_id'].toString(),
+                  firstname: e['first_name'] ?? '',
+                  lastname: e['last_name'] ?? '',
+                  department: e['department'] ?? '',
+                ),
+              )
+              .toList();
+        }
+      } else {
+        print("Failed to fetch students: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching students: $e");
+    }
+    return [];
   }
 
   @override
@@ -224,12 +245,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
             left: 20,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SchoolGuardHome()),
-                );
-              },
+              onPressed: () => Navigator.pop(context),
             ),
           ),
           Positioned(
@@ -248,7 +264,7 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
             Positioned(
               bottom: MediaQuery.of(context).padding.bottom + 30,
               child: GestureDetector(
-                onTap: _scanID,
+                onTap: _scanStudentID,
                 child: Container(
                   width: buttonSize,
                   height: buttonSize,
@@ -304,6 +320,7 @@ class ScannerOverlay extends CustomPainter {
       ..color = Colors.blue
       ..strokeWidth = 6
       ..style = PaintingStyle.stroke;
+
     const padding = 10.0;
     final rectWidth = size.width - (padding * 5);
     final rectHeight = rectWidth / 0.625;
@@ -341,4 +358,18 @@ class ScannerOverlay extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class Student {
+  final String id;
+  final String firstname;
+  final String lastname;
+  final String department;
+
+  Student({
+    required this.id,
+    required this.firstname,
+    required this.lastname,
+    required this.department,
+  });
 }

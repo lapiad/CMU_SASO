@@ -10,6 +10,20 @@ import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
+class Student {
+  final String id;
+  final String firstname;
+  final String lastname;
+  final String department;
+
+  Student({
+    required this.id,
+    required this.firstname,
+    required this.lastname,
+    required this.department,
+  });
+}
+
 class SchoolGuardHome extends StatefulWidget {
   const SchoolGuardHome({super.key});
 
@@ -38,29 +52,25 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
               (item) => ViolationRecord(
                 studentName: item['student_name'] ?? '',
                 studentId: item['student_id'] ?? '',
-                violation: item['violation_type'] ?? '',
+                violation: item['violation_type'] ?? 'Manual Entry',
                 status: item['status'] ?? '',
                 role: item['role'] ?? '',
                 reportedBy: item['reported_by'] ?? '',
                 dateTime: item['date_of_incident'] ?? '',
                 department: item['student_department'] ?? '',
                 base64Imagestring: item['photo_evidence'] ?? '',
-                offenseLevel: item['offense_level'] ?? '',
+                offenseLevel: item['offense_level'] ?? '1st',
                 violationId: item['id'] ?? '',
               ),
             )
             .where(
               (record) =>
                   record.department.isNotEmpty &&
-                  record.department.toLowerCase() != 'n/a' &&
-                  record.offenseLevel.isNotEmpty &&
-                  record.offenseLevel.toLowerCase() != 'n/a',
+                  record.offenseLevel.isNotEmpty,
             )
             .toList();
 
-        setState(() {
-          scanData = records;
-        });
+        setState(() => scanData = records);
       }
     } catch (e) {
       debugPrint('Error fetching violations: $e');
@@ -84,6 +94,32 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
         final dateB = DateTime.tryParse(b.dateTime) ?? DateTime(2000);
         return dateB.compareTo(dateA);
       });
+  }
+
+  void _addManualViolation(Student student) {
+    final nowStr = DateTime.now().toIso8601String();
+    final record = ViolationRecord(
+      studentName: "${student.firstname} ${student.lastname}",
+      studentId: student.id,
+      violation: "Manual Entry",
+      status: "Recorded",
+      role: "guard",
+      reportedBy: "Manual Entry",
+      dateTime: nowStr,
+      department: student.department,
+      base64Imagestring: "",
+      offenseLevel: "1st",
+      violationId: DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+
+    setState(() {
+      scanData.insert(0, record);
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ViolationScreen(studentId: '')),
+    );
   }
 
   @override
@@ -177,14 +213,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                 backgroundColor: Colors.white24,
                 child: IconButton(
                   icon: const Icon(Icons.person_outline, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: () {},
                 ),
               ),
             ],
@@ -285,9 +314,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                     );
                     if (result != null && result is ViolationRecord) {
                       if (result.department.isNotEmpty &&
-                          result.department.toLowerCase() != 'n/a' &&
-                          result.offenseLevel.isNotEmpty &&
-                          result.offenseLevel.toLowerCase() != 'n/a') {
+                          result.offenseLevel.isNotEmpty) {
                         setState(() => scanData.insert(0, result));
                       }
                     }
@@ -304,19 +331,28 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _showManualEntryDialog(context),
-                  icon: const Icon(Icons.edit_note),
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final Student? student = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ManualEntryPage(),
+                      ),
+                    );
+                    if (student != null) {
+                      _addManualViolation(student);
+                    }
+                  },
+                  icon: const Icon(Icons.edit),
                   label: const Text("Manual"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo.shade50,
-                    foregroundColor: Colors.indigo.shade700,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.indigo.shade600,
+                    side: BorderSide(color: Colors.indigo.shade600, width: 2),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(color: Colors.indigo.shade200, width: 1),
                     ),
                   ),
                 ),
@@ -328,237 +364,6 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
     );
   }
 
-  // ------------------ MANUAL ENTRY ------------------
-  void _showManualEntryDialog(BuildContext context) {
-    final TextEditingController studentNoController = TextEditingController();
-    bool isLoading = false;
-    Map<String, dynamic>? studentInfo;
-    String? errorMessage;
-
-    Future<void> fetchStudent(StateSetter setModalState) async {
-      setModalState(() {
-        isLoading = true;
-        errorMessage = null;
-        studentInfo = null;
-      });
-
-      final studentId = studentNoController.text.trim();
-      if (studentId.isEmpty) {
-        setModalState(() {
-          errorMessage = "Please enter a Student ID.";
-          isLoading = false;
-        });
-        return;
-      }
-
-      try {
-        final url = Uri.parse(
-          '${GlobalConfiguration().getValue("server_url")}/students/student-info/$studentId',
-        );
-        final response = await http.get(url);
-
-        if (response.statusCode == 200) {
-          final decoded = json.decode(response.body);
-          if (decoded != null && decoded['student_Info'] != null) {
-            setModalState(() {
-              studentInfo = Map<String, dynamic>.from(decoded['student_Info']);
-            });
-          } else {
-            setModalState(() {
-              errorMessage = "Student not found.";
-            });
-          }
-        } else {
-          setModalState(() {
-            errorMessage = "Lookup failed. Status: ${response.statusCode}";
-          });
-        }
-      } catch (e) {
-        setModalState(() {
-          errorMessage = "Error connecting to server.";
-        });
-      } finally {
-        setModalState(() => isLoading = false);
-      }
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        "Manual Student Lookup",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: studentNoController,
-                        decoration: InputDecoration(
-                          labelText: "Enter Student ID Number",
-                          prefixIcon: const Icon(
-                            Icons.badge_outlined,
-                            color: Colors.indigo,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: isLoading
-                            ? null
-                            : () => fetchStudent(setModalState),
-                        icon: isLoading
-                            ? const SizedBox(
-                                height: 16,
-                                width: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.search),
-                        label: Text(
-                          isLoading ? "Searching..." : "Lookup Student",
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      if (errorMessage != null)
-                        Center(
-                          child: Text(
-                            "🚨 $errorMessage",
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        )
-                      else if (studentInfo != null)
-                        Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  studentInfo!['student_name'] ?? '',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo.shade700,
-                                  ),
-                                ),
-                                const Divider(height: 16, color: Colors.grey),
-                                _buildInfoRow(
-                                  Icons.person_outline,
-                                  "ID:",
-                                  studentInfo!['student_no'] ?? '',
-                                ),
-                                _buildInfoRow(
-                                  Icons.business_outlined,
-                                  "Dept:",
-                                  studentInfo!['department'] ?? '',
-                                ),
-                                _buildInfoRow(
-                                  Icons.school_outlined,
-                                  "Course:",
-                                  studentInfo!['course'] ?? '',
-                                ),
-                                const SizedBox(height: 20),
-                                ElevatedButton.icon(
-                                  icon: const Icon(Icons.arrow_forward),
-                                  label: const Text("Record Violation"),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green.shade600,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ViolationScreen(
-                                          studentNo: studentInfo!['student_no'],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: Colors.indigo.shade400),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  // ------------------ RECENT SCANS ------------------
   Widget _buildRecentScans(List<ViolationRecord> data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,12 +383,42 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
               ),
             ),
           ),
-        ...data.take(5).map((scan) => _scanTile(scan)),
+        ...data.take(5).map((scan) => ViolationTile(scan: scan)),
       ],
     );
   }
 
-  Widget _scanTile(ViolationRecord scan) {
+  Widget _buildViewAllButton(BuildContext context) {
+    return Center(
+      child: TextButton.icon(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            builder: (context) => SizedBox(
+              height: MediaQuery.of(context).size.height * 0.85,
+              child: ScanHistoryModal(scanData: scanData),
+            ),
+          );
+        },
+        icon: const Icon(Icons.list_alt_outlined),
+        label: const Text("View All Records"),
+      ),
+    );
+  }
+}
+
+// ----------------- Supporting Widgets -----------------
+
+class ViolationTile extends StatelessWidget {
+  final ViolationRecord scan;
+  const ViolationTile({super.key, required this.scan});
+
+  @override
+  Widget build(BuildContext context) {
     String formattedTime = '';
     try {
       final dateTime = DateTime.parse(scan.dateTime);
@@ -624,20 +459,27 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
             ),
           ],
         ),
+        trailing: OffenseBadge(offense: scan.offenseLevel, time: formattedTime),
         isThreeLine: true,
-        trailing: _offenseBadge(scan.offenseLevel, formattedTime),
       ),
     );
   }
+}
 
-  Widget _offenseBadge(String offense, String time) {
-    final mapping = {
-      "1st": ["1st Offense", Colors.green.shade600],
-      "2nd": ["2nd Offense", Colors.amber.shade700],
-      "3rd": ["3rd/Major", Colors.red.shade600],
-    };
-    final info =
-        mapping[offense.toLowerCase()] ?? ["Unknown", Colors.grey.shade600];
+class OffenseBadge extends StatelessWidget {
+  final String offense;
+  final String? time;
+  const OffenseBadge({super.key, required this.offense, this.time});
+
+  @override
+  Widget build(BuildContext context) {
+    final offenseColor =
+        {
+          "First Offense": Colors.yellow.shade700,
+          "Second Offense": Colors.orange.shade700,
+          "Third Offense": Colors.red.shade700,
+        }[offense] ??
+        Colors.indigo.shade400;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -646,11 +488,11 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
           decoration: BoxDecoration(
-            color: info[1] as Color,
+            color: offenseColor,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            info[0] as String,
+            offense,
             style: const TextStyle(
               fontSize: 12,
               color: Colors.white,
@@ -658,49 +500,30 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
             ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(time, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+        if (time != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            time!,
+            style: const TextStyle(fontSize: 11, color: Colors.black54),
+          ),
+        ],
       ],
-    );
-  }
-
-  Widget _buildViewAllButton(BuildContext context) {
-    return Center(
-      child: TextButton.icon(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-            ),
-            builder: (context) => SizedBox(
-              height: MediaQuery.of(context).size.height * 0.85,
-              child: _ScanHistoryModal(scanData: scanData),
-            ),
-          );
-        },
-        icon: const Icon(Icons.list_alt_outlined),
-        label: const Text("View All Records"),
-      ),
     );
   }
 }
 
-// ------------------ VIEW ALL MODAL ------------------
-class _ScanHistoryModal extends StatelessWidget {
+class ScanHistoryModal extends StatelessWidget {
   final List<ViolationRecord> scanData;
-
-  const _ScanHistoryModal({required this.scanData});
+  const ScanHistoryModal({super.key, required this.scanData});
 
   @override
   Widget build(BuildContext context) {
     final sortedData = List<ViolationRecord>.from(scanData)
-      ..sort((a, b) {
-        final dateA = DateTime.tryParse(a.dateTime) ?? DateTime(2000);
-        final dateB = DateTime.tryParse(b.dateTime) ?? DateTime(2000);
-        return dateB.compareTo(dateA);
-      });
+      ..sort(
+        (a, b) => (DateTime.tryParse(b.dateTime) ?? DateTime(2000)).compareTo(
+          DateTime.tryParse(a.dateTime) ?? DateTime(2000),
+        ),
+      );
 
     return Column(
       children: [
@@ -724,104 +547,210 @@ class _ScanHistoryModal extends StatelessWidget {
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: sortedData.length,
-            itemBuilder: (context, index) {
-              final scan = sortedData[index];
-              String formattedTime = '';
-              try {
-                final dateTime = DateTime.parse(scan.dateTime);
-                formattedTime = DateFormat(
-                  'MMM dd, yyyy hh:mm a',
-                ).format(dateTime.toLocal());
-              } catch (_) {
-                formattedTime = scan.dateTime;
-              }
-
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.indigo.shade50,
-                    child: const Icon(
-                      Icons.person_2_outlined,
-                      color: Colors.indigo,
-                    ),
-                  ),
-                  title: Text(
-                    scan.studentName,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("ID: ${scan.studentId}"),
-                      Text("Violation: ${scan.violation}"),
-                      Text("Department: ${scan.department}"),
-                    ],
-                  ),
-                  trailing: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _offenseBadge(scan.offenseLevel),
-                      const SizedBox(height: 4),
-                      Text(
-                        formattedTime,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                  isThreeLine: true,
-                ),
-              );
-            },
+            itemBuilder: (context, index) =>
+                ViolationTile(scan: sortedData[index]),
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _offenseBadge(String offense) {
-    final mapping = {
-      "1st": ["1st Offense", Colors.green.shade600],
-      "2nd": ["2nd Offense", Colors.amber.shade700],
-      "3rd": ["3rd/Major", Colors.red.shade600],
-    };
-    final info =
-        mapping[offense.toLowerCase()] ?? ["Unknown", Colors.grey.shade600];
+// ----------------- Manual Entry Page -----------------
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-      decoration: BoxDecoration(
-        color: info[1] as Color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        info[0] as String,
-        style: const TextStyle(
-          fontSize: 12,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+class ManualEntryPage extends StatefulWidget {
+  const ManualEntryPage({super.key});
+
+  @override
+  State<ManualEntryPage> createState() => _ManualEntryPageState();
+}
+
+class _ManualEntryPageState extends State<ManualEntryPage> {
+  final TextEditingController _controller = TextEditingController();
+  List<Student> _students = [];
+  List<Student> _filtered = [];
+  Student? _selectedStudent;
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _searchStudents(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _students = [];
+        _filtered = [];
+        _error = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/students?search=$query');
+      final response = await http.get(url);
+
+      if (!mounted) return; // Ensure widget is still mounted
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as List;
+        final students = data.map((e) {
+          return Student(
+            id: e['student_id'].toString(),
+            firstname: e['first_name'] ?? '',
+            lastname: e['last_name'] ?? '',
+            department: e['department'] ?? '',
+          );
+        }).toList();
+
+        setState(() {
+          _students = students;
+          _filtered = students;
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _error = "Search failed. Status: ${response.statusCode}";
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = "Error connecting to server.";
+        _loading = false;
+      });
+    }
+  }
+
+  void _filterList(String input) {
+    if (input.isEmpty) {
+      setState(() {
+        _filtered = _students;
+      });
+      return;
+    }
+
+    final filtered = _students.where((s) {
+      final q = input.toLowerCase();
+      return s.firstname.toLowerCase().contains(q) ||
+          s.lastname.toLowerCase().contains(q) ||
+          s.id.contains(input);
+    }).toList();
+
+    setState(() {
+      _filtered = filtered;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Manual Entry")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                labelText: "Search student by ID or name",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                _filterList(value);
+                _searchStudents(value);
+              },
+            ),
+            const SizedBox(height: 16),
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (_error != null)
+              Center(
+                child: Text(
+                  "🚨 $_error",
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            else if (_filtered.isEmpty)
+              const Center(child: Text("No students found."))
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _filtered.length,
+                  itemBuilder: (context, index) {
+                    final student = _filtered[index];
+                    final isSelected = _selectedStudent?.id == student.id;
+
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: isSelected
+                              ? Colors.indigo
+                              : Colors.grey.shade300,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: ListTile(
+                        title: Text("${student.firstname} ${student.lastname}"),
+                        subtitle: Text(
+                          "ID: ${student.id} | Dept: ${student.department}",
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            _selectedStudent = student;
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            if (_selectedStudent != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text("Record Violation"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context, _selectedStudent);
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
+// --- PROFILE SCREEN ---
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  // --- Logout Confirmation Dialog ---
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -863,8 +792,7 @@ class ProfileScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         final box = GetStorage();
-                        box.erase(); // clear all saved user data
-
+                        box.erase();
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (_) => const Login()),
                           (route) => false,
@@ -891,165 +819,54 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final box = GetStorage();
     final user = box.read('user_details') ?? {};
-
     final firstName = user['first_name'] ?? '';
     final lastName = user['last_name'] ?? '';
     final email = user['email'] ?? 'N/A';
     final department = user['department'] ?? 'Safety and Security Office';
-
-    // Generate initials for avatar
-    final initials =
-        (firstName.isNotEmpty ? firstName[0] : '') +
-        (lastName.isNotEmpty ? lastName[0] : '');
-    final displayInitials = initials.isNotEmpty ? initials.toUpperCase() : 'U';
+    final role = user['role'] ?? 'Guard';
 
     return Scaffold(
-      backgroundColor: Colors.blue.shade900,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // Profile Header
-              CircleAvatar(
-                radius: 45,
-                backgroundColor: Colors.white24,
-                child: Text(
-                  displayInitials,
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                "$firstName $lastName".trim().isEmpty
-                    ? "Unknown User"
-                    : "$firstName $lastName".trim(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                email,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Info Fields
-              _buildInfoField(
-                label: "Email Address",
-                value: email,
-                icon: Icons.email_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildInfoField(
-                label: "First Name",
-                value: firstName,
-                icon: Icons.person_outline,
-              ),
-              const SizedBox(height: 16),
-              _buildInfoField(
-                label: "Last Name",
-                value: lastName,
-                icon: Icons.badge_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildInfoField(
-                label: "Department / Office",
-                value: department,
-                icon: Icons.business_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildInfoField(
-                label: "Account Status",
-                value: "Active",
-                icon: Icons.verified_user_outlined,
-              ),
-              const SizedBox(height: 40),
-
-              // Logout Button
-              ElevatedButton.icon(
-                onPressed: () => _showLogoutDialog(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 18,
-                    horizontal: 40,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  minimumSize: const Size(double.infinity, 56),
-                ),
-                icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: AppBar(
+        title: const Text("Profile"),
+        backgroundColor: Colors.indigo,
       ),
-    );
-  }
-
-  // --- Info Field Builder ---
-  Widget _buildInfoField({
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blue.shade700),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value.isEmpty ? 'N/A' : value,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.indigo.shade100,
+              child: const Icon(Icons.person, size: 50, color: Colors.indigo),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              "$firstName $lastName",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(email, style: const TextStyle(color: Colors.black54)),
+            const SizedBox(height: 6),
+            Text(
+              "$role, $department",
+              style: const TextStyle(color: Colors.black54),
+            ),
+            const Spacer(),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.logout),
+              label: const Text("Logout"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 20,
+                ),
+              ),
+              onPressed: () => _showLogoutDialog(context),
+            ),
+          ],
+        ),
       ),
     );
   }

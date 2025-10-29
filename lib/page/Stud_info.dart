@@ -1,87 +1,128 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/page/Schoolguard.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:intl/intl.dart';
-import 'dart:typed_data';
+import 'package:dropdown_search/dropdown_search.dart';
 
-const Color kPrimaryColor = Color(0xFF1A237E);
-const Color kAccentColor = Color(0xFF42A5F5);
-
-class ViolationScreen extends StatefulWidget {
-  final String studentNo;
-  final String name;
+class Student {
+  final String id;
+  final String firstname;
+  final String lastname;
   final String department;
 
-  const ViolationScreen({
-    super.key,
-    required this.studentNo,
-    this.name = "",
-    this.department = "",
+  Student({
+    required this.id,
+    required this.firstname,
+    required this.lastname,
+    required this.department,
   });
+}
+
+class ViolationScreen extends StatefulWidget {
+  const ViolationScreen({super.key, required String studentId});
 
   @override
   State<ViolationScreen> createState() => _ViolationScreenState();
 }
 
 class _ViolationScreenState extends State<ViolationScreen> {
-  // Controllers
-  late TextEditingController studentNameController;
-  late TextEditingController studentIdController;
-  late TextEditingController departmentController;
-  late TextEditingController violationTypeController;
-  late TextEditingController offenseLevelController;
-  late TextEditingController reportedByController;
-  late TextEditingController roleController;
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController studentIdController = TextEditingController();
+  final TextEditingController studentNameController = TextEditingController();
+  final TextEditingController reportedByController = TextEditingController();
+  final TextEditingController roleController = TextEditingController();
+  final TextEditingController incidentDateController = TextEditingController();
+  final TextEditingController departmentController = TextEditingController();
+  final TextEditingController violationTypeController = TextEditingController();
+  final TextEditingController offenseLevelController = TextEditingController();
+  final TextEditingController statusController = TextEditingController();
 
   DateTime? incidentDate;
-  TimeOfDay? incidentTime;
-  String? statusValue;
+  List<File>? _photoEvidenceFile = [];
+  List<Uint8List>? _photoEvidenceBytesList = [];
+  final ImagePicker _picker = ImagePicker();
 
-  // State
-  String? _photoEvidencePath;
-  Uint8List? _photoEvidenceBytes;
-  bool _isSubmitting = false;
-  bool _isLoadingViolations = true;
-
-  List<String> violationTypes = [];
-  final _formKey = GlobalKey<FormState>();
+  bool canSubmit = true;
+  Color offenseColor = Colors.green;
 
   @override
   void initState() {
     super.initState();
-
-    studentNameController = TextEditingController(text: widget.name);
-    studentIdController = TextEditingController(text: widget.studentNo);
-    departmentController = TextEditingController(text: widget.department);
-    violationTypeController = TextEditingController();
-    offenseLevelController = TextEditingController();
-    reportedByController = TextEditingController();
-    roleController = TextEditingController();
-
-    // Default date/time
+    statusController.text = "Pending";
+    final userDetails = GetStorage().read('user_details');
+    reportedByController.text = userDetails?['first_name'] ?? '';
+    roleController.text = userDetails?['role'] ?? '';
     incidentDate = DateTime.now();
-    incidentTime = TimeOfDay.now();
-
-    _loadViolationTypes();
+    incidentDateController.text = DateFormat(
+      'yyyy-MM-dd – hh:mm a',
+    ).format(incidentDate!);
   }
 
-  @override
-  void dispose() {
-    studentNameController.dispose();
-    studentIdController.dispose();
-    departmentController.dispose();
-    violationTypeController.dispose();
-    offenseLevelController.dispose();
-    reportedByController.dispose();
-    roleController.dispose();
-    super.dispose();
+  InputDecoration _fieldDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    );
   }
 
-  Future<void> _loadViolationTypes() async {
+  Widget _buildReadOnlyField({
+    required TextEditingController controller,
+    required String label,
+    IconData? icon,
+    VoidCallback? onTap,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      onTap: onTap,
+      decoration: _fieldDecoration(label).copyWith(
+        prefixIcon: icon != null ? Icon(icon, color: Colors.blueAccent) : null,
+      ),
+    );
+  }
+
+  Future<List<Student>> fetchStudents(String filter) async {
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/students');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is List) {
+          return data
+              .map<Student>(
+                (e) => Student(
+                  id: e['student_id'].toString(),
+                  firstname: e['first_name'] ?? '',
+                  lastname: e['last_name'] ?? '',
+                  department: e['department'] ?? '',
+                ),
+              )
+              .toList();
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching students: $e");
+    }
+    return [];
+  }
+
+  Future<List<String>> fetchViolationTypes(String filter) async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
       final url = Uri.parse('$baseUrl/violations/get_violation_types');
@@ -89,408 +130,439 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final types = (data is List)
-            ? List<String>.from(data)
-            : (data['violation_types'] as List)
-                  .map((e) => e['type_name'].toString())
-                  .toList();
+        if (data is List) return List<String>.from(data);
+      }
+    } catch (e) {
+      debugPrint("Error fetching violation types: $e");
+    }
+    return [];
+  }
+
+  Future<int> fetchStudentViolationCountById(String studentId) async {
+    if (studentId.isEmpty) return 0;
+    try {
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/violations/student/$studentId');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        List violations = data['violations'] ?? [];
+        return violations.length;
+      }
+    } catch (e) {
+      debugPrint("Error fetching violation count: $e");
+    }
+    return 0;
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFiles = await _picker.pickMultiImage(imageQuality: 70);
+    if (pickedFiles.isNotEmpty) {
+      if (kIsWeb) {
+        List<Uint8List> photoBytes = [];
+        for (var photo in pickedFiles) {
+          photoBytes.add(await photo.readAsBytes());
+        }
         setState(() {
-          violationTypes = types;
-          _isLoadingViolations = false;
+          _photoEvidenceBytesList = photoBytes;
+          _photoEvidenceFile = [];
+        });
+      } else {
+        setState(() {
+          _photoEvidenceFile = pickedFiles.map((e) => File(e.path)).toList();
+          _photoEvidenceBytesList = [];
         });
       }
-    } catch (e) {
-      debugPrint("Error loading violation types: $e");
-      setState(() => _isLoadingViolations = false);
     }
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source, imageQuality: 70);
-    if (pickedFile != null) {
-      setState(() {
-        _photoEvidencePath = pickedFile.path;
-      });
-      _photoEvidenceBytes = await pickedFile.readAsBytes();
+  Widget _buildPhotoPreview() {
+    final photos = kIsWeb ? _photoEvidenceBytesList : _photoEvidenceFile;
+    if (photos == null || photos.isEmpty) {
+      return Container(
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cloud_upload, size: 30, color: Colors.grey),
+              SizedBox(height: 6),
+              Text(
+                "Tap to upload photos",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
     }
-  }
 
-  void _showImagePicker() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: photos.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Wrap(
+      itemBuilder: (_, index) {
+        final photo = kIsWeb
+            ? _photoEvidenceBytesList![index]
+            : _photoEvidenceFile![index];
+        return Stack(
           children: [
-            const Text(
-              'Evidence Photo',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: kPrimaryColor),
-              title: const Text("Take Photo"),
+            GestureDetector(
               onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
+                showDialog(
+                  context: context,
+                  builder: (_) => Dialog(
+                    insetPadding: EdgeInsets.zero,
+                    backgroundColor: Colors.black,
+                    child: PhotoView(
+                      imageProvider: kIsWeb
+                          ? MemoryImage(photo as Uint8List)
+                          : FileImage(photo as File) as ImageProvider,
+                      backgroundDecoration: const BoxDecoration(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                );
               },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: kIsWeb
+                    ? Image.memory(photo as Uint8List, fit: BoxFit.cover)
+                    : Image.file(photo as File, fit: BoxFit.cover),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: kPrimaryColor),
-              title: const Text("Choose from Gallery"),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-            if (_photoEvidencePath != null)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text(
-                  "Remove Photo",
-                  style: TextStyle(color: Colors.red),
-                ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
                 onTap: () {
-                  Navigator.pop(context);
                   setState(() {
-                    _photoEvidencePath = null;
-                    _photoEvidenceBytes = null;
+                    if (kIsWeb) {
+                      _photoEvidenceBytesList!.removeAt(index);
+                    } else {
+                      _photoEvidenceFile!.removeAt(index);
+                    }
                   });
                 },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _submitViolation() async {
-    if (!_formKey.currentState!.validate() ||
-        incidentDate == null ||
-        violationTypeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please complete all required fields.")),
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-
-    Map<String, dynamic> violationData = {
-      'student_id': studentIdController.text.trim(),
-      'student_name': studentNameController.text.trim(),
-      'violation_type': violationTypeController.text.trim(),
-      'offense_level': offenseLevelController.text.trim(),
-      'department': departmentController.text.trim(),
-      'reported_by': reportedByController.text.trim(),
-      'status': statusValue ?? '',
-      'role': roleController.text.trim(),
-      'date_of_incident': incidentDate!.toIso8601String(),
-    };
-
-    if (_photoEvidenceBytes != null) {
-      violationData['photo_evidence'] = base64Encode(_photoEvidenceBytes!);
-    }
-
-    try {
-      final url = '${GlobalConfiguration().getValue("server_url")}/violations';
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(violationData),
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Violation report submitted.")),
-        );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const SchoolGuardHome()),
-          (route) => false,
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Submission failed: ${response.body}")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error submitting violation: $e")));
-    } finally {
-      setState(() => _isSubmitting = false);
-    }
-  }
-
-  Widget _readOnlyField(TextEditingController controller, String label) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: TextFormField(
-          controller: controller,
-          readOnly: true,
-          decoration: InputDecoration(
-            labelText: label,
-            filled: true,
-            fillColor: Colors.blue.shade50,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: kPrimaryColor, width: 2),
-            ),
-          ),
-        ),
-      );
-
-  Widget _dateTimePickerField(
-    String label,
-    DateTime? date,
-    TimeOfDay? time,
-    VoidCallback onTap,
-  ) {
-    final text = date != null && time != null
-        ? '${DateFormat('yyyy-MM-dd').format(date)} ${time.format(context)}'
-        : '';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AbsorbPointer(
-          child: TextFormField(
-            decoration: InputDecoration(
-              labelText: label,
-              suffixIcon: const Icon(
-                Icons.calendar_today,
-                color: kPrimaryColor,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            controller: TextEditingController(text: text),
-            validator: (v) => text.isEmpty ? 'Required' : null,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _evidenceBox() => GestureDetector(
-    onTap: _showImagePicker,
-    child: Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: _photoEvidencePath != null
-          ? Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(_photoEvidencePath!),
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
                   ),
+                  padding: const EdgeInsets.all(4),
+                  child: const Icon(Icons.close, color: Colors.white, size: 18),
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Photo Evidence Attached (Tap to change)",
-                  style: TextStyle(color: kPrimaryColor),
-                ),
-              ],
-            )
-          : Column(
-              children: [
-                const Icon(Icons.camera_alt, color: kPrimaryColor, size: 40),
-                const SizedBox(height: 10),
-                Text(
-                  "Upload Photo Evidence (Optional)",
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-              ],
+              ),
             ),
-    ),
-  );
+          ],
+        );
+      },
+    );
+  }
+
+  void _updateOffenseLevel(int count) {
+    String level = '';
+    Color color = Colors.green;
+    bool canSubmitLocal = true;
+
+    if (count == 0) {
+      level = "First Offense";
+      color = Colors.green;
+    } else if (count == 1) {
+      level = "Second Offense";
+      color = Colors.orange;
+    } else if (count == 2) {
+      level = "Third Offense";
+      color = Colors.redAccent;
+    } else {
+      level = "Limit Reached (No More Violations)";
+      color = Colors.red.shade700;
+      canSubmitLocal = false;
+    }
+
+    setState(() {
+      offenseLevelController.text = level;
+      offenseColor = color;
+      canSubmit = canSubmitLocal;
+    });
+  }
+
+  Future<void> createViolation() async {
+    // TODO: implement your violation submission logic
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Record Violation",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: kPrimaryColor,
+        title: const Text("New Violation Report"),
+        backgroundColor: Colors.blueAccent,
       ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
+                if (!canSubmit)
+                  Card(
+                    color: Colors.red.shade50,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.warning, color: Colors.red),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "⚠️ Maximum offense limit reached. Cannot submit new violation.",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Student Section
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
-                        _buildSection(
-                          "Student Information",
-                          Icons.person,
-                          Column(
-                            children: [
-                              _readOnlyField(
-                                studentIdController,
-                                "Student No.",
-                              ),
-                              _readOnlyField(
-                                studentNameController,
-                                "Student Name",
-                              ),
-                              _readOnlyField(
-                                departmentController,
-                                "Department",
-                              ),
-                            ],
+                        DropdownSearch<Student>(
+                          asyncItems: (filter) => fetchStudents(filter),
+                          itemAsString: (s) =>
+                              "${s.id} - ${s.firstname} ${s.lastname}",
+                          popupProps: const PopupProps.menu(
+                            showSearchBox: true,
                           ),
+                          dropdownDecoratorProps: DropDownDecoratorProps(
+                            dropdownSearchDecoration: _fieldDecoration(
+                              "Select Student",
+                            ),
+                          ),
+                          onChanged: (Student? s) async {
+                            if (s != null) {
+                              studentIdController.text = s.id;
+                              studentNameController.text =
+                                  "${s.firstname} ${s.lastname}";
+                              departmentController.text = s.department;
+                              final count =
+                                  await fetchStudentViolationCountById(s.id);
+                              _updateOffenseLevel(count);
+                            }
+                          },
                         ),
-                        _buildSection(
-                          "Violation Details",
-                          Icons.gavel,
-                          _isLoadingViolations
-                              ? const CircularProgressIndicator(
-                                  color: kPrimaryColor,
-                                )
-                              : Column(
-                                  children: [
-                                    Autocomplete<String>(
-                                      optionsBuilder: (textEditingValue) {
-                                        final input = textEditingValue.text
-                                            .toLowerCase();
-                                        return violationTypes.where(
-                                          (v) =>
-                                              v.toLowerCase().contains(input),
-                                        );
-                                      },
-                                      onSelected: (val) =>
-                                          violationTypeController.text = val,
-                                      fieldViewBuilder:
-                                          (
-                                            context,
-                                            controller,
-                                            focusNode,
-                                            onFieldSubmitted,
-                                          ) {
-                                            controller.text =
-                                                violationTypeController.text;
-                                            return TextFormField(
-                                              controller: controller,
-                                              focusNode: focusNode,
-                                              decoration: InputDecoration(
-                                                labelText: "Violation Type",
-                                                suffixIcon: const Icon(
-                                                  Icons.search,
-                                                  color: kPrimaryColor,
-                                                ),
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                              ),
-                                              validator: (v) =>
-                                                  controller.text.isEmpty
-                                                  ? "Required"
-                                                  : null,
-                                            );
-                                          },
-                                    ),
-                                    _dateTimePickerField(
-                                      "Date & Time of Incident",
-                                      incidentDate,
-                                      incidentTime,
-                                      () async {
-                                        final pickedDate = await showDatePicker(
-                                          context: context,
-                                          initialDate:
-                                              incidentDate ?? DateTime.now(),
-                                          firstDate: DateTime(2023),
-                                          lastDate: DateTime(2030),
-                                        );
-                                        if (pickedDate != null) {
-                                          final pickedTime =
-                                              await showTimePicker(
-                                                context: context,
-                                                initialTime:
-                                                    incidentTime ??
-                                                    TimeOfDay.now(),
-                                              );
-                                          if (pickedTime != null) {
-                                            setState(() {
-                                              incidentDate = pickedDate;
-                                              incidentTime = pickedTime;
-                                            });
-                                          }
-                                        }
-                                      },
-                                    ),
-                                    _evidenceBox(),
-                                  ],
-                                ),
+                        const SizedBox(height: 12),
+                        _buildReadOnlyField(
+                          controller: studentIdController,
+                          label: "Student ID",
+                        ),
+                        const SizedBox(height: 12),
+                        _buildReadOnlyField(
+                          controller: studentNameController,
+                          label: "Student Name",
+                        ),
+                        const SizedBox(height: 12),
+                        _buildReadOnlyField(
+                          controller: departmentController,
+                          label: "Department",
                         ),
                       ],
                     ),
                   ),
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isSubmitting
-                            ? null
-                            : () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(
-                            color: kPrimaryColor,
-                            width: 2,
+
+                // Violation Section
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        DropdownSearch<String>(
+                          asyncItems: (filter) => fetchViolationTypes(filter),
+                          selectedItem: violationTypeController.text.isEmpty
+                              ? null
+                              : violationTypeController.text,
+                          popupProps: const PopupProps.menu(
+                            showSearchBox: true,
                           ),
-                        ),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: kPrimaryColor,
+                          dropdownDecoratorProps: DropDownDecoratorProps(
+                            dropdownSearchDecoration: _fieldDecoration(
+                              "Violation Type",
+                            ),
                           ),
+                          onChanged: (value) {
+                            violationTypeController.text = value ?? '';
+                          },
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitViolation,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kPrimaryColor,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: _isSubmitting
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              )
-                            : const Text(
-                                "Record Violation",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildReadOnlyField(
+                                controller: offenseLevelController,
+                                label: "Offense Level",
                               ),
-                      ),
+                            ),
+                            const SizedBox(width: 10),
+                            Chip(
+                              label: Text(
+                                offenseLevelController.text,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              backgroundColor: offenseColor,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildReadOnlyField(
+                          controller: statusController,
+                          label: "Status",
+                        ),
+                        const SizedBox(height: 12),
+                        _buildReadOnlyField(
+                          controller: incidentDateController,
+                          label: "Incident Date & Time",
+                          icon: Icons.calendar_today,
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: incidentDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(3000),
+                            );
+                            if (date != null) {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.fromDateTime(
+                                  incidentDate ?? DateTime.now(),
+                                ),
+                              );
+                              if (time != null) {
+                                setState(() {
+                                  incidentDate = DateTime(
+                                    date.year,
+                                    date.month,
+                                    date.day,
+                                    time.hour,
+                                    time.minute,
+                                  );
+                                  incidentDateController.text = DateFormat(
+                                    'yyyy-MM-dd – hh:mm a',
+                                  ).format(incidentDate!);
+                                });
+                              }
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ),
+
+                // Reporter Section
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        _buildReadOnlyField(
+                          controller: reportedByController,
+                          label: "Reported By",
+                        ),
+                        const SizedBox(height: 12),
+                        _buildReadOnlyField(
+                          controller: roleController,
+                          label: "Role",
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Photo Upload
+                InkWell(
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.blueAccent.withOpacity(0.3),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade200,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: _buildPhotoPreview(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: canSubmit
+                      ? () {
+                          if (_formKey.currentState!.validate())
+                            createViolation();
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    canSubmit ? "Submit Report" : "Cannot Submit",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -499,37 +571,4 @@ class _ViolationScreenState extends State<ViolationScreen> {
       ),
     );
   }
-
-  Widget _buildSection(String title, IconData icon, Widget body) => Card(
-    elevation: 4,
-    margin: const EdgeInsets.only(bottom: 24),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            color: kPrimaryColor,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-          ),
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(padding: const EdgeInsets.all(16), child: body),
-      ],
-    ),
-  );
 }
