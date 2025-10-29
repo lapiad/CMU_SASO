@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
 import 'package:get_storage/get_storage.dart';
@@ -113,10 +114,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage>
         shadowColor: Colors.black45,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 26),
-          onPressed: () => Navigator.pushReplacement(
+          onPressed: () => kIsWeb? Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const Dashboard()),
-          ),
+          ):
+          Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(

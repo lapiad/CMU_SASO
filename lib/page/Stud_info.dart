@@ -26,7 +26,9 @@ class Student {
 }
 
 class ViolationScreen extends StatefulWidget {
-  const ViolationScreen({super.key, required String studentId});
+  final String studentId;
+
+  const ViolationScreen({super.key, required this.studentId});
 
   @override
   State<ViolationScreen> createState() => _ViolationScreenState();
@@ -52,6 +54,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
   bool canSubmit = true;
   Color offenseColor = Colors.green;
+  int violationCount = 0;
 
   @override
   void initState() {
@@ -64,6 +67,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
     incidentDateController.text = DateFormat(
       'yyyy-MM-dd – hh:mm a',
     ).format(incidentDate!);
+    fetchStudents();
   }
 
   InputDecoration _fieldDecoration(String label) {
@@ -95,32 +99,37 @@ class _ViolationScreenState extends State<ViolationScreen> {
     );
   }
 
-  Future<List<Student>> fetchStudents(String filter) async {
+  Future<void> fetchStudents() async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse('$baseUrl/students');
+      final url = Uri.parse('$baseUrl/students/student-info/${widget.studentId}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data is List) {
-          return data
-              .map<Student>(
-                (e) => Student(
-                  id: e['student_id'].toString(),
-                  firstname: e['first_name'] ?? '',
-                  lastname: e['last_name'] ?? '',
-                  department: e['department'] ?? '',
-                ),
-              )
-              .toList();
+        
+        if (data["student_Info"] != null) {
+          Student student = Student(
+            id: data["student_Info"]["student_id"],
+            firstname: data["student_Info"]["first_name"],
+            lastname: data["student_Info"]["last_name"],
+            department: data["student_Info"]["department"],
+          );
+          setState(() {
+            studentIdController.text = student.id;
+            studentNameController.text = "${student.firstname} ${student.lastname}";
+            departmentController.text = student.department;
+            fetchStudentViolationCountById().then((_) {
+              _updateOffenseLevel(violationCount);
+            });
+          });
         }
       }
     } catch (e) {
       debugPrint("Error fetching students: $e");
     }
-    return [];
   }
+  
 
   Future<List<String>> fetchViolationTypes(String filter) async {
     try {
@@ -130,7 +139,9 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data is List) return List<String>.from(data);
+         return List<String>.from(
+            data['violation_types'].map((e) => e['type_name']),
+          );
       }
     } catch (e) {
       debugPrint("Error fetching violation types: $e");
@@ -138,21 +149,21 @@ class _ViolationScreenState extends State<ViolationScreen> {
     return [];
   }
 
-  Future<int> fetchStudentViolationCountById(String studentId) async {
-    if (studentId.isEmpty) return 0;
+  Future<void> fetchStudentViolationCountById() async {
     try {
       final baseUrl = GlobalConfiguration().getValue("server_url");
-      final url = Uri.parse('$baseUrl/violations/student/$studentId');
+      final url = Uri.parse('$baseUrl/violations/student/${widget.studentId}');
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        List violations = data['violations'] ?? [];
-        return violations.length;
+        setState(() {
+          violationCount = data['violations'].length;
+        });
+        
       }
     } catch (e) {
       debugPrint("Error fetching violation count: $e");
     }
-    return 0;
   }
 
   Future<void> _pickImage() async {
@@ -353,30 +364,6 @@ class _ViolationScreenState extends State<ViolationScreen> {
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
-                        DropdownSearch<Student>(
-                          asyncItems: (filter) => fetchStudents(filter),
-                          itemAsString: (s) =>
-                              "${s.id} - ${s.firstname} ${s.lastname}",
-                          popupProps: const PopupProps.menu(
-                            showSearchBox: true,
-                          ),
-                          dropdownDecoratorProps: DropDownDecoratorProps(
-                            dropdownSearchDecoration: _fieldDecoration(
-                              "Select Student",
-                            ),
-                          ),
-                          onChanged: (Student? s) async {
-                            if (s != null) {
-                              studentIdController.text = s.id;
-                              studentNameController.text =
-                                  "${s.firstname} ${s.lastname}";
-                              departmentController.text = s.department;
-                              final count =
-                                  await fetchStudentViolationCountById(s.id);
-                              _updateOffenseLevel(count);
-                            }
-                          },
-                        ),
                         const SizedBox(height: 12),
                         _buildReadOnlyField(
                           controller: studentIdController,

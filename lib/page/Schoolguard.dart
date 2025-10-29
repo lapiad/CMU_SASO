@@ -5,6 +5,7 @@ import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/page/IDScanner.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:flutter_application_1/pages/login.dart';
+import 'package:flutter_application_1/pages/profile.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
@@ -213,7 +214,14 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                 backgroundColor: Colors.white24,
                 child: IconButton(
                   icon: const Icon(Icons.person_outline, color: Colors.white),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProfileScreen(),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -736,7 +744,12 @@ class _ManualEntryPageState extends State<ManualEntryPage> {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.pop(context, _selectedStudent);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ViolationScreen(studentId: _selectedStudent!.id,),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -751,6 +764,7 @@ class _ManualEntryPageState extends State<ManualEntryPage> {
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  // --- Logout Confirmation Dialog ---
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -792,7 +806,8 @@ class ProfileScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         final box = GetStorage();
-                        box.erase();
+                        box.erase(); // clear all saved user data
+
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (_) => const Login()),
                           (route) => false,
@@ -819,54 +834,165 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final box = GetStorage();
     final user = box.read('user_details') ?? {};
+
     final firstName = user['first_name'] ?? '';
     final lastName = user['last_name'] ?? '';
     final email = user['email'] ?? 'N/A';
     final department = user['department'] ?? 'Safety and Security Office';
-    final role = user['role'] ?? 'Guard';
+
+    // Generate initials for avatar
+    final initials =
+        (firstName.isNotEmpty ? firstName[0] : '') +
+        (lastName.isNotEmpty ? lastName[0] : '');
+    final displayInitials = initials.isNotEmpty ? initials.toUpperCase() : 'U';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Profile"),
-        backgroundColor: Colors.indigo,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.indigo.shade100,
-              child: const Icon(Icons.person, size: 50, color: Colors.indigo),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "$firstName $lastName",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            Text(email, style: const TextStyle(color: Colors.black54)),
-            const SizedBox(height: 6),
-            Text(
-              "$role, $department",
-              style: const TextStyle(color: Colors.black54),
-            ),
-            const Spacer(),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.logout),
-              label: const Text("Logout"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 20,
+      backgroundColor: Colors.blue.shade900,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // Profile Header
+              CircleAvatar(
+                radius: 45,
+                backgroundColor: Colors.white24,
+                child: Text(
+                  displayInitials,
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              onPressed: () => _showLogoutDialog(context),
-            ),
-          ],
+              const SizedBox(height: 14),
+              Text(
+                "$firstName $lastName".trim().isEmpty
+                    ? "Unknown User"
+                    : "$firstName $lastName".trim(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                email,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Info Fields
+              _buildInfoField(
+                label: "Email Address",
+                value: email,
+                icon: Icons.email_outlined,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "First Name",
+                value: firstName,
+                icon: Icons.person_outline,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Last Name",
+                value: lastName,
+                icon: Icons.badge_outlined,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Department / Office",
+                value: department,
+                icon: Icons.business_outlined,
+              ),
+              const SizedBox(height: 16),
+              _buildInfoField(
+                label: "Account Status",
+                value: "Active",
+                icon: Icons.verified_user_outlined,
+              ),
+              const SizedBox(height: 40),
+
+              // Logout Button
+              ElevatedButton.icon(
+                onPressed: () => _showLogoutDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 40,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  // --- Info Field Builder ---
+  Widget _buildInfoField({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blue.shade700),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value.isEmpty ? 'N/A' : value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
