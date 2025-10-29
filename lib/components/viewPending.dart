@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+const String baseUrl = 'http://localhost:3000/api'; // Update this with your actual API base URL
+
+
 class PendingReportsDialog extends StatefulWidget {
   const PendingReportsDialog({super.key});
 
@@ -13,16 +16,14 @@ class _PendingReportsDialogState extends State<PendingReportsDialog> {
   List<Report> reports = [];
   bool isLoading = true;
 
-  static const String baseUrl = 'http://192.168.1.4:8000';
-
   @override
   void initState() {
     super.initState();
-    fetchPendingReports();
+    fetchPendingReports(); 
   }
 
   Future<void> fetchPendingReports() async {
-    final apiUrl = Uri.parse('$baseUrl/violations/pending');
+    final apiUrl = Uri.parse('$baseUrl/violations');
     try {
       final response = await http.get(apiUrl);
       if (response.statusCode == 200) {

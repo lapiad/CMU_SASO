@@ -32,17 +32,29 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
   bool filterFirstOffense = false;
   bool filterSecondOffense = false;
   bool filterThirdOffense = false;
-  bool filterImproperUniform = false;
+  bool filterDresscode = false;
   bool filterLateAttendance = false;
   bool filterSeriousMisconduct = false;
+  bool filterNoId = false;
+  bool filterLanyard = false;
+  bool filterEarrings = false;
+  bool filterBehavioral = false;
+  bool filterVape = false;
+  bool filterBullying = false;
+  bool filterCheating = false;
+  bool filterVandalism = false;
+  bool filterUnauthorized = false;
+  bool filterWeapon = false;
   bool filterCAS = false;
   bool filterCBA = false;
   bool filterCCS = false;
   bool filterCTE = false;
   bool filterCCJE = false;
+  bool filterCOA = false;
   bool filterPending = false;
   bool filterUnderReview = false;
   bool filterReviewed = false;
+  bool filterReferred = false;
 
   String searchQuery = "";
 
@@ -151,30 +163,58 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
           (filterThirdOffense && record.offenseLevel == 'Third Offense');
 
       final matchesViolationType =
-          (!filterImproperUniform &&
+          (!filterDresscode &&
               !filterLateAttendance &&
-              !filterSeriousMisconduct) ||
-          (filterImproperUniform && record.violation == 'Improper Uniform') ||
+              !filterSeriousMisconduct &&
+              !filterNoId &&
+              !filterLanyard &&
+              !filterEarrings &&
+              !filterBehavioral &&
+              !filterVape &&
+              !filterBullying &&
+              !filterCheating &&
+              !filterVandalism &&
+              !filterUnauthorized &&
+              !filterWeapon) ||
+          (filterDresscode && record.violation == 'Dresscode') ||
           (filterLateAttendance && record.violation == 'Late Attendance') ||
-          (filterSeriousMisconduct && record.violation == 'Serious Misconduct');
+          (filterSeriousMisconduct &&
+              record.violation == 'Serious Misconduct') ||
+          (filterNoId && record.violation == 'NO ID') ||
+          (filterLanyard && record.violation == 'Not using lanyard') ||
+          (filterEarrings && record.violation == 'Earings') ||
+          (filterBehavioral && record.violation == 'Behavioral Misconduct') ||
+          (filterVape && record.violation == 'Vape') ||
+          (filterBullying && record.violation == 'Bullying') ||
+          (filterCheating && record.violation == 'Cheating') ||
+          (filterVandalism && record.violation == 'Vandalism') ||
+          (filterUnauthorized &&
+              record.violation == 'Unauthorized entry of outsider') ||
+          (filterWeapon && record.violation == 'Bringing deadly weapon');
 
       final matchesDepartment =
           (!filterCAS &&
               !filterCBA &&
               !filterCCS &&
               !filterCTE &&
+              !filterCOA &&
               !filterCCJE) ||
           (filterCAS && record.department == 'CAS') ||
           (filterCBA && record.department == 'CBA') ||
           (filterCCS && record.department == 'CCS') ||
+          (filterCOA && record.department == 'COA') ||
           (filterCTE && record.department == 'CTE') ||
           (filterCCJE && record.department == 'CCJE');
 
       final matchesStatus =
-          (!filterPending && !filterUnderReview && !filterReviewed) ||
+          (!filterPending &&
+              !filterUnderReview &&
+              !filterReviewed &&
+              !filterReferred) ||
           (filterPending && record.status == 'Pending') ||
           (filterUnderReview && record.status == 'Under Review') ||
-          (filterReviewed && record.status == 'Reviewed');
+          (filterReviewed && record.status == 'Reviewed') ||
+          (filterReferred && record.status == 'Referred');
 
       final recordDate = DateTime.tryParse(record.dateTime);
       final matchesDate =
@@ -201,7 +241,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
       case 'pending':
         return Colors.orange.shade200;
       case 'in progress':
-        return const Color.fromARGB(255, 66, 184, 66).withOpacity(0.18);
+        return const Color.fromRGBO(66, 184, 66, 0.18);
       case 'reviewed':
         return Colors.lightBlue.shade100;
       case 'referred':
@@ -226,22 +266,48 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
 
   void _clearFilters() {
     setState(() {
+      // Offense level
       filterFirstOffense = false;
       filterSecondOffense = false;
       filterThirdOffense = false;
-      filterImproperUniform = false;
+
+      // Violation types
+      filterDresscode = false;
       filterLateAttendance = false;
       filterSeriousMisconduct = false;
+      filterNoId = false;
+      filterLanyard = false;
+      filterEarrings = false;
+      filterBehavioral = false;
+      filterVape = false;
+      filterBullying = false;
+      filterCheating = false;
+      filterVandalism = false;
+      filterUnauthorized = false;
+      filterWeapon = false;
+
+      // Departments
       filterCAS = false;
       filterCBA = false;
       filterCCS = false;
       filterCTE = false;
+      filterCOA = false;
       filterCCJE = false;
+
+      // Statuses
       filterPending = false;
       filterUnderReview = false;
       filterReviewed = false;
+      filterReferred = false;
+
+      // Dates and search
       startDate = null;
       endDate = null;
+      searchQuery = "";
+
+      // Close the filter drawer if open
+      showFilters = false;
+      _drawerController.reverse();
     });
   }
 
@@ -347,7 +413,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [accent, accent.withOpacity(0.85)],
+                    colors: [accent, accent.withAlpha((0.85 * 255).round())],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -401,7 +467,9 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
               child: AnimatedOpacity(
                 opacity: showFilters ? 0.45 : 0.0,
                 duration: const Duration(milliseconds: 300),
-                child: Container(color: Colors.black.withOpacity(0.45)),
+                child: Container(
+                  color: Colors.black.withAlpha((0.45 * 255).round()),
+                ),
               ),
             ),
 
@@ -506,6 +574,75 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
               ],
             ),
             const SizedBox(height: 10),
+
+            // Date range (start / end) - filteredRecords already uses startDate/endDate
+            _buildFilterSection("Date Range", [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3650),
+                          ),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            startDate = picked;
+                          });
+                        }
+                      },
+                      child: Text(
+                        startDate == null
+                            ? 'Start date: Any'
+                            : 'Start: ${DateFormat('MMM dd, yyyy').format(startDate!)}',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: endDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3650),
+                          ),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            endDate = picked;
+                          });
+                        }
+                      },
+                      child: Text(
+                        endDate == null
+                            ? 'End date: Any'
+                            : 'End: ${DateFormat('MMM dd, yyyy').format(endDate!)}',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              TextButton(
+                onPressed: () => setState(() {
+                  startDate = null;
+                  endDate = null;
+                }),
+                child: const Text("Clear date range"),
+              ),
+            ]),
+
+            const Divider(),
+
+            // Offense level
             _buildFilterSection("Priority", [
               _buildCheckbox(
                 "First Offense",
@@ -523,7 +660,10 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                 (val) => setState(() => filterThirdOffense = val!),
               ),
             ]),
+
             const Divider(),
+
+            // Status - labels match the values used in filteredRecords
             _buildFilterSection("Report Status", [
               _buildCheckbox(
                 "Pending",
@@ -531,7 +671,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                 (val) => setState(() => filterPending = val!),
               ),
               _buildCheckbox(
-                "In Progress",
+                "Under Review",
                 filterUnderReview,
                 (val) => setState(() => filterUnderReview = val!),
               ),
@@ -540,67 +680,122 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                 filterReviewed,
                 (val) => setState(() => filterReviewed = val!),
               ),
-              // keep original behavior (Referred maps to Reviewed toggle in original) - preserved
               _buildCheckbox(
                 "Referred",
-                filterReviewed,
-                (val) => setState(() => filterReviewed = val!),
+                filterReferred,
+                (val) => setState(() => filterReferred = val!),
               ),
             ]),
+
             const Divider(),
+
+            // Violation Type - match the exact strings used in filtering logic
             _buildFilterSection("Violation Type", [
-              _buildCheckbox(
-                "Dress Code",
-                filterImproperUniform,
-                (val) => setState(() => filterImproperUniform = val!),
-              ),
-              _buildCheckbox(
-                "Behavioral Misconduct",
-                filterLateAttendance,
-                (val) => setState(() => filterLateAttendance = val!),
-              ),
-              _buildCheckbox(
-                "Unauthorized Entry of Outsider",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "Bringing Deadly Weapons",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "Cheating exam",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "Vandalism",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "NO ID",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "Not Using Lanyard of CMU",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "Vape",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
-              ),
-              _buildCheckbox(
-                "Bullying",
-                filterSeriousMisconduct,
-                (val) => setState(() => filterSeriousMisconduct = val!),
+              Builder(
+                builder: (context) {
+                  final all = allRecordsNotifier.value;
+                  final noIdCount = all
+                      .where((r) => r.violation == 'NO ID')
+                      .length;
+                  final lanyardCount = all
+                      .where((r) => r.violation == 'Not using lanyard')
+                      .length;
+                  final dresscodeCount = all
+                      .where((r) => r.violation == 'Dresscode')
+                      .length;
+                  final earringsCount = all
+                      .where((r) => r.violation == 'Earings')
+                      .length;
+                  final behavioralCount = all
+                      .where((r) => r.violation == 'Behavioral Misconduct')
+                      .length;
+                  final vapeCount = all
+                      .where((r) => r.violation == 'Vape')
+                      .length;
+                  final bullyingCount = all
+                      .where((r) => r.violation == 'Bullying')
+                      .length;
+                  final cheatingCount = all
+                      .where((r) => r.violation == 'Cheating')
+                      .length;
+                  final vandalismCount = all
+                      .where((r) => r.violation == 'Vandalism')
+                      .length;
+                  final unauthorizedCount = all
+                      .where(
+                        (r) => r.violation == 'Unauthorized entry of outsider',
+                      )
+                      .length;
+                  final weaponCount = all
+                      .where((r) => r.violation == 'Bringing deadly weapon')
+                      .length;
+
+                  return Column(
+                    children: [
+                      _buildCheckbox(
+                        "NO ID ($noIdCount)",
+                        filterNoId ?? false,
+                        (val) => setState(() => filterNoId = val!),
+                      ),
+                      _buildCheckbox(
+                        "Not using lanyard ($lanyardCount)",
+                        filterLanyard ?? false,
+                        (val) => setState(() => filterLanyard = val!),
+                      ),
+                      _buildCheckbox(
+                        "Dresscode ($dresscodeCount)",
+                        filterDresscode,
+                        (val) => setState(() => filterDresscode = val!),
+                      ),
+                      _buildCheckbox(
+                        "Earings ($earringsCount)",
+                        filterEarrings ?? false,
+                        (val) => setState(() => filterEarrings = val!),
+                      ),
+                      _buildCheckbox(
+                        "Behavioral Misconduct ($behavioralCount)",
+                        filterBehavioral ?? false,
+                        (val) => setState(() => filterBehavioral = val!),
+                      ),
+                      _buildCheckbox(
+                        "Vape ($vapeCount)",
+                        filterVape ?? false,
+                        (val) => setState(() => filterVape = val!),
+                      ),
+                      _buildCheckbox(
+                        "Bullying ($bullyingCount)",
+                        filterBullying ?? false,
+                        (val) => setState(() => filterBullying = val!),
+                      ),
+                      _buildCheckbox(
+                        "Cheating ($cheatingCount)",
+                        filterCheating ?? false,
+                        (val) => setState(() => filterCheating = val!),
+                      ),
+                      _buildCheckbox(
+                        "Vandalism ($vandalismCount)",
+                        filterVandalism ?? false,
+                        (val) => setState(() => filterVandalism = val!),
+                      ),
+                      _buildCheckbox(
+                        "Unauthorized entry ($unauthorizedCount)",
+                        filterUnauthorized ?? false,
+                        (val) => setState(() => filterUnauthorized = val!),
+                      ),
+                      _buildCheckbox(
+                        "Bringing deadly weapon ($weaponCount)",
+                        filterWeapon ?? false,
+                        (val) => setState(() => filterWeapon = val!),
+                      ),
+                    ],
+                  );
+                },
               ),
             ]),
+
             const Divider(),
+
+            // Department
             _buildFilterSection("Department", [
               _buildCheckbox(
                 "CAS",
@@ -623,24 +818,53 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
                 (val) => setState(() => filterCTE = val!),
               ),
               _buildCheckbox(
+                "COA",
+                filterCOA,
+                (val) => setState(() => filterCOA = val!),
+              ),
+              _buildCheckbox(
                 "CCJE",
                 filterCCJE,
                 (val) => setState(() => filterCCJE = val!),
               ),
             ]),
+
             const SizedBox(height: 18),
+
+            // Actions
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  onPressed: _clearFilters,
+                  onPressed: () {
+                    _clearFilters();
+                    // immediate feedback
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Filters cleared'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
                   child: const Text(
                     "Clear",
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _applyFilters,
+                  onPressed: () {
+                    // apply the currently selected filters and close drawer
+                    _applyFilters();
+                    // immediate feedback
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Filters applied'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF446EAD),
                     shape: RoundedRectangleBorder(
@@ -707,7 +931,7 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
           Center(
             child: CircleAvatar(
               radius: 42,
-              backgroundColor: Colors.white.withOpacity(0.12),
+              backgroundColor: Colors.white.withAlpha((0.12 * 255).round()),
               child: Image.asset(
                 'images/logos.png',
                 color: Colors.white,
@@ -817,7 +1041,8 @@ class _ViolationLogsPageState extends State<ViolationLogsPage>
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 headingRowHeight: 56,
-                dataRowHeight: 68,
+                dataRowMinHeight: 68,
+                dataRowMaxHeight: 68,
                 headingRowColor: WidgetStateProperty.all(Colors.grey.shade100),
                 columns: const [
                   DataColumn(
