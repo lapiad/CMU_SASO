@@ -406,7 +406,7 @@ class _CreateViolationDialogState extends State<CreateViolationDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        "Create New Violation Report",
+                        "Create New Violation",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

@@ -599,7 +599,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   height: 80,
                   child: buildActionButton(
                     Icons.add,
-                    "Create New Violation Report",
+                    "Create New Violation",
                     () async {
                       await showDialog(
                         context: context,
