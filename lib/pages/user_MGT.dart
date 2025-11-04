@@ -573,28 +573,31 @@ class _EditUserDialogState extends State<EditUserDialog> {
     setState(() => isSaving = true);
 
     try {
-      const serverUrl = 'http://localhost:8080'; // Replace with actual URL
-      final url = Uri.parse('$serverUrl/users/${widget.user.id}');
+      final baseUrl = GlobalConfiguration().getValue("server_url");
+      final url = Uri.parse('$baseUrl/user/edit');
 
-      final response = await http.put(
+      final body = {
+        'user_id': widget.user.id, // ✅ fixed reference
+        'first_name': nameController.text.trim(),
+        'email': emailController.text.trim(),
+        'department': officeController.text.trim(),
+        'role': roleController.text.trim(),
+      };
+
+      final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'first_name': nameController.text.trim(),
-          'email': emailController.text.trim(),
-          'department': officeController.text.trim(),
-          'role': roleController.text.trim(),
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {
         Navigator.pop(context, true);
-        _showSnackbar(context, 'User updated successfully! 🎉', isError: false);
+        _showSnackbar(context, 'User updated successfully!', isError: false);
       } else {
-        Navigator.pop(context, false);
+        final error = jsonDecode(response.body);
         _showSnackbar(
           context,
-          'Failed to update user: ${response.statusCode}',
+          'Failed: ${error["message"] ?? "Unknown error"}',
           isError: true,
         );
       }
@@ -645,7 +648,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
         constraints: BoxConstraints(
           minWidth: 300,
           maxWidth: screenWidth * 0.5,
-          maxHeight: screenHeight * 0.8, // Limit height and allow scrolling
+          maxHeight: screenHeight * 0.8,
         ),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -655,7 +658,6 @@ class _EditUserDialogState extends State<EditUserDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Title
                   Row(
                     children: [
                       Icon(Icons.person_outline, color: theme.primaryColor),
@@ -672,8 +674,6 @@ class _EditUserDialogState extends State<EditUserDialog> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  // Name Field
                   _buildTextField(
                     controller: nameController,
                     label: 'Full Name',
@@ -681,8 +681,6 @@ class _EditUserDialogState extends State<EditUserDialog> {
                     icon: Icons.person,
                     validator: (val) => _validateRequired(val, 'Name'),
                   ),
-
-                  // Email Field
                   _buildTextField(
                     controller: emailController,
                     label: 'Email',
@@ -691,8 +689,6 @@ class _EditUserDialogState extends State<EditUserDialog> {
                     keyboardType: TextInputType.emailAddress,
                     validator: _validateEmail,
                   ),
-
-                  // Office/Department Field
                   _buildTextField(
                     controller: officeController,
                     label: 'Office/Department',
@@ -700,8 +696,6 @@ class _EditUserDialogState extends State<EditUserDialog> {
                     icon: Icons.location_city,
                     validator: (val) => _validateRequired(val, 'Office'),
                   ),
-
-                  // Role Field
                   _buildTextField(
                     controller: roleController,
                     label: 'Role/Position',
@@ -709,10 +703,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
                     icon: Icons.work,
                     validator: (val) => _validateRequired(val, 'Role'),
                   ),
-
                   const SizedBox(height: 24),
-
-                  // Action Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -787,7 +778,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
           fillColor: Colors.grey[100],
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blue),
+            borderSide: const BorderSide(color: Colors.blue),
           ),
         ),
       ),
