@@ -19,14 +19,6 @@ class SummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      // width: 420,
-      // height: 200,
-      // padding: const EdgeInsets.all(16),
-      // decoration: BoxDecoration(
-      //   color: iconColor.withOpacity(0.1),
-      //   borderRadius: BorderRadius.circular(12),
-      //   border: Border.all(color: iconColor),
-      // ),
       child: Container(
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.only(top: 10),

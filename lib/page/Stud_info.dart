@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:intl/intl.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter_application_1/page/Schoolguard.dart';
 
 class Student {
   final String id;
@@ -56,6 +57,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
   bool canSubmit = true;
   Color offenseColor = Colors.green;
   int violationCount = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -71,9 +73,15 @@ class _ViolationScreenState extends State<ViolationScreen> {
     fetchStudents();
   }
 
-  InputDecoration _fieldDecoration(String label) {
+  InputDecoration _fieldDecoration(String label, {bool required = false}) {
     return InputDecoration(
-      labelText: label,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          if (required) const Text(' *', style: TextStyle(color: Colors.red)),
+        ],
+      ),
       filled: true,
       fillColor: Colors.grey[50],
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -110,7 +118,6 @@ class _ViolationScreenState extends State<ViolationScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         if (data["student_Info"] != null) {
           Student student = Student(
             id: data["student_Info"]["student_id"],
@@ -312,12 +319,7 @@ class _ViolationScreenState extends State<ViolationScreen> {
   }
 
   Future<void> createViolation() async {
-    if (incidentDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select the date of incident.")),
-      );
-      return;
-    }
+    setState(() => _isLoading = true);
 
     Map<String, dynamic> violationData = {
       'student_id': studentIdController.text.trim(),
@@ -355,17 +357,25 @@ class _ViolationScreenState extends State<ViolationScreen> {
         body: jsonEncode(violationData),
       );
 
+      setState(() => _isLoading = false);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Violation report submitted.")),
         );
-        Navigator.pop(context);
+        await Future.delayed(const Duration(milliseconds: 500));
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SchoolGuardHome()),
+          (route) => false,
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Submission failed: ${response.body}")),
         );
       }
     } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -379,261 +389,267 @@ class _ViolationScreenState extends State<ViolationScreen> {
         title: const Text("New Violation Report"),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!canSubmit)
-                  Card(
-                    color: Colors.red.shade50,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.warning, color: Colors.red),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              "⚠️ Maximum offense limit reached. Cannot submit new violation.",
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // Student Section
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 12),
-                        _buildReadOnlyField(
-                          controller: studentIdController,
-                          label: "Student ID",
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!canSubmit)
+                      Card(
+                        color: Colors.red.shade50,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 12),
-                        _buildReadOnlyField(
-                          controller: studentNameController,
-                          label: "Student Name",
-                        ),
-                        const SizedBox(height: 12),
-                        _buildReadOnlyField(
-                          controller: departmentController,
-                          label: "Department",
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Violation Section
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        DropdownSearch<String>(
-                          asyncItems: (filter) => fetchViolationTypes(filter),
-                          selectedItem: violationTypeController.text.isEmpty
-                              ? null
-                              : violationTypeController.text,
-                          popupProps: const PopupProps.menu(
-                            showSearchBox: true,
-                          ),
-                          dropdownDecoratorProps: DropDownDecoratorProps(
-                            dropdownSearchDecoration: _fieldDecoration(
-                              "Violation Type",
-                            ),
-                          ),
-                          onChanged: (value) {
-                            violationTypeController.text = value ?? '';
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildReadOnlyField(
-                                controller: offenseLevelController,
-                                label: "Offense Level",
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Chip(
-                              label: Text(
-                                offenseLevelController.text,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.warning, color: Colors.red),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  "⚠️ Maximum offense limit reached. Cannot submit new violation.",
+                                  style: TextStyle(color: Colors.red),
                                 ),
                               ),
-                              backgroundColor: offenseColor,
+                            ],
+                          ),
+                        ),
+                      ),
+                    // --- Student Section ---
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            _buildReadOnlyField(
+                              controller: studentIdController,
+                              label: "Student ID",
+                            ),
+                            const SizedBox(height: 12),
+                            _buildReadOnlyField(
+                              controller: studentNameController,
+                              label: "Student Name",
+                            ),
+                            const SizedBox(height: 12),
+                            _buildReadOnlyField(
+                              controller: departmentController,
+                              label: "Department",
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        _buildReadOnlyField(
-                          controller: statusController,
-                          label: "Status",
-                        ),
-                        const SizedBox(height: 12),
-                        _buildReadOnlyField(
-                          controller: incidentDateController,
-                          label: "Incident Date & Time",
-                          icon: Icons.calendar_today,
-                          onTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: incidentDate ?? DateTime.now(),
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(3000),
-                            );
-                            if (date != null) {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.fromDateTime(
-                                  incidentDate ?? DateTime.now(),
+                      ),
+                    ),
+                    // --- Violation Section ---
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            DropdownSearch<String>(
+                              asyncItems: (filter) =>
+                                  fetchViolationTypes(filter),
+                              selectedItem: violationTypeController.text.isEmpty
+                                  ? null
+                                  : violationTypeController.text,
+                              popupProps: const PopupProps.menu(
+                                showSearchBox: true,
+                              ),
+                              dropdownDecoratorProps: DropDownDecoratorProps(
+                                dropdownSearchDecoration: _fieldDecoration(
+                                  "Violation Type",
+                                  required: true,
                                 ),
-                              );
-                              if (time != null) {
-                                setState(() {
-                                  incidentDate = DateTime(
-                                    date.year,
-                                    date.month,
-                                    date.day,
-                                    time.hour,
-                                    time.minute,
+                              ),
+                              onChanged: (value) {
+                                violationTypeController.text = value ?? '';
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a violation type';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildReadOnlyField(
+                                    controller: offenseLevelController,
+                                    label: "Offense Level",
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Chip(
+                                  label: Text(
+                                    offenseLevelController.text,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  backgroundColor: offenseColor,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _buildReadOnlyField(
+                              controller: statusController,
+                              label: "Status",
+                            ),
+                            const SizedBox(height: 12),
+                            _buildReadOnlyField(
+                              controller: incidentDateController,
+                              label: "Incident Date & Time",
+                              icon: Icons.calendar_today,
+                              onTap: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: incidentDate ?? DateTime.now(),
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(3000),
+                                );
+                                if (date != null) {
+                                  final time = await showTimePicker(
+                                    context: context,
+                                    initialTime: TimeOfDay.fromDateTime(
+                                      incidentDate ?? DateTime.now(),
+                                    ),
                                   );
-                                  incidentDateController.text = DateFormat(
-                                    'yyyy-MM-dd – hh:mm a',
-                                  ).format(incidentDate!);
-                                });
+                                  if (time != null) {
+                                    setState(() {
+                                      incidentDate = DateTime(
+                                        date.year,
+                                        date.month,
+                                        date.day,
+                                        time.hour,
+                                        time.minute,
+                                      );
+                                      incidentDateController.text = DateFormat(
+                                        'yyyy-MM-dd – hh:mm a',
+                                      ).format(incidentDate!);
+                                    });
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // --- Reporter Section ---
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            _buildReadOnlyField(
+                              controller: reportedByController,
+                              label: "Reported By",
+                            ),
+                            const SizedBox(height: 12),
+                            _buildReadOnlyField(
+                              controller: roleController,
+                              label: "Role",
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // --- Remarks Section ---
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: remarksController,
+                              decoration: _fieldDecoration("Remarks"),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // --- Photo Upload ---
+                    InkWell(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.blueAccent.withOpacity(0.3),
+                          ),
+                        ),
+                        child: _buildPhotoPreview(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: canSubmit
+                          ? () {
+                              if (_formKey.currentState!.validate()) {
+                                createViolation();
                               }
                             }
-                          },
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Reporter Section
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        _buildReadOnlyField(
-                          controller: reportedByController,
-                          label: "Reported By",
-                        ),
-                        const SizedBox(height: 12),
-                        _buildReadOnlyField(
-                          controller: roleController,
-                          label: "Role",
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Remarks Section
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: remarksController,
-                          readOnly: false,
-                          decoration: _fieldDecoration("Remarks")
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Photo Upload
-                InkWell(
-                  onTap: _pickImage,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.blueAccent.withOpacity(0.3),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade200,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                      child: Text(
+                        canSubmit ? "Submit Report" : "Cannot Submit",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
+                      ),
                     ),
-                    child: _buildPhotoPreview(),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-
-                ElevatedButton(
-                  onPressed: canSubmit
-                      ? () {
-                          createViolation();
-                        }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    canSubmit ? "Submit Report" : "Cannot Submit",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (_isLoading)
+            Container(
+              color: Colors.black45,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+        ],
       ),
     );
   }

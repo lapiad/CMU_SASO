@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/GenerateReport.dart';
 import 'package:flutter_application_1/components/createviolation.dart';
+import 'package:flutter_application_1/components/userManual.dart';
 import 'package:flutter_application_1/components/viewPending.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
@@ -48,8 +49,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     super.initState();
     fetchUserName();
     fetchViolations();
-
-    // Periodic refresh every 30 seconds
     refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       fetchViolations();
     });
@@ -61,7 +60,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     super.dispose();
   }
 
-  // ===================== USER INFO =====================
   Future<void> fetchUserName() async {
     try {
       final box = GetStorage();
@@ -83,14 +81,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
-  // ===================== VIOLATIONS =====================
   Future<void> fetchViolations() async {
     try {
       final url = Uri.parse(
         '${GlobalConfiguration().getValue("server_url")}/violations',
       );
       final response = await http.get(url);
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<dynamic> violationsList = [];
@@ -102,7 +98,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           violationsList = data['violations'] as List<dynamic>;
         }
 
-        // Sort by newest first
         violationsList.sort((a, b) {
           final dateA =
               DateTime.tryParse(a['created_at'] ?? '') ?? DateTime(2000);
@@ -133,9 +128,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
     for (var v in recentViolations) {
       String status = (v['status'] ?? '').toString().toLowerCase();
-      if (status == 'pending')
+      if (status == 'pending') {
         pending++;
-      else if (status == 'in-progress' || status == 'under review')
+      } else if (status == 'in-progress' || status == 'under review')
         inProgress++;
       else if (status == 'reviewed' || status == 'referred')
         reviewed++;
@@ -151,7 +146,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     });
   }
 
-  // ===================== ADMIN MENU =====================
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
@@ -227,7 +221,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Colors.grey;
   }
 
-  // ===================== BUILD =====================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -251,6 +244,65 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           },
         ),
         actions: [
+          // 🔔 Notification Bell
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications,
+                  size: 32,
+                  color: Colors.white,
+                ),
+                onPressed: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (_) => PendingReportsDialog(),
+                  );
+                  fetchViolations();
+                },
+              ),
+              if (int.tryParse(summaryData["pending"] ?? "0") != null &&
+                  int.parse(summaryData["pending"] ?? "0") > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 22,
+                      minHeight: 22,
+                    ),
+                    child: Text(
+                      summaryData["pending"] ?? "0",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          // 🆕 User Manual Button (navigate to new screen)
+          IconButton(
+            icon: const Icon(Icons.help_outline, size: 32, color: Colors.white),
+            tooltip: 'User Manual',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => UserManualScreen()),
+              );
+            },
+          ),
+
+          // 👤 User Info
           Row(
             children: [
               Text(
@@ -408,81 +460,93 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   // ===================== SUMMARY SECTION =====================
   Widget _buildSummarySection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => ViolationLogsPage()),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+          ),
+          child: MediaQuery.of(context).size.width > 770
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SummaryWidget(
+                      title: "Total Cases",
+                      value: summaryData["totalCases"] ?? "0",
+                      subtitle: "All Recorded Cases",
+                      icon: Icons.cases_outlined,
+                      iconColor: Colors.indigo,
+                    ),
+                    SummaryWidget(
+                      title: "Pending",
+                      value: summaryData["pending"] ?? "0",
+                      subtitle: "Awaiting Action",
+                      icon: Icons.hourglass_bottom,
+                      iconColor: Colors.orange,
+                    ),
+                    SummaryWidget(
+                      title: "In Progress",
+                      value: summaryData["inProgress"] ?? "0",
+                      subtitle: "Currently Handled",
+                      icon: Icons.autorenew,
+                      iconColor: Colors.blueAccent,
+                    ),
+                    SummaryWidget(
+                      title: "Reviewed",
+                      value: summaryData["reviewed"] ?? "0",
+                      subtitle: "Completed Cases",
+                      icon: Icons.verified,
+                      iconColor: Colors.green,
+                    ),
+                  ],
+                )
+              : Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    SummaryWidget(
+                      title: "Total Cases",
+                      value: summaryData["totalCases"] ?? "0",
+                      subtitle: "All Recorded Cases",
+                      icon: Icons.cases_outlined,
+                      iconColor: Colors.indigo,
+                    ),
+                    SummaryWidget(
+                      title: "Pending",
+                      value: summaryData["pending"] ?? "0",
+                      subtitle: "Awaiting Action",
+                      icon: Icons.hourglass_bottom,
+                      iconColor: Colors.orange,
+                    ),
+                    SummaryWidget(
+                      title: "In Progress",
+                      value: summaryData["inProgress"] ?? "0",
+                      subtitle: "Currently Handled",
+                      icon: Icons.autorenew,
+                      iconColor: Colors.blueAccent,
+                    ),
+                    SummaryWidget(
+                      title: "Reviewed",
+                      value: summaryData["reviewed"] ?? "0",
+                      subtitle: "Completed Cases",
+                      icon: Icons.verified,
+                      iconColor: Colors.green,
+                    ),
+                  ],
+                ),
+        ),
       ),
-      child: MediaQuery.of(context).size.width > 770
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                SummaryWidget(
-                  title: "Total Cases",
-                  value: summaryData["totalCases"] ?? "0",
-                  subtitle: "All Recorded Cases",
-                  icon: Icons.cases_outlined,
-                  iconColor: Colors.indigo,
-                ),
-                SummaryWidget(
-                  title: "Pending",
-                  value: summaryData["pending"] ?? "0",
-                  subtitle: "Awaiting Action",
-                  icon: Icons.hourglass_bottom,
-                  iconColor: Colors.orange,
-                ),
-                SummaryWidget(
-                  title: "In Progress",
-                  value: summaryData["inProgress"] ?? "0",
-                  subtitle: "Currently Handled",
-                  icon: Icons.autorenew,
-                  iconColor: Colors.blueAccent,
-                ),
-                SummaryWidget(
-                  title: "Reviewed",
-                  value: summaryData["reviewed"] ?? "0",
-                  subtitle: "Completed Cases",
-                  icon: Icons.verified,
-                  iconColor: Colors.green,
-                ),
-              ],
-            )
-          : Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                SummaryWidget(
-                  title: "Total Cases",
-                  value: summaryData["totalCases"] ?? "0",
-                  subtitle: "All Recorded Cases",
-                  icon: Icons.cases_outlined,
-                  iconColor: Colors.indigo,
-                ),
-                SummaryWidget(
-                  title: "Pending",
-                  value: summaryData["pending"] ?? "0",
-                  subtitle: "Awaiting Action",
-                  icon: Icons.hourglass_bottom,
-                  iconColor: Colors.orange,
-                ),
-                SummaryWidget(
-                  title: "In Progress",
-                  value: summaryData["inProgress"] ?? "0",
-                  subtitle: "Currently Handled",
-                  icon: Icons.autorenew,
-                  iconColor: Colors.blueAccent,
-                ),
-                SummaryWidget(
-                  title: "Reviewed",
-                  value: summaryData["reviewed"] ?? "0",
-                  subtitle: "Completed Cases",
-                  icon: Icons.verified,
-                  iconColor: Colors.green,
-                ),
-              ],
-            ),
     );
   }
 
@@ -539,7 +603,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     () async {
                       await showDialog(
                         context: context,
-                        builder: (_) => const CreateViolationDialog(),
+                        builder: (_) => CreateViolationDialog(),
                       );
                       fetchViolations();
                     },
@@ -549,7 +613,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   width: double.infinity,
                   height: 80,
                   child: buildActionButton(
-                    Icons.article_outlined,
+                    Icons.pending_actions,
                     "View Pending Reports",
                     () async {
                       await showDialog(
@@ -571,7 +635,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         context: context,
                         builder: (_) => ReportDialog(),
                       );
-                      fetchViolations();
                     },
                   ),
                 ),
@@ -583,20 +646,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  // ===================== CARD WRAPPER =====================
   Widget _frostedCard({required String title, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,8 +663,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             title,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 26,
-              color: Color(0xFF2c3e50),
+              fontSize: 22,
+              color: Color(0xFF446EAD),
             ),
           ),
           const SizedBox(height: 12),

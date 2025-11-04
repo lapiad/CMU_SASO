@@ -5,7 +5,6 @@ import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/page/IDScanner.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:flutter_application_1/pages/login.dart';
-import 'package:flutter_application_1/pages/profile.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
@@ -219,9 +218,7 @@ class _SchoolGuardHomeState extends State<SchoolGuardHome> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => ProfileScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => ProfileScreen()),
                     );
                   },
                 ),
@@ -749,7 +746,8 @@ class _ManualEntryPageState extends State<ManualEntryPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ViolationScreen(studentId: _selectedStudent!.id,),
+                        builder: (_) =>
+                            ViolationScreen(studentId: _selectedStudent!.id),
                       ),
                     );
                   },

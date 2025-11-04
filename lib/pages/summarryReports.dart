@@ -8,7 +8,7 @@ import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:flutter_application_1/pages/profile.dart';
 import 'package:flutter_application_1/pages/dashboard.dart';
-import 'package:flutter_application_1/pages/user_mgt.dart';
+import 'package:flutter_application_1/pages/user_MGT.dart';
 import 'package:flutter_application_1/pages/violation_logs.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:global_configuration/global_configuration.dart';
@@ -376,10 +376,12 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
       final barImg = await _barController.capture();
       final lineImg = await _lineController.capture();
 
-      final logoData = await rootBundle.load('images/logos.png');
-      final logoBytes = logoData.buffer.asUint8List();
+      // Load header image
+      final headerImageData = await rootBundle.load('images/header.png');
+      final headerImage = pw.MemoryImage(headerImageData.buffer.asUint8List());
 
       final pdf = pw.Document();
+
       final departmentDist = getDepartmentDistribution();
       final typeDist = getViolationTypeDistribution();
       final weeklyData = getWeeklyViolationCounts();
@@ -395,79 +397,101 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
 
       final now = DateTime.now();
 
+      pw.Widget buildHeader() {
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Image(headerImage, width: 460, fit: pw.BoxFit.contain),
+            pw.SizedBox(height: 4),
+            pw.Text(
+              "Student Affairs and Services Office",
+              style: pw.TextStyle(
+                fontSize: 11,
+                color: PdfColors.black,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+            pw.Divider(color: PdfColors.blueGrey300, thickness: 0.8),
+          ],
+        );
+      }
+
+      pw.Widget buildFooter(pw.Context context) {
+        return pw.Container(
+          alignment: pw.Alignment.centerRight,
+          margin: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'Page ${context.pageNumber} of ${context.pagesCount}',
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+          ),
+        );
+      }
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+          build: (context) => pw.Column(
+            children: [
+              buildHeader(),
+              pw.Expanded(
+                child: pw.Center(
+                  child: pw.Column(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: [
+                      pw.Text(
+                        "SUMMARY REPORT OF STUDENT VIOLATIONS",
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          fontSize: 20,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.blue900,
+                        ),
+                      ),
+                      pw.SizedBox(height: 15),
+                      pw.Text(
+                        "STUDENT AFFAIRS AND SERVICES OFFICE (SASO)",
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.blue700,
+                        ),
+                      ),
+                      pw.SizedBox(height: 10),
+                      pw.Text(
+                        "City of Malabon University",
+                        textAlign: pw.TextAlign.center,
+                        style: const pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
+                      pw.SizedBox(height: 40),
+                      pw.Text(
+                        "Generated on ${DateFormat('MMMM dd, yyyy at hh:mm a').format(now)}",
+                        textAlign: pw.TextAlign.center,
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-          footer: (context) => pw.Align(
-            alignment: pw.Alignment.centerRight,
-            child: pw.Text(
-              'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey),
-            ),
-          ),
+          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          header: (context) => buildHeader(),
+          footer: (context) => buildFooter(context),
           build: (context) => [
-            // Header
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      "CITY OF MALABON UNIVERSITY",
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 14,
-                        color: PdfColors.blue900,
-                      ),
-                    ),
-                    pw.Text(
-                      "Student Affairs & Services Office",
-                      style: const pw.TextStyle(
-                        fontSize: 11,
-                        color: PdfColors.blueGrey700,
-                      ),
-                    ),
-                    pw.Text(
-                      "Disciplinary Records Management System",
-                      style: const pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.blueGrey600,
-                      ),
-                    ),
-                  ],
-                ),
-                pw.Container(
-                  height: 45,
-                  width: 45,
-                  child: pw.Image(pw.MemoryImage(logoBytes)),
-                ),
-              ],
-            ),
-            pw.Divider(thickness: 1.5, color: PdfColors.blueGrey400),
-            pw.SizedBox(height: 12),
-            pw.Center(
-              child: pw.Text(
-                'SUMMARY REPORT OF STUDENT VIOLATIONS',
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.blue800,
-                ),
-              ),
-            ),
-            pw.SizedBox(height: 4),
-            pw.Center(
-              child: pw.Text(
-                'Generated on ${DateFormat('MMMM dd, yyyy – hh:mm a').format(now)}',
-                style: const pw.TextStyle(
-                  fontSize: 9,
-                  color: PdfColors.grey600,
-                ),
-              ),
-            ),
-            pw.SizedBox(height: 20),
             pw.Container(
               decoration: pw.BoxDecoration(
                 color: PdfColors.blue50,
@@ -512,7 +536,9 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Organized 2-page PDF generated!')),
+          const SnackBar(
+            content: Text('✅ PDF generated with header on every page!'),
+          ),
         );
       }
     } catch (e) {
@@ -600,9 +626,9 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                   Colors.primaries[i % Colors.primaries.length],
               value: value.toDouble(),
               title: "$key\n$value",
-              radius: 90,
+              radius: 150,
               titleStyle: const TextStyle(
-                fontSize: 14,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -656,7 +682,7 @@ class _SummaryReportsPageState extends State<SummaryReportsPage> {
                 BarChartRodData(
                   toY: entries[i].value.toDouble(),
                   color: colors[i % colors.length],
-                  width: 18,
+                  width: 50,
                 ),
               ],
             );

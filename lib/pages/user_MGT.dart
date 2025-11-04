@@ -34,7 +34,6 @@ class User {
   final String email;
   final String office;
   final String role;
-  final String status;
 
   User({
     required this.id,
@@ -42,7 +41,6 @@ class User {
     required this.email,
     required this.office,
     required this.role,
-    required this.status,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -52,7 +50,6 @@ class User {
       email: json['email'] ?? '',
       office: json['department'] ?? '',
       role: json['role'] ?? '',
-      status: json['status'] ?? 'Active',
     );
   }
 }
@@ -68,7 +65,7 @@ class UserMgt extends StatefulWidget {
 class _UserManagementPageState extends State<UserMgt> {
   double sideMenuSize = 0.0;
   List<User> users = [];
-  bool isLoading = false; // ✅ Loading state
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -76,7 +73,6 @@ class _UserManagementPageState extends State<UserMgt> {
     fetchUsers();
   }
 
-  /// ✅ Fetch users from backend
   Future<void> fetchUsers() async {
     setState(() => isLoading = true);
     try {
@@ -105,7 +101,6 @@ class _UserManagementPageState extends State<UserMgt> {
     }
   }
 
-  /// ✅ Delete user and auto-refresh
   Future<void> _deleteUser(int index) async {
     final user = users[index];
     final confirm = await showDialog<bool>(
@@ -146,7 +141,7 @@ class _UserManagementPageState extends State<UserMgt> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('${user.name} deleted')));
-        await fetchUsers(); // ✅ Refresh table after delete
+        await fetchUsers();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to delete user: ${resp.statusCode}')),
@@ -159,20 +154,22 @@ class _UserManagementPageState extends State<UserMgt> {
     }
   }
 
-  /// ✅ Function to open Add User dialog and refresh after close
   void _openAddUserDialog() async {
     final result = await showDialog(
       context: context,
       builder: (_) => const AddNewUserDialog(),
     );
-
-    // If dialog returns success, refresh table automatically
-    if (result == true) {
-      await fetchUsers(); // ✅ Re-fetch new data from backend
-    }
+    if (result == true) await fetchUsers();
   }
 
-  /// Admin dropdown menu
+  void _openEditUserDialog(User user) async {
+    final result = await showDialog(
+      context: context,
+      builder: (_) => EditUserDialog(user: user),
+    );
+    if (result == true) await fetchUsers();
+  }
+
   void _showAdminMenu(BuildContext context) async {
     final result = await showMenu(
       context: context,
@@ -210,7 +207,6 @@ class _UserManagementPageState extends State<UserMgt> {
     );
   }
 
-  /// Sidebar builder
   Widget _buildSideMenu(BuildContext context) {
     return Container(
       width: sideMenuSize,
@@ -301,7 +297,6 @@ class _UserManagementPageState extends State<UserMgt> {
     onTap: onTap,
   );
 
-  /// Main UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -361,25 +356,12 @@ class _UserManagementPageState extends State<UserMgt> {
                         icon: Icons.supervised_user_circle_outlined,
                         iconColor: Colors.blue,
                       ),
-                      const SizedBox(width: 30),
-                      SummaryWidget(
-                        title: "Active Users",
-                        value: users
-                            .where((u) => u.status == "Active")
-                            .length
-                            .toString(),
-                        subtitle: "Currently Active",
-                        icon: Icons.online_prediction,
-                        iconColor: Colors.green,
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Expanded(
                     child: isLoading
-                        ? const Center(
-                            child: CircularProgressIndicator(),
-                          ) // ✅ Loading indicator
+                        ? const Center(child: CircularProgressIndicator())
                         : Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -453,18 +435,6 @@ class _UserManagementPageState extends State<UserMgt> {
                                       label: SizedBox(
                                         width: 300,
                                         child: Text(
-                                          'Status',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 30,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: SizedBox(
-                                        width: 300,
-                                        child: Text(
                                           'Actions',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
@@ -512,26 +482,25 @@ class _UserManagementPageState extends State<UserMgt> {
                                           ),
                                         ),
                                         DataCell(
-                                          Chip(
-                                            label: Text(
-                                              user.status,
-                                              style: const TextStyle(
-                                                fontSize: 20,
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.edit,
+                                                  color: Colors.green,
+                                                ),
+                                                onPressed: () =>
+                                                    _openEditUserDialog(user),
                                               ),
-                                            ),
-                                            backgroundColor:
-                                                user.status == "Active"
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
-                                        ),
-                                        DataCell(
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                            ),
-                                            onPressed: () => _deleteUser(index),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed: () =>
+                                                    _deleteUser(index),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -549,13 +518,278 @@ class _UserManagementPageState extends State<UserMgt> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddUserDialog, // ✅ Dynamic refresh after add
+        onPressed: _openAddUserDialog,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           "Add User",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: const Color(0xFF446EAD),
+      ),
+    );
+  }
+}
+
+/// Edit User Dialog
+class EditUserDialog extends StatefulWidget {
+  final User user;
+
+  const EditUserDialog({super.key, required this.user});
+
+  @override
+  State<EditUserDialog> createState() => _EditUserDialogState();
+}
+
+class _EditUserDialogState extends State<EditUserDialog> {
+  final _formKey = GlobalKey<FormState>();
+
+  late TextEditingController nameController;
+  late TextEditingController emailController;
+  late TextEditingController officeController;
+  late TextEditingController roleController;
+  bool isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.user.name);
+    emailController = TextEditingController(text: widget.user.email);
+    officeController = TextEditingController(text: widget.user.office);
+    roleController = TextEditingController(text: widget.user.role);
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    officeController.dispose();
+    roleController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveUser() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => isSaving = true);
+
+    try {
+      const serverUrl = 'http://localhost:8080'; // Replace with actual URL
+      final url = Uri.parse('$serverUrl/users/${widget.user.id}');
+
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'first_name': nameController.text.trim(),
+          'email': emailController.text.trim(),
+          'department': officeController.text.trim(),
+          'role': roleController.text.trim(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        Navigator.pop(context, true);
+        _showSnackbar(context, 'User updated successfully! 🎉', isError: false);
+      } else {
+        Navigator.pop(context, false);
+        _showSnackbar(
+          context,
+          'Failed to update user: ${response.statusCode}',
+          isError: true,
+        );
+      }
+    } catch (e) {
+      _showSnackbar(context, 'Error: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => isSaving = false);
+    }
+  }
+
+  void _showSnackbar(
+    BuildContext context,
+    String message, {
+    required bool isError,
+  }) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Email cannot be empty';
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
+  String? _validateRequired(String? value, String fieldName) {
+    if (value == null || value.isEmpty) return '$fieldName is required';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: 300,
+          maxWidth: screenWidth * 0.5,
+          maxHeight: screenHeight * 0.8, // Limit height and allow scrolling
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline, color: theme.primaryColor),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Edit User Details',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Name Field
+                  _buildTextField(
+                    controller: nameController,
+                    label: 'Full Name',
+                    hint: 'Enter user\'s full name',
+                    icon: Icons.person,
+                    validator: (val) => _validateRequired(val, 'Name'),
+                  ),
+
+                  // Email Field
+                  _buildTextField(
+                    controller: emailController,
+                    label: 'Email',
+                    hint: 'user@example.com',
+                    icon: Icons.email,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: _validateEmail,
+                  ),
+
+                  // Office/Department Field
+                  _buildTextField(
+                    controller: officeController,
+                    label: 'Office/Department',
+                    hint: 'e.g., Sales, HR',
+                    icon: Icons.location_city,
+                    validator: (val) => _validateRequired(val, 'Office'),
+                  ),
+
+                  // Role Field
+                  _buildTextField(
+                    controller: roleController,
+                    label: 'Role/Position',
+                    hint: 'e.g., Manager, Developer',
+                    icon: Icons.work,
+                    validator: (val) => _validateRequired(val, 'Role'),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: isSaving
+                            ? null
+                            : () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: 100,
+                        child: ElevatedButton(
+                          onPressed: isSaving ? null : _saveUser,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : const Text(
+                                  'Save',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(icon),
+          filled: true,
+          fillColor: Colors.grey[100],
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blue),
+          ),
+        ),
       ),
     );
   }

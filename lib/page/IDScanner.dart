@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/page/Schoolguard.dart';
 import 'package:flutter_application_1/page/Stud_info.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -70,8 +71,9 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
   Future<void> _scanStudentID({int attempt = 1}) async {
     if (!mounted ||
         _cameraController == null ||
-        !_cameraController!.value.isInitialized)
+        !_cameraController!.value.isInitialized) {
       return;
+    }
 
     try {
       setState(() => _isProcessing = true);
@@ -245,7 +247,14 @@ class _IDScannerScreenState extends State<IDScannerScreen> {
             left: 20,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) {
+                    return const SchoolGuardHome();
+                  },
+                ),
+              ),
             ),
           ),
           Positioned(

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_application_1/classes/Integrations.dart';
 import 'package:flutter_application_1/classes/ViolationRecords.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +23,6 @@ class _ReportDialogState extends State<ReportDialog> {
   List<ViolationRecord> allRecords = [];
   final _dateFormat = DateFormat('yyyy-MM-dd');
 
-  // Example list of departments — you can replace or load dynamically
   final List<String> departments = [
     'All Departments',
     'COA',
@@ -31,6 +31,9 @@ class _ReportDialogState extends State<ReportDialog> {
     'CAS',
     'CCS',
   ];
+
+  bool _isLoading = false;
+  double _progress = 0.0;
 
   // ===================== DATE PICKER =====================
   Future<void> _pickDate(BuildContext context, bool isStartDate) async {
@@ -109,10 +112,17 @@ class _ReportDialogState extends State<ReportDialog> {
       return;
     }
 
-    await _fetchViolations();
-    final records = _filterRecords();
+    setState(() {
+      _isLoading = true;
+      _progress = 0.1;
+    });
 
+    await _fetchViolations();
+    setState(() => _progress = 0.3);
+
+    final records = _filterRecords();
     if (records.isEmpty) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("No records found for the selected filters."),
@@ -121,61 +131,88 @@ class _ReportDialogState extends State<ReportDialog> {
       return;
     }
 
+    // Load header image
+    final imageBytes = await rootBundle.load('images/header.png');
+    setState(() => _progress = 0.5);
+    final headerImage = pw.MemoryImage(imageBytes.buffer.asUint8List());
+
     final pdf = pw.Document();
 
     // ===== Cover Page =====
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
-        build: (context) => pw.Center(
-          child: pw.Column(
-            mainAxisAlignment: pw.MainAxisAlignment.center,
-            children: [
-              pw.Text(
-                'City of Malabon University',
-                style: pw.TextStyle(
-                  fontSize: 22,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.blue900,
+        margin: const pw.EdgeInsets.only(top: 10),
+        build: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Image(headerImage, width: 500, fit: pw.BoxFit.contain),
+            pw.SizedBox(height: 20),
+            pw.Text(
+              "Student Affairs and Services Office",
+              style: pw.TextStyle(
+                fontSize: 11,
+                color: PdfColors.black,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+            pw.Divider(color: PdfColors.blueGrey300, thickness: 0.8),
+            pw.SizedBox(height: 40),
+            pw.Expanded(
+              child: pw.Center(
+                child: pw.Column(
+                  mainAxisSize: pw.MainAxisSize.min,
+                  children: [
+                    pw.Text(
+                      'Student Violations Report',
+                      style: pw.TextStyle(
+                        fontSize: 26,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 20),
+                    pw.Text(
+                      'Department: ${selectedDepartment ?? ''}',
+                      style: pw.TextStyle(
+                        fontSize: 14,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                    pw.SizedBox(height: 8),
+                    pw.Text(
+                      'From ${_dateFormat.format(startDate!)} to ${_dateFormat.format(endDate!)}',
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                    pw.SizedBox(height: 30),
+                    pw.Text(
+                      'Generated on: ${DateFormat("MMMM dd, yyyy 'at' hh:mm a").format(DateTime.now())}',
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              pw.SizedBox(height: 12),
-              pw.Text(
-                'Weekly Violation Report',
-                style: pw.TextStyle(
-                  fontSize: 26,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 20),
-              pw.Text(
-                'Department: ${selectedDepartment ?? "All Departments"}',
-                style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700),
-              ),
-              pw.SizedBox(height: 8),
-              pw.Text(
-                'From ${_dateFormat.format(startDate!)} to ${_dateFormat.format(endDate!)}',
-                style: pw.TextStyle(fontSize: 16, color: PdfColors.grey700),
-              ),
-              pw.SizedBox(height: 30),
-              pw.Text(
-                'Generated on: ${DateFormat("MMMM dd, yyyy – hh:mm a").format(DateTime.now())}',
-                style: pw.TextStyle(fontSize: 12, color: PdfColors.grey600),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+
+    setState(() => _progress = 0.7);
 
     // ===== Data Table Page =====
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4.landscape,
-        margin: const pw.EdgeInsets.all(20),
+        margin: const pw.EdgeInsets.all(10),
+        header: (context) => _buildPdfHeader(headerImage),
         build: (context) => [
-          _buildPdfHeader(),
-          pw.SizedBox(height: 15),
+          pw.SizedBox(height: 10),
           _buildStyledTable(records),
           pw.SizedBox(height: 30),
           _buildPdfFooter(),
@@ -184,14 +221,27 @@ class _ReportDialogState extends State<ReportDialog> {
     );
 
     final pdfBytes = await pdf.save();
+    setState(() => _progress = 0.9);
     await _savePdfToDevice(pdfBytes);
+
+    setState(() {
+      _progress = 1.0;
+    });
+    await Future.delayed(const Duration(milliseconds: 700));
+
+    setState(() {
+      _isLoading = false;
+      _progress = 0.0;
+    });
   }
 
   // ===================== PDF BUILDERS =====================
-  pw.Widget _buildPdfHeader() {
+  pw.Widget _buildPdfHeader(pw.ImageProvider headerImage) {
     return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
+        pw.Image(headerImage, width: 600, height: 80, fit: pw.BoxFit.contain),
+        pw.SizedBox(height: 15),
         pw.Text(
           'Violation Records Summary',
           style: pw.TextStyle(
@@ -200,15 +250,16 @@ class _ReportDialogState extends State<ReportDialog> {
             color: PdfColors.blue800,
           ),
         ),
-        pw.SizedBox(height: 8),
+        pw.SizedBox(height: 4),
         pw.Text(
           'Department: ${selectedDepartment ?? "All Departments"}',
           style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
         pw.Text(
-          'Date Range: ${_dateFormat.format(startDate!)} → ${_dateFormat.format(endDate!)}',
+          'Date Range: ${_dateFormat.format(startDate!)} to ${_dateFormat.format(endDate!)}',
           style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
         ),
+        pw.Divider(color: PdfColors.grey600, thickness: 0.5),
       ],
     );
   }
@@ -306,7 +357,7 @@ class _ReportDialogState extends State<ReportDialog> {
     final displayText = text.trim().isNotEmpty ? text.trim() : '-';
 
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       alignment: pw.Alignment.centerLeft,
       child: pw.Text(
         displayText,
@@ -323,7 +374,7 @@ class _ReportDialogState extends State<ReportDialog> {
     return pw.Align(
       alignment: pw.Alignment.centerRight,
       child: pw.Text(
-        'Generated by CMU SAO System • ${DateFormat("MMMM dd, yyyy").format(DateTime.now())}',
+        'Generated by CMU SASO System, ${DateFormat("MMMM dd, yyyy").format(DateTime.now())}',
         style: pw.TextStyle(
           fontSize: 10,
           color: PdfColors.grey600,
@@ -335,43 +386,10 @@ class _ReportDialogState extends State<ReportDialog> {
 
   // ===================== SAVE PDF =====================
   Future<void> _savePdfToDevice(Uint8List pdfBytes) async {
-    final now = DateTime.now();
     await Printing.sharePdf(
       bytes: pdfBytes,
       filename: "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf",
     );
-    //   try {
-    //     final jsfile =pdfBytes.toJS;
-    //     final jsBlobParts = <JSAny>[jsfile].toJS;
-    //     final blob = html.Blob(jsBlobParts, html.BlobPropertyBag(type: 'application/pdf'));
-    //     final url = html.URL.createObjectURL(blob);
-
-    //     final anchor = html.document.createElement('a') as html.HTMLAnchorElement
-    //       ..href = url
-    //       ..download =
-    //           "weekly_report_${DateTime.now().millisecondsSinceEpoch}.pdf"
-    //       ..target = "blank";
-
-    //     html.document.body!.append(anchor);
-    //     anchor.click();
-    //     anchor.remove();
-    //     html.URL.revokeObjectURL(url);
-
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(
-    //         content: Text("✅ PDF report downloaded successfully!"),
-    //         backgroundColor: Colors.green,
-    //       ),
-    //     );
-    //   } catch (e) {
-    //     debugPrint("PDF Download Error: $e");
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text("❌ Failed to download report: $e"),
-    //         backgroundColor: Colors.red,
-    //       ),
-    //     );
-    //   }
   }
 
   // ===================== UI BUILD =====================
@@ -379,94 +397,153 @@ class _ReportDialogState extends State<ReportDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 480,
-        padding: const EdgeInsets.all(28),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ===== Header =====
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(
-                  Icons.description_outlined,
-                  size: 30,
-                  color: Colors.blueAccent,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Main Dialog
+          Container(
+            width: 480,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icons.description_outlined,
+                      size: 30,
+                      color: Colors.blueAccent,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'Student Violations Report',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 10),
-                Text(
-                  'Generate Weekly Report',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                const SizedBox(height: 30),
+                _buildDropdownField(
+                  label: 'Department',
+                  icon: Icons.apartment_outlined,
+                  items: departments,
+                  selectedValue: selectedDepartment,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedDepartment = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 18),
+                _buildDateField(
+                  label: 'Start Date',
+                  icon: Icons.calendar_today_outlined,
+                  isStart: true,
+                  date: startDate,
+                ),
+                const SizedBox(height: 18),
+                _buildDateField(
+                  label: 'End Date',
+                  icon: Icons.calendar_month_outlined,
+                  isStart: false,
+                  date: endDate,
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _generatePdfReport,
+                    icon: const Icon(
+                      Icons.download_rounded,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Download PDF Report',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[800],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 3,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 30),
+          ),
 
-            // ===== Department Dropdown =====
-            _buildDropdownField(
-              label: 'Department',
-              icon: Icons.apartment_outlined,
-              items: departments,
-              selectedValue: selectedDepartment,
-              onChanged: (value) {
-                setState(() {
-                  selectedDepartment = value;
-                });
-              },
-            ),
-            const SizedBox(height: 18),
-
-            // ===== Start and End Dates =====
-            _buildDateField(
-              label: 'Start Date',
-              icon: Icons.calendar_today_outlined,
-              isStart: true,
-              date: startDate,
-            ),
-            const SizedBox(height: 18),
-            _buildDateField(
-              label: 'End Date',
-              icon: Icons.calendar_month_outlined,
-              isStart: false,
-              date: endDate,
-            ),
-            const SizedBox(height: 30),
-
-            // ===== Generate Button =====
-            SizedBox(
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _generatePdfReport,
-                icon: const Icon(Icons.download_rounded, color: Colors.white),
-                label: const Text(
-                  'Download PDF Report',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
+          // ===== LOADING OVERLAY =====
+          if (_isLoading)
+            Container(
+              color: Colors.white.withOpacity(0.75),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
                     color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[800],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  width: 260,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 4.5,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+
+                      // Smooth linear bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: _progress,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[200],
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Text section
+                      Text(
+                        "Generating Report...",
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        "${(100 * _progress).toInt()}% complete",
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                      ),
+                    ],
                   ),
-                  elevation: 3,
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -507,7 +584,7 @@ class _ReportDialogState extends State<ReportDialog> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      initialValue: selectedValue,
+      value: selectedValue,
       items: items
           .map(
             (dept) => DropdownMenuItem(
